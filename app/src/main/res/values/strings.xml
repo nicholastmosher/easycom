@@ -1,7 +1,9 @@
 <resources>
-    <string name="app_name">TEC Universal COMM</string>
+    <string name="app_name">TEC COMM</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_add_device">Add Device</string>
+    <string name="action_delete_device">Delete</string>
+    <string name="action_temp_enable">Enable</string>
+    <string name="action_temp_disable">Disable</string>
 </resources>

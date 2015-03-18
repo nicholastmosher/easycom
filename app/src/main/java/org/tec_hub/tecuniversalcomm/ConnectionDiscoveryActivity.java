@@ -1,0 +1,208 @@
+package org.tec_hub.tecuniversalcomm;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.v7.app.ActionBarActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import java.util.Random;
+import java.util.Vector;
+
+/**
+ * Created by user on 3/3/2015.
+ */
+public class ConnectionDiscoveryActivity extends ActionBarActivity
+{
+    public static final String EXTRA_CONNECTION = "connection";
+    public static final int REQUEST_ENABLE_BT = 1;
+
+    /**
+     * This BroadcastReceiver is triggered when the Bluetooth module discovers a new Bluetooth
+     * device.  When this happens, make a new Connection representing that bluetooth device
+     * and put it to the discovered devices adapter.
+     */
+    private final BroadcastReceiver btReceiver = new BroadcastReceiver()
+    {
+        public void onReceive(Context context, Intent intent)
+        {
+            String action = intent.getAction();
+            if(action.equals(BluetoothDevice.ACTION_FOUND))
+            {
+                System.out.println("Bluetooth device discovered!");
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if(connectionAdapter != null)
+                {
+                    Connection btConnection = new Connection(Connection.Type.Bluetooth,
+                                                             device.getName(),
+                                                             device.getAddress());
+                    connectionAdapter.add(btConnection);
+                }
+            }
+        }
+    };
+
+    private BluetoothAdapter bluetoothAdapter;
+    private ConnectionListAdapter connectionAdapter;
+    private ListView discoveredList;
+
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setTitle("Discovered Devices");
+        setContentView(R.layout.discovered_devices_list);
+
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if(bluetoothAdapter == null)
+        {
+            System.out.println("Bluetooth Adapter is null; Device does not support Bluetooth.");
+        }
+        connectionAdapter = new ConnectionListAdapter();
+        int dummy = new Random().nextInt();
+        connectionAdapter.add(new Connection(Connection.Type.Bluetooth, "Dummy", String.valueOf(dummy > 0 ? dummy : -dummy)));
+
+        discoveredList = (ListView) findViewById(R.id.discovered_devices_list);
+        discoveredList.setAdapter(connectionAdapter);
+        discoveredList.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                /*
+                 * Return different data based on the type of connection chosen.
+                 */
+                switch(((Connection) connectionAdapter.getItem(position)).getType())
+                {
+                    case Bluetooth:
+                        Intent i = new Intent();
+                        i.putExtra(EXTRA_CONNECTION, (Parcelable) connectionAdapter.getItem(position));
+                        setResult(RESULT_OK, i);
+                        finish();
+                        break;
+
+                    case Undefined:
+                    default:
+                }
+            }
+        });
+
+        registerReceiver(btReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+        discoveredList.deferNotifyDataSetChanged();
+
+        if(!bluetoothAdapter.isEnabled())
+        {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+    protected void onStart()
+    {
+        super.onStart();
+        bluetoothAdapter.startDiscovery();
+    }
+
+    protected void onStop()
+    {
+        super.onStop();
+    }
+
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        unregisterReceiver(btReceiver);
+    }
+
+    private class ConnectionListAdapter extends BaseAdapter
+    {
+        private Vector<Connection> discoveredConnections = new Vector<Connection>();
+
+        public void add(Connection connection)
+        {
+            if(connection != null)
+            {
+                boolean flagDuplicate = false;
+                for(Connection c : discoveredConnections)
+                {
+                    if(c.equals(connection))
+                    {
+                        flagDuplicate = true;
+                        break;
+                    }
+                }
+                if(!flagDuplicate)
+                {
+                    discoveredConnections.add(connection);
+                    notifyDataSetChanged();
+                }
+            }
+        }
+
+        public int getCount()
+        {
+            if(discoveredConnections != null)
+            {
+                return discoveredConnections.size();
+            }
+            return 0;
+        }
+
+        public Object getItem(int position)
+        {
+            return discoveredConnections.get(position);
+        }
+
+        public long getItemId(int position)
+        {
+            return 0;
+        }
+
+        /**
+         * Returns a view that represents a discovered device.
+         * @param position The position of this discovered device in it's parent ListView.
+         * @param convertView The previous instance of this view, can be used to refresh view.
+         * @param parent The parent of the view to return.
+         * @return
+         */
+        public View getView(int position, View convertView, ViewGroup parent)
+        {
+            LinearLayout view;
+
+            if(convertView == null)
+            {
+                view = new LinearLayout(ConnectionDiscoveryActivity.this);
+                LayoutInflater inflater = (LayoutInflater) ConnectionDiscoveryActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                inflater.inflate(R.layout.discovered_bt_device_list_item, view, true);
+            }
+            else
+            {
+                view = (LinearLayout) convertView;
+            }
+            TextView nameTextView = (TextView) view.findViewById(R.id.discovered_bt_name);
+            TextView addressTextView = (TextView) view.findViewById(R.id.discovered_bt_address);
+
+            Connection connection = discoveredConnections.get(position);
+            if(connection.getType() == Connection.Type.Bluetooth)
+            {
+                String name = connection.getName();
+                String address = connection.getBluetoothAddress();
+
+                nameTextView.setText((name == null) ? "No name" : name);
+                addressTextView.setText(address);
+            }
+
+            return view;
+        }
+    }
+}
