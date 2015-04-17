@@ -6,4 +6,6 @@
     <string name="action_delete_device">Delete</string>
     <string name="action_temp_enable">Enable</string>
     <string name="action_temp_disable">Disable</string>
+    <string name="terminal_clear">Clear Terminal</string>
+    <string name="rename_device">Rename</string>
 </resources>

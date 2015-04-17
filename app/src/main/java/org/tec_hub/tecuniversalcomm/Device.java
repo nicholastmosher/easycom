@@ -3,6 +3,9 @@ package org.tec_hub.tecuniversalcomm;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.Connection.Connection;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -15,102 +18,89 @@ import java.util.ArrayList;
  * Each avenue of connection is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device implements Parcelable, Serializable
-{
-    public static final Parcelable.Creator<Device> CREATOR = new Parcelable.Creator<Device>()
-    {
-        public Device createFromParcel(Parcel in)
-        {
+public class Device implements Parcelable, Serializable {
+
+    public static final Parcelable.Creator<Device> CREATOR = new Parcelable.Creator<Device>() {
+        public Device createFromParcel(Parcel in) {
             return new Device(in);
         }
 
-        public Device[] newArray(int size)
-        {
+        public Device[] newArray(int size) {
             return new Device[size];
         }
     };
 
     private static final long serialVersionUID = -4431171658721312519L;
 
-    private ArrayList<Connection> connections;
-    private String name;
+    private ArrayList<Connection> mConnections;
+    private String mName;
 
     /**
      * Constructs a new Device based on information in a Connection object.
+     *
      * @param connection
      */
-    public Device(String name, Connection connection)
-    {
-        connections = new ArrayList<Connection>();
-        if(connection != null)
-        {
+    public Device(String name, Connection connection) {
+        mConnections = new ArrayList<Connection>();
+        if (connection != null) {
             connection.setParent(this);
-            connections.add(connection);
+            mConnections.add(connection);
         }
-        if(name != null)
-        {
-            this.name = name;
-        }
-        else
-        {
-            this.name = (connection.getName() != null ? connection.getName() : "Device (" + hashCode() + ")");
+        if (name != null) {
+            this.mName = name;
+        } else {
+            this.mName = (connection.getName() != null ? connection.getName() : "Device (" + hashCode() + ")");
         }
     }
 
     /**
-     * Creates a device with no connections.
-     * @param name The name of the device.
+     * Creates a device with no mConnections.
+     *
+     * @param name The mName of the device.
      */
-    public Device(String name)
-    {
+    public Device(String name) {
         this(name, null);
     }
 
-    public Device(Connection connection)
-    {
+    public Device(Connection connection) {
         this(null, connection);
     }
 
     /**
      * Constructs this device from it's parcelable representation.
+     *
      * @param in The parcelable representation of this object.
      */
-    public Device(Parcel in)
-    {
-        name = in.readString();
-        connections = new ArrayList<Connection>();
+    public Device(Parcel in) {
+        mName = in.readString();
+        mConnections = new ArrayList<Connection>();
         Connection[] temp = (Connection[]) in.readParcelableArray(Connection.class.getClassLoader());
-        for(Connection c : temp)
-        {
+        for (Connection c : temp) {
             c.setParent(this);
-            connections.add(c);
+            mConnections.add(c);
         }
     }
 
-    public void setName(String name)
-    {
-        this.name = name;
+    public void setName(String mName) {
+        this.mName = mName;
     }
 
-    public String getName()
-    {
-        return this.name;
+    public String getName() {
+        return this.mName;
     }
 
     /**
      * Returns true if this device has an associated BT interface.
+     *
      * @return
      */
-    public boolean hasBTConnection()
-    {
+    public boolean hasBTConnection() {
         /*
-         * For each remote connection in this device's connections,
-         * if one of those connections is bluetooth, return true.
+         * For each connection in this device's mConnections,
+         * if one of those mConnections is bluetooth, return true.
          */
-        for(Connection rc : connections)
-        {
-            if(rc.getType() == Connection.Type.Bluetooth)
-            {
+        for (Connection c : mConnections) {
+            if (c instanceof BluetoothConnection) {
                 return true;
             }
         }
@@ -118,55 +108,57 @@ public class Device implements Parcelable, Serializable
     }
 
     /**
-     * Returns an ArrayList of all BT connections that are associated with the
+     * Returns an ArrayList of all BT mConnections that are associated with the
      * given device.
+     * //TODO will cause problems when multiple bluetooth connections are assigned to one device
      * @return
      */
-    public ArrayList<Connection> getConnections()
-    {
-        return connections;
+    public ArrayList<Connection> getConnections() {
+        return mConnections;
     }
 
-    public int hashCode()
-    {
+    public BluetoothConnection getBluetoothConnection() {
+        if(mConnections != null) {
+            for (Connection c : mConnections) {
+                if (c instanceof BluetoothConnection) {
+                    return (BluetoothConnection) c;
+                }
+            }
+        }
+        return null;
+    }
+
+    public int hashCode() {
         int hash = 2;
-        if(connections != null)
-        {
-            for(Connection c : connections)
-            {
+        if (mConnections != null) {
+            for (Connection c : mConnections) {
                 hash += c.hashCode();
             }
         }
         return hash;
     }
 
-    public boolean equals(Object o)
-    {
-        if(this == o)
-        {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
 
-        if(!(o instanceof Device))
-        {
+        if (!(o instanceof Device)) {
             return false;
         }
 
-        if(hashCode() == o.hashCode())
-        {
+        if (hashCode() == o.hashCode()) {
             return true;
         }
         return false;
     }
 
-    public int describeContents()
-    {
+    public int describeContents() {
         return 0;
     }
 
-    public void writeToParcel(Parcel out, int flags)
-    {
-        out.writeString(name);
-        out.writeParcelableArray((Connection[]) connections.toArray(), flags);
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(mName);
+        out.writeParcelableArray((Connection[]) mConnections.toArray(), flags);
     }
 }

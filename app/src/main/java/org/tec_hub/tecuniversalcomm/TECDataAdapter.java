@@ -19,25 +19,20 @@ import java.util.Iterator;
  * The mode of data storage is through Serialization to files
  * where object data is kept.
  */
-public class TECDataAdapter
-{
+public class TECDataAdapter {
     public static final String FILE_DEVICES = "devices.ser";
     private static final Handler DEVICE_HANDLER = new Handler();
 
     private static File devicesFolder;
     private static File devicesFile;
 
-    public static void init(Context context)
-    {
+    public static void init(Context context) {
         devicesFolder = context.getFilesDir();
         devicesFile = new File(devicesFolder, FILE_DEVICES);
-        try
-        {
+        try {
             //If the file to store device data in doesn't exist, create it.
             devicesFile.createNewFile();
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -49,11 +44,10 @@ public class TECDataAdapter
      * that it will be placed in a queue to process on a separate thread, freeing up the main thread
      * to return to the main execution.
      */
-    private static class DeviceWriter implements Runnable
-    {
+    private static class DeviceWriter implements Runnable {
         private Device device;
-        public DeviceWriter(Device device)
-        {
+
+        public DeviceWriter(Device device) {
             this.device = device;
         }
 
@@ -65,22 +59,18 @@ public class TECDataAdapter
          * index of the ArrayList that will then be written back to the file.
          */
         @Override
-        public void run()
-        {
+        public void run() {
             ArrayList<Device> devices = readDevicesFromFile();
             boolean flagDuplicate = false;
-            for(Device d : devices)
-            {
-                if(device.hashCode() == d.hashCode())
-                {
+            for (Device d : devices) {
+                if (device.hashCode() == d.hashCode()) {
                     //If the hashcode is the same, then the data is identical.
                     flagDuplicate = true;
                     break;
                 }
             }
 
-            if(!flagDuplicate)
-            {
+            if (!flagDuplicate) {
                 devices.add(device);
             }
             wipeDevicesFile();
@@ -93,23 +83,19 @@ public class TECDataAdapter
      * post() in order to add it to a queue that runs on a separate thread, thus moving the heavy
      * lifting of this timing-insensitive task off of the main thread.
      */
-    public static class DeviceDeleter implements Runnable
-    {
+    public static class DeviceDeleter implements Runnable {
         private Device device;
-        public DeviceDeleter(Device device)
-        {
+
+        public DeviceDeleter(Device device) {
             this.device = device;
         }
 
         @Override
-        public void run()
-        {
+        public void run() {
             ArrayList<Device> devices = readDevicesFromFile();
-            for(Iterator<Device> i = devices.iterator(); i.hasNext(); )
-            {
+            for (Iterator<Device> i = devices.iterator(); i.hasNext(); ) {
                 Device d = i.next();
-                if(d.equals(device))
-                {
+                if (d.equals(device)) {
                     i.remove();
                 }
             }
@@ -119,36 +105,29 @@ public class TECDataAdapter
     }
 
     /**
-     *
      * @param device The new or updated device to put to persistent storage.
      */
-    public static void putDevice(Device device)
-    {
+    public static void putDevice(Device device) {
         DEVICE_HANDLER.post(new DeviceWriter(device));
     }
 
-    public static void deleteDevice(Device device)
-    {
+    public static void deleteDevice(Device device) {
         DEVICE_HANDLER.post(new DeviceDeleter(device));
     }
 
     /**
      * Writes the given ArrayList of devices to the persistent storage file.
+     *
      * @param devices The ArrayList of devices being stored.
      */
-    public static void writeDevicesToFile(ArrayList<Device> devices)
-    {
-        if(devicesFile.exists())
-        {
-            try
-            {
+    public static void writeDevicesToFile(ArrayList<Device> devices) {
+        if (devicesFile.exists()) {
+            try {
                 FileOutputStream fileOutputStream = new FileOutputStream(devicesFile);
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(devices);
                 objectOutputStream.close();
-            }
-            catch(IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -156,26 +135,20 @@ public class TECDataAdapter
 
     /**
      * Returns an ArrayList of devices retrieved from the persistent data file.
+     *
      * @return an ArrayList of devices retrieved from the persistent data file.
      */
-    public static ArrayList<Device> readDevicesFromFile()
-    {
+    public static ArrayList<Device> readDevicesFromFile() {
         ArrayList<Device> fileDevices = new ArrayList<Device>();
-        if(devicesFile.exists())
-        {
-            try
-            {
+        if (devicesFile.exists()) {
+            try {
                 FileInputStream fileInputStream = new FileInputStream(devicesFile);
                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
                 fileDevices = (ArrayList<Device>) objectInputStream.readObject();
                 objectInputStream.close();
-            }
-            catch(IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
-            }
-            catch(ClassNotFoundException e)
-            {
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -185,14 +158,10 @@ public class TECDataAdapter
     /**
      * Wipes all data from the persistent data file.
      */
-    private static void wipeDevicesFile()
-    {
-        try
-        {
+    public static void wipeDevicesFile() {
+        try {
             new PrintWriter(devicesFile).close();
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

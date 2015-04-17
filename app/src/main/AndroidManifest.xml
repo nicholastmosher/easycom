@@ -24,6 +24,12 @@
             android:label="Discover New Devices" >
 
         </activity>
+        <activity
+            android:name=".ConnectionTerminalActivity"
+            android:label="Send Data Over Connections"
+            android:parentActivityName=".TECActivity">
+
+        </activity>
     </application>
 
 </manifest>
