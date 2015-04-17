@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,6 +13,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.Connection.Connection;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +34,7 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
     private TextView mTerminalWindow;
     private EditText mTerminalInput;
     private Button mTerminalSend;
+    private MenuItem mConnectedIndicator;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +43,8 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
         Bundle extras = getIntent().getExtras();
         mConnection = extras.getParcelable(CONNECTION_DATA);
 
-        getSupportActionBar().setTitle(mConnection.getName() + " - " + mConnection.getAddress());
+        getSupportActionBar().setTitle(mConnection.getName());
+        getSupportActionBar().setSubtitle(mConnection.getAddress());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mTerminalScroll = (ScrollView) findViewById(R.id.terminal_scrollview);
@@ -62,7 +66,26 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
         });
 
         mConnection.connect();
-        new ReceiveInputTask().execute("");
+
+        //Set a listener to accordingly change the status of the connection indicator
+        mConnection.setOnConnectStatusChangedListener(this, new Connection.OnConnectStatusChangedListener() {
+            @Override
+            public void onConnect() {
+                if(mConnectedIndicator != null) {
+                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
+                }
+
+                //Start input listening task when we connect
+                new ReceiveInputTask().execute();
+            }
+
+            @Override
+            public void onDisconnect() {
+                if(mConnectedIndicator != null) {
+                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                }
+            }
+        });
     }
 
     @Override
@@ -73,6 +96,11 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
 
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_connection_terminal, menu);
+
+        //Isolate the connected indicator and set it to a member variable for dynamic icon
+        mConnectedIndicator = menu.findItem(R.id.connected_indicator);
+        mConnectedIndicator.setIcon(getResources().getDrawable(
+                (mConnection.isConnected() ? R.drawable.ic_connected : R.drawable.ic_disconnected)));
         return true;
     }
 
@@ -80,8 +108,18 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         if(id == R.id.terminal_button_clear) {
+
+            //Erase all text in the terminal window
             clearTerminal();
             return true;
+        } else if(id == R.id.connected_indicator) {
+
+            //Toggle between connected and disconnected
+            if(mConnection.isConnected()) {
+                mConnection.disconnect();
+            } else {
+                mConnection.connect();
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -124,10 +162,10 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
         mTerminalWindow.setText("");
     }
 
-    private class ReceiveInputTask extends AsyncTask<String, String, String> {
+    private class ReceiveInputTask extends AsyncTask<Void, String, Void> {
 
         @Override
-        protected String doInBackground(String... params) {
+        protected Void doInBackground(Void... params) {
             while(mConnection.isConnected()) {
                 byte[] buffer = new byte[256];
                 int bytes = 0;
@@ -136,7 +174,6 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
                     bytes = input.read(buffer);
                 } catch(IOException e) {
                     e.printStackTrace();
-                    return null;
                 }
                 String message = new String(buffer, 0, bytes);
                 System.out.println(message);

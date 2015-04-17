@@ -3,6 +3,7 @@ package org.tec_hub.tecuniversalcomm.Connection;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -10,6 +11,8 @@ import android.os.Parcelable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -35,8 +38,6 @@ public class BluetoothConnection extends Connection implements Parcelable {
     private BluetoothSocket mBluetoothSocket;
     private OutputStream mOutputStream;
     private InputStream mInputStream;
-
-    private boolean mConnected;
 
     public BluetoothConnection(String name, String address) {
         super(name);
@@ -71,38 +72,22 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     public void connect() {
-        new BluetoothConnectTask().execute("");
+        if(!mConnected) {
+            new BluetoothConnectTask().execute();
+        }
     }
 
     public void disconnect() {
-        if(mBluetoothSocket != null) {
-            try {
-                mBluetoothSocket.close();
-                mConnected = false;
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if(mOutputStream != null) {
-            try {
-                mOutputStream.close();
-                mConnected = false;
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if(mInputStream != null) {
-            try {
-                mInputStream.close();
-                mConnected = false;
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
+        if(mConnected) {
+            new BluetoothDisconnectTask().execute();
         }
     }
 
+    /**
+     * Retrieves the Output Stream if this Connection is connected and
+     * the Output Stream is not null.
+     * @return The OutputStream to the remote bluetooth device.
+     */
     public OutputStream getOutputStream() {
         if(mConnected && mOutputStream != null) {
             return mOutputStream;
@@ -110,6 +95,11 @@ public class BluetoothConnection extends Connection implements Parcelable {
         return null;
     }
 
+    /**
+     * Retrieves the Input Stream if this Connection is connected and
+     * the Input Stream is not null.
+     * @return The InputStream from the remote bluetooth device.
+     */
     public InputStream getInputStream() {
         if(mConnected && mInputStream != null) {
             return mInputStream;
@@ -117,9 +107,40 @@ public class BluetoothConnection extends Connection implements Parcelable {
         return null;
     }
 
-    private class BluetoothConnectTask extends AsyncTask<String, Void, Boolean> {
+    /**
+     * Adds a new OnConnectStatusChangedListener to the map.  The Context
+     * is used as the map key so that more than one activity may set
+     * callbacks but no activity may have duplicate listeners.
+     * @param context The context of the listener.
+     * @param listener The OnConnectStatusChangedListener to associate with the context.
+     */
+    public void setOnConnectStatusChangedListener(Context context, OnConnectStatusChangedListener listener) {
+        mOnConnectStatusChangedListeners.put(context, listener);
+    }
 
-        protected Boolean doInBackground(String... params) {
+    /**
+     * Loops through all registered OnConnectStatusChangedListeners and notifies them of connection.
+     */
+    protected void notifyConnected() {
+        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
+        for(Context c : listenerKeys) {
+            mOnConnectStatusChangedListeners.get(c).onConnect();
+        }
+    }
+
+    /**
+     * Loops through all registered OnConnectStatusChangedListeners and notifies them of disconnection.
+     */
+    protected void notifyDisconnected() {
+        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
+        for(Context c : listenerKeys) {
+            mOnConnectStatusChangedListeners.get(c).onDisconnect();
+        }
+    }
+
+    private class BluetoothConnectTask extends AsyncTask<Void, Void, Boolean> {
+
+        protected Boolean doInBackground(Void... params) {
             //Check if BT is enabled
             if (!mBluetoothAdapter.isEnabled()) {
                 System.out.println("Bluetooth not enabled!"); //TODO better handling.
@@ -182,6 +203,56 @@ public class BluetoothConnection extends Connection implements Parcelable {
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
             mConnected = true;
+            if(mOnConnectStatusChangedListeners != null) {
+                notifyConnected();
+            }
+        }
+    }
+
+    private class BluetoothDisconnectTask extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            mConnected = false;
+            boolean success = true;
+            if(mConnected && mBluetoothSocket != null) {
+                try {
+                    mBluetoothSocket.close();
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    success = false;
+                }
+            }
+
+            if(mOutputStream != null) {
+                try {
+                    mOutputStream.close();
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    success = false;
+                }
+            }
+
+            if(mInputStream != null) {
+                try {
+                    mInputStream.close();
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    success = false;
+                }
+            }
+            return success;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            super.onPostExecute(success);
+            if(success) {
+                if(mOnConnectStatusChangedListeners != null) {
+                    notifyDisconnected();
+                }
+            }
         }
     }
 }
