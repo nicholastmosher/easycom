@@ -28,6 +28,7 @@ import org.tec_hub.tecuniversalcomm.Connection.Connection;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class TECActivity extends ActionBarActivity {
 
@@ -118,7 +119,7 @@ public class TECActivity extends ActionBarActivity {
                     //TODO put option to put connection in existing devices
                     ArrayList<Connection> connections = new ArrayList<>();
                     connections.add(connection);
-                    Device device = new Device("Dummy", connections);
+                    Device device = Device.build("Dummy", connections);
                     mDeviceAdapter.put(device);
                 }
                 break;
@@ -138,7 +139,7 @@ public class TECActivity extends ActionBarActivity {
          * This is held in memory and is readily accessible so that system calls
          * requesting View updates can be satisfied quickly.
          */
-        private ArrayList<Device> mDeviceEntries;
+        private List<Device> mDeviceEntries;
         private Context mContext;
 
         public DeviceListAdapter(Context context) {

@@ -11,6 +11,7 @@ import org.tec_hub.tecuniversalcomm.Connection.Connection;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -38,29 +39,48 @@ public class Device implements Parcelable, Serializable {
 
     private String mName;
     private final UUID mUUID;
-    private ArrayList<Connection> mConnections;
+    private List<Connection> mConnections;
 
-    public Device(String name, ArrayList<Connection> connections, UUID uuid) {
+    private Device(String name, List<Connection> connections, UUID uuid) {
         mName = Preconditions.checkNotNull(name);
         mConnections = Preconditions.checkNotNull(connections);
         mUUID = Preconditions.checkNotNull(uuid);
     }
 
-    public Device(String name, ArrayList<Connection> connections, String uuid) {
-        this(name, connections, UUID.fromString(uuid));
+    public static Device build(String name, List<Connection> connections, UUID uuid) {
+        return new Device(name, connections, uuid);
     }
 
-    public Device(String name, ArrayList<Connection> connections) {
-        this(name, connections, UUID.randomUUID());
+    public static Device build(String name, List<Connection> connections, String uuid) {
+        Preconditions.checkNotNull(uuid);
+        return new Device(name, connections, UUID.fromString(uuid));
     }
 
-    /**
-     * Creates a device with no mConnections.
-     *
-     * @param name The mName of the device.
-     */
-    public Device(String name) {
-        this(name, null);
+    public static Device build(String name, Connection connection, UUID uuid) {
+        Preconditions.checkNotNull(connection);
+        List<Connection> connections = new ArrayList<>();
+        connections.add(connection);
+        return new Device(name, connections, uuid);
+    }
+
+    public static Device build(String name, Connection connection, String uuid) {
+        Preconditions.checkNotNull(uuid);
+        return build(name, connection, UUID.fromString(uuid));
+    }
+
+    public static Device build(String name, List<Connection> connections) {
+        return new Device(name, connections, UUID.randomUUID());
+    }
+
+    public static Device build(String name, Connection connection) {
+        Preconditions.checkNotNull(connection);
+        List<Connection> connections = new ArrayList<>();
+        connections.add(connection);
+        return build(name, connections);
+    }
+
+    public static Device build(String name) {
+        return build(name, new ArrayList<Connection>());
     }
 
     /**
@@ -99,7 +119,7 @@ public class Device implements Parcelable, Serializable {
         return mUUID;
     }
 
-    public ArrayList<Connection> getConnections() {
+    public List<Connection> getConnections() {
         return mConnections;
     }
 
