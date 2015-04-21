@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.common.base.Preconditions;
+
 import org.tec_hub.tecuniversalcomm.Device;
 
 import java.io.InputStream;
@@ -21,8 +23,8 @@ public abstract class Connection implements Parcelable, Serializable {
 
     private final String mConnectionName;
 
-    //Not final because parent assignment happens after construction.
-    protected Device mParent = null;
+    //Transient to prevent infinite loops during JSON serialization.
+    protected transient Device mParent = null;
 
     protected boolean mConnected;
 
@@ -35,13 +37,19 @@ public abstract class Connection implements Parcelable, Serializable {
      * @param name The name of the connection.
      */
     public Connection(String name) {
-        mConnectionName = name;
-        mOnConnectStatusChangedListeners = new HashMap<Context, OnConnectStatusChangedListener>();
+        mConnectionName = Preconditions.checkNotNull(name);
+        mOnConnectStatusChangedListeners = new HashMap<>();
     }
 
     public Connection(Parcel in) {
+        Preconditions.checkNotNull(in);
         mConnectionName = in.readString();
         mOnConnectStatusChangedListeners = (HashMap<Context, OnConnectStatusChangedListener>) in.readSerializable();
+    }
+
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(mConnectionName);
+        out.writeSerializable((Serializable) mOnConnectStatusChangedListeners);
     }
 
     /**
@@ -68,11 +76,6 @@ public abstract class Connection implements Parcelable, Serializable {
 
     public int describeContents() {
         return 0;
-    }
-
-    public void writeToParcel(Parcel out, int flags) {
-        out.writeString(mConnectionName);
-        out.writeSerializable((Serializable) mOnConnectStatusChangedListeners);
     }
 
     public abstract boolean isConnected();

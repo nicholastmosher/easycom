@@ -8,10 +8,11 @@ import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.common.base.Preconditions;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -40,15 +41,15 @@ public class BluetoothConnection extends Connection implements Parcelable {
     private InputStream mInputStream;
 
     public BluetoothConnection(String name, String address) {
-        super(name);
-        mBluetoothAddress = address;
+        super(Preconditions.checkNotNull(name));
+        mBluetoothAddress = Preconditions.checkNotNull(address);
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mConnected = false;
     }
 
     public BluetoothConnection(Parcel in) {
-        super(in);
-        mBluetoothAddress = in.readString();
+        super(Preconditions.checkNotNull(in));
+        mBluetoothAddress = Preconditions.checkNotNull(in.readString());
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         //Android framework is lacking here (no readBoolean()), have to do array workaround.
@@ -210,10 +211,8 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     private class BluetoothDisconnectTask extends AsyncTask<Void, Void, Boolean> {
-
         @Override
         protected Boolean doInBackground(Void... params) {
-
             mConnected = false;
             boolean success = true;
             if(mConnected && mBluetoothSocket != null) {
@@ -224,7 +223,6 @@ public class BluetoothConnection extends Connection implements Parcelable {
                     success = false;
                 }
             }
-
             if(mOutputStream != null) {
                 try {
                     mOutputStream.close();
@@ -233,7 +231,6 @@ public class BluetoothConnection extends Connection implements Parcelable {
                     success = false;
                 }
             }
-
             if(mInputStream != null) {
                 try {
                     mInputStream.close();

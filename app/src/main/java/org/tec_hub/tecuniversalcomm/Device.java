@@ -3,11 +3,15 @@ package org.tec_hub.tecuniversalcomm;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.common.base.Preconditions;
+
 import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.Connection.Connection;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
@@ -32,25 +36,22 @@ public class Device implements Parcelable, Serializable {
 
     private static final long serialVersionUID = -4431171658721312519L;
 
-    private ArrayList<Connection> mConnections;
     private String mName;
+    private final UUID mUUID;
+    private ArrayList<Connection> mConnections;
 
-    /**
-     * Constructs a new Device based on information in a Connection object.
-     *
-     * @param connection
-     */
-    public Device(String name, Connection connection) {
-        mConnections = new ArrayList<Connection>();
-        if (connection != null) {
-            connection.setParent(this);
-            mConnections.add(connection);
-        }
-        if (name != null) {
-            this.mName = name;
-        } else {
-            this.mName = (connection.getName() != null ? connection.getName() : "Device (" + hashCode() + ")");
-        }
+    public Device(String name, ArrayList<Connection> connections, UUID uuid) {
+        mName = Preconditions.checkNotNull(name);
+        mConnections = Preconditions.checkNotNull(connections);
+        mUUID = Preconditions.checkNotNull(uuid);
+    }
+
+    public Device(String name, ArrayList<Connection> connections, String uuid) {
+        this(name, connections, UUID.fromString(uuid));
+    }
+
+    public Device(String name, ArrayList<Connection> connections) {
+        this(name, connections, UUID.randomUUID());
     }
 
     /**
@@ -62,23 +63,28 @@ public class Device implements Parcelable, Serializable {
         this(name, null);
     }
 
-    public Device(Connection connection) {
-        this(null, connection);
-    }
-
     /**
      * Constructs this device from it's parcelable representation.
      *
      * @param in The parcelable representation of this object.
      */
     public Device(Parcel in) {
-        mName = in.readString();
-        mConnections = new ArrayList<Connection>();
-        Connection[] temp = (Connection[]) in.readParcelableArray(Connection.class.getClassLoader());
-        for (Connection c : temp) {
+        mName = Preconditions.checkNotNull(in.readString());
+        mConnections = Preconditions.checkNotNull(
+                new ArrayList<>(
+                Arrays.asList((Connection[]) in.readParcelableArray(
+                Connection.class.getClassLoader()))));
+        for (Connection c : mConnections) {
             c.setParent(this);
-            mConnections.add(c);
         }
+        String uuidString = Preconditions.checkNotNull(in.readString());
+        mUUID = UUID.fromString(uuidString);
+    }
+
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeString(mName);
+        out.writeParcelableArray((Connection[]) mConnections.toArray(), flags);
+        out.writeString(mUUID.toString());
     }
 
     public void setName(String mName) {
@@ -89,34 +95,20 @@ public class Device implements Parcelable, Serializable {
         return this.mName;
     }
 
-    /**
-     * Returns true if this device has an associated BT interface.
-     *
-     * @return
-     */
-    public boolean hasBTConnection() {
-        /*
-         * For each connection in this device's mConnections,
-         * if one of those mConnections is bluetooth, return true.
-         */
-        for (Connection c : mConnections) {
-            if (c instanceof BluetoothConnection) {
-                return true;
-            }
-        }
-        return false;
+    public UUID getUUID() {
+        return mUUID;
+    }
+
+    public ArrayList<Connection> getConnections() {
+        return mConnections;
     }
 
     /**
      * Returns an ArrayList of all BT mConnections that are associated with the
      * given device.
-     * //TODO will cause problems when multiple bluetooth connections are assigned to one device
+     * //FIXME will cause problems when multiple bluetooth connections are assigned to one device
      * @return
      */
-    public ArrayList<Connection> getConnections() {
-        return mConnections;
-    }
-
     public BluetoothConnection getBluetoothConnection() {
         if(mConnections != null) {
             for (Connection c : mConnections) {
@@ -153,12 +145,11 @@ public class Device implements Parcelable, Serializable {
         return false;
     }
 
-    public int describeContents() {
-        return 0;
+    public boolean isVersionOf(Device d) {
+        return d.getUUID().equals(this.getUUID());
     }
 
-    public void writeToParcel(Parcel out, int flags) {
-        out.writeString(mName);
-        out.writeParcelableArray((Connection[]) mConnections.toArray(), flags);
+    public int describeContents() {
+        return 0;
     }
 }
