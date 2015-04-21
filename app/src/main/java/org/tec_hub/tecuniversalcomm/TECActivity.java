@@ -22,6 +22,8 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.common.base.Preconditions;
+
 import org.tec_hub.tecuniversalcomm.Connection.Connection;
 
 import java.util.ArrayList;
@@ -89,6 +91,9 @@ public class TECActivity extends ActionBarActivity {
             TECDataAdapter.wipeDevicesFile();
             mDeviceAdapter.populateFromStorage();
             return true;
+        } else if(id == R.id.action_refresh_devices) {
+            mDeviceAdapter.populateFromStorage();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -111,7 +116,9 @@ public class TECActivity extends ActionBarActivity {
                 if (resultCode == RESULT_OK) {
                     Connection connection = data.getParcelableExtra(ConnectionDiscoveryActivity.EXTRA_CONNECTION);
                     //TODO put option to put connection in existing devices
-                    Device device = new Device(connection);
+                    ArrayList<Connection> connections = new ArrayList<>();
+                    connections.add(connection);
+                    Device device = new Device("Dummy", connections);
                     mDeviceAdapter.put(device);
                 }
                 break;
@@ -136,7 +143,7 @@ public class TECActivity extends ActionBarActivity {
 
         public DeviceListAdapter(Context context) {
             this.mContext = context;
-            this.mDeviceEntries = new ArrayList<Device>();
+            this.mDeviceEntries = new ArrayList<>();
             populateFromStorage();
         }
 
@@ -186,11 +193,8 @@ public class TECActivity extends ActionBarActivity {
          * array responsible for displaying the entries in the listView.
          */
         public void populateFromStorage() {
-            ArrayList<Device> tempFileDevices = TECDataAdapter.readDevicesFromFile();
-            if (tempFileDevices != null) {
-                mDeviceEntries = tempFileDevices;
-                notifyDataSetChanged();
-            }
+            mDeviceEntries = Preconditions.checkNotNull(TECDataAdapter.readDevicesFromFile());
+            notifyDataSetChanged();
         }
 
         public int getCount() {
@@ -209,7 +213,7 @@ public class TECActivity extends ActionBarActivity {
         }
 
         public View getView(final int position, View convertView, ViewGroup parent) {
-            LinearLayout view = null;
+            LinearLayout view;
 
             if (convertView == null) //Regenerate the view
             {
@@ -250,7 +254,7 @@ public class TECActivity extends ActionBarActivity {
                     public void onClick(View v) {
 
                         Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
-                        intent.putExtra(ConnectionTerminalActivity.CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
+                        intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
                         startActivity(intent);
                     }
                 });

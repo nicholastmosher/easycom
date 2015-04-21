@@ -2,6 +2,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".TECActivity">
 
+    <item
+        android:id="@+id/action_refresh_devices"
+        android:icon="@drawable/ic_action_refresh"
+        android:title="Refresh Devices"
+        app:showAsAction="always" />
+
     <item android:id="@+id/action_delete_all_devices"
         android:icon="@drawable/ic_action_discard"
         android:title="Delete Devices"

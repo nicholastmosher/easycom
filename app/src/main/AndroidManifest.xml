@@ -30,6 +30,9 @@
             android:parentActivityName=".TECActivity">
 
         </activity>
+        <service
+            android:name=".Connection.BluetoothConnectionService"
+            android:label="Manage Bluetooth Connections" >
+        </service>
     </application>
-
 </manifest>
