@@ -8,8 +8,8 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
@@ -22,11 +22,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Nick Mosher on 3/2/2015.
@@ -42,6 +43,9 @@ public class TECDataAdapter {
     private static HandlerThread mHandlerThread;
     private static Handler mHandler;
     private static GsonBuilder mGsonBuilder;
+    private static Type mDeviceListType;
+    private static Type mConnectionListType;
+    private static Gson mGson;
 
     static {
         mHandlerThread = new HandlerThread("TECDataAdapter Handler Thread");
@@ -49,13 +53,16 @@ public class TECDataAdapter {
         mHandler = new Handler(mHandlerThread.getLooper());
 
         mGsonBuilder = new GsonBuilder();
-        mGsonBuilder.registerTypeAdapter(new ArrayList<Device>().getClass(), new DeviceListTypeAdapter());
+        mDeviceListType = new TypeToken<List<Device>>(){}.getType();
+        mConnectionListType = new TypeToken<List<Connection>>(){}.getType();
+
+        mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());
+        mGson = mGsonBuilder.create();
     }
 
     public static void init(Context context) {
         mDevicesFolder = context.getFilesDir();
         mDevicesFile = new File(mDevicesFolder, FILE_DEVICES);
-        wipeDevicesFile();
         try {
             //If the file to store device data in doesn't exist, create it.
             mDevicesFile.createNewFile();
@@ -69,7 +76,7 @@ public class TECDataAdapter {
      * @param device The new or updated device to put to persistent storage.
      */
     public static void putDevice(Device device) {
-        mHandler.post(new DeviceWriteTask(device));
+        mHandler.post(new AddDeviceTask(device));
     }
 
     /**
@@ -77,17 +84,31 @@ public class TECDataAdapter {
      * @param device The device object to find and remove from persistent storage.
      */
     public static void deleteDevice(Device device) {
-        mHandler.post(new DeviceRemoveTask(device));
+        mHandler.post(new RemoveDeviceTask(device));
+    }
+
+    /**
+     * Puts the specified list of devices as the sole object in persistent storage.
+     * @param devices The list of devices to write to disk.
+     */
+    public static void setDevices(List<Device> devices) {
+        mHandler.post(new SetDevicesTask(devices));
+    }
+
+    public static List<Device> getDevices() {
+        return readDevicesFromFile();
     }
 
     /**
      * Writes the given List of devices to the persistent storage file.
+     * This overwrites the existing storage.
      * @param devices The List of devices being stored.
      */
-    public static void writeDevicesToFile(List<Device> devices) {
+    private static void writeDevicesToFile(List<Device> devices) {
         Preconditions.checkNotNull(devices);
+        wipeDevicesFile();
         if(mDevicesFile.exists()) {
-            String json = mGsonBuilder.create().toJson(devices);
+            String json = mGson.toJson(devices);
             System.out.println("Wrote: " + json);
             try {
                 FileOutputStream fileOutputStream = new FileOutputStream(mDevicesFile, true);
@@ -103,7 +124,7 @@ public class TECDataAdapter {
      * Returns a List of devices retrieved from the persistent data file.
      * @return a List of devices retrieved from the persistent data file.
      */
-    public static List<Device> readDevicesFromFile() {
+    private static List<Device> readDevicesFromFile() {
         List<Device> devices = new ArrayList<>();
         try {
             //Reads a file line-by-line
@@ -125,7 +146,7 @@ public class TECDataAdapter {
                 return devices;
             }
 
-            List<Device> temp = mGsonBuilder.create().fromJson(jsonFile, new ArrayList<Device>().getClass());
+            List<Device> temp = mGson.fromJson(jsonFile, mDeviceListType);
             Preconditions.checkNotNull(temp);
             devices = temp;
         } catch(IOException ioe) {
@@ -152,10 +173,10 @@ public class TECDataAdapter {
      * which runs on a separate thread so that this heavy lifting doesn't
      * interfere with the main UI thread.
      */
-    private static class DeviceWriteTask implements Runnable {
+    private static class AddDeviceTask implements Runnable {
         private Device mDevice;
 
-        public DeviceWriteTask(Device device) {
+        public AddDeviceTask(Device device) {
             mDevice = Preconditions.checkNotNull(device);
         }
 
@@ -168,10 +189,8 @@ public class TECDataAdapter {
          */
         @Override
         public void run() {
-            Calendar calendar = Calendar.getInstance();
-            System.out.println("Begin Device Write at: " + calendar.get(Calendar.SECOND) + calendar.get(Calendar.MILLISECOND));
             List<Device> fileDevices = readDevicesFromFile();
-            boolean flagNeedToAdd = true;
+            boolean flagUpdateExisting = false;
             for (Device fileDevice : fileDevices) {
                 /*
                  * If the device from the parameter is a version of the existing
@@ -182,18 +201,29 @@ public class TECDataAdapter {
                     int index = fileDevices.indexOf(fileDevice);
                     if (index != -1) {
                         fileDevices.set(index, mDevice);
-                        flagNeedToAdd = false;
+                        flagUpdateExisting = true;
+                        break;
                     } else {
-                        throw new IllegalStateException("Cannot find device index!");
+                        throw new IllegalStateException("[TECDataAdapter.AddDeviceTask.run] Cannot find device index!");
                     }
                 }
             }
-            if (flagNeedToAdd) {
+            if (!flagUpdateExisting) {
                 fileDevices.add(mDevice);
             }
-            wipeDevicesFile();
             writeDevicesToFile(fileDevices);
-            System.out.println("End Device Write at: " + calendar.get(Calendar.SECOND) + calendar.get(Calendar.MILLISECOND));
+        }
+    }
+
+    private static class SetDevicesTask implements Runnable {
+        private List<Device> mDevices;
+        public SetDevicesTask(List<Device> devices) {
+            mDevices = devices;
+        }
+
+        @Override
+        public void run() {
+            writeDevicesToFile(mDevices);
         }
     }
 
@@ -202,9 +232,9 @@ public class TECDataAdapter {
      * which runs on a separate thread so that this heavy lifting doesn't
      * interfere with the main UI thread.
      */
-    private static class DeviceRemoveTask implements Runnable {
+    private static class RemoveDeviceTask implements Runnable {
         private Device mDevice;
-        public DeviceRemoveTask(Device device) {
+        public RemoveDeviceTask(Device device) {
             mDevice = Preconditions.checkNotNull(device);
         }
 
@@ -219,90 +249,8 @@ public class TECDataAdapter {
                         iterator.remove();
                     }
                 }
-                wipeDevicesFile();
                 writeDevicesToFile(fileDevices);
             }
-        }
-    }
-
-    /**
-     * Special class implementing GSON TypeAdapter.  This is used to tell
-     * GSON exactly how to serialize and deserialize any and all "Device"
-     * objects it encounters.  This adapter directly calls the
-     * ConnectionListTypeAdapter in order to handle the serialization and
-     * deserialization of the Connection lists.
-     */
-    private static final class DeviceListTypeAdapter extends TypeAdapter<List<Device>> {
-
-        /**
-         * Name key for device names.
-         */
-        public static final String DEVICE_NAME = "mName";
-
-        /**
-         * Name key for device UUIDs.
-         */
-        public static final String DEVICE_UUID = "mUUID";
-
-        public static final String DEVICE_CONNECTIONS = "mConnections";
-
-        @Override
-        public void write(JsonWriter writer, List<Device> devices) throws IOException {
-            //Begin array of devices
-            writer.beginArray();
-            for(Device device : devices) {
-                Preconditions.checkNotNull(device);
-
-                //Begin writing device object
-                writer.beginObject();
-                writer.name(DEVICE_NAME).value(device.getName()); //Write device name
-                writer.name(DEVICE_UUID).value(device.getUUID().toString()); //Write device UUID
-
-                //Begin writing connections array.
-                writer.name(DEVICE_CONNECTIONS);
-                //Directly call the ConnectionListTypeAdapter as a nested writer.
-                new ConnectionListTypeAdapter().write(writer, device.getConnections());
-
-                //End writing this object.
-                writer.endObject();
-            }
-            //End array of devices.
-            writer.endArray();
-        }
-
-        @Override
-        public List<Device> read(JsonReader reader) throws IOException {
-            List<Device> devices = new ArrayList<>();
-
-            //Begin reading devices array.
-            reader.beginArray();
-            while(reader.hasNext()) {
-                //Create local variables as a cache for the Device.
-                String deviceName = null;
-                String deviceUUID = null;
-                List<Connection> deviceConnections = new ArrayList<>();
-
-                //Begin reading a new Device object.
-                reader.beginObject();
-                while(reader.hasNext()) {
-                    String name = reader.nextName();
-                    if (name.equals(DEVICE_NAME)) { //Read device name
-                        deviceName = reader.nextString();
-                    } else if (name.equals(DEVICE_UUID)) { //Read device UUID
-                        deviceUUID = reader.nextString();
-                    } else if (name.equals(DEVICE_CONNECTIONS) && reader.peek() != JsonToken.NULL) { //Read connections array
-                        //Directly call the ConnectionListTypeAdapter as a nested reader.
-                        deviceConnections = new ConnectionListTypeAdapter().read(reader);
-                    }
-                }
-                //End reading this device.
-                reader.endObject();
-                //Add parsed device to the List.
-                devices.add(Device.build(deviceName, deviceConnections, deviceUUID));
-            }
-            reader.endArray(); //End reading device array.
-            Preconditions.checkNotNull(devices);
-            return devices;
         }
     }
 
@@ -317,20 +265,26 @@ public class TECDataAdapter {
          */
         public static final String CONNECTION_NAME = "mName";
 
+        public static final String CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS = "mOnStatusChangedListeners";
+
         /**
          * Key of Connection Implementation.
          */
         public static final String CONNECTION_IMPL = "mImpl";
 
+        //Implementations of Connection
         /**
          * Implementation key of Bluetooth Connections.
          */
         public static final String IMPL_BLUETOOTH = "BluetoothConnection";
 
+        //BluetoothConnection specific data
         /**
          * Key to store BluetoothConnection address.
          */
         public static final String BLUETOOTH_ADDRESS = "BluetoothAddress";
+
+        private Type mOnConnectStatusChangedListenersMapType = new TypeToken<Map<Context, Connection.OnConnectStatusChangedListener>>(){}.getType();
 
         @Override
         public void write(JsonWriter writer, List<Connection> connections) throws IOException {
@@ -342,6 +296,10 @@ public class TECDataAdapter {
                 //Begin this Connection
                 writer.beginObject();
                 writer.name(CONNECTION_NAME).value(connection.getName()); //Write connection name
+
+                //Give back to Gson for writing map
+                writer.name(CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS);
+                mGson.toJson(connection.getOnConnectStatusChangedListeners(), mOnConnectStatusChangedListenersMapType, writer);
 
                 //Write all properties specific to BluetoothConnections.
                 if(connection instanceof BluetoothConnection) {
@@ -365,6 +323,7 @@ public class TECDataAdapter {
             while(reader.hasNext()) {
                 //Create local variables as a cache to build a Connection
                 String connectionName = null;
+                Map<Context, Connection.OnConnectStatusChangedListener> onConnectStatusChangedListenerMap = null;
                 String connectionImpl = null;
                 String bluetoothConnectionAddress = null;
 
@@ -374,6 +333,8 @@ public class TECDataAdapter {
                     String name = reader.nextName();
                     if(name.equals(CONNECTION_NAME)) { //Read Connection name
                         connectionName = reader.nextString();
+                    } else if(name.equals(CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS)) { //Read listeners map
+                        onConnectStatusChangedListenerMap = mGson.fromJson(reader, mOnConnectStatusChangedListenersMapType);
                     } else if(name.equals(CONNECTION_IMPL)) { //Read Connection implementation
                         connectionImpl = reader.nextString();
                     } else if(name.equals(BLUETOOTH_ADDRESS)) { //Read BluetoothConnection address
@@ -386,9 +347,12 @@ public class TECDataAdapter {
                 //Parse Connection data into object
                 Preconditions.checkNotNull(connectionName);
                 Preconditions.checkNotNull(connectionImpl);
+                Preconditions.checkNotNull(onConnectStatusChangedListenerMap);
                 if(connectionImpl.equals(IMPL_BLUETOOTH)) { //If this Connection is a BluetoothConnection
                     Preconditions.checkNotNull(bluetoothConnectionAddress);
-                    connections.add(new BluetoothConnection(connectionName, bluetoothConnectionAddress));
+                    BluetoothConnection bluetoothConnection = new BluetoothConnection(connectionName, bluetoothConnectionAddress);
+                    bluetoothConnection.setOnConnectStatusChangedListeners(onConnectStatusChangedListenerMap);
+                    connections.add(bluetoothConnection);
                 }
             }
             //End array of Connections

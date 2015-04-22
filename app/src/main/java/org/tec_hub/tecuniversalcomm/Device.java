@@ -47,6 +47,16 @@ public class Device implements Parcelable, Serializable {
         mUUID = Preconditions.checkNotNull(uuid);
     }
 
+    /**
+     * No-argument constructor made private so that Gson can correctly
+     * build this object and then populate the members with Json data.
+     */
+    protected Device() {
+        mName = null;
+        mUUID = UUID.randomUUID();
+        mConnections = new ArrayList<>();
+    }
+
     public static Device build(String name, List<Connection> connections, UUID uuid) {
         return new Device(name, connections, uuid);
     }

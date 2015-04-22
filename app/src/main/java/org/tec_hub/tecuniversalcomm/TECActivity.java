@@ -134,6 +134,9 @@ public class TECActivity extends ActionBarActivity {
      * list item for placement in the list.
      */
     private class DeviceListAdapter extends BaseAdapter {
+
+        private boolean mForceRedraw = false;
+
         /**
          * Dynamic array that keeps track of all devices currently being managed.
          * This is held in memory and is readily accessible so that system calls
@@ -150,43 +153,47 @@ public class TECActivity extends ActionBarActivity {
 
         /**
          * Inserts the given device into storage and notifies the mDeviceListView of a data update.
-         *
-         * @param device The device to add to memory.
+         * @param newDevice The device to add to memory.
          */
-        public void put(Device device) {
-            if (device != null) {
-                boolean flagDuplicate = false;
-                for (Device d : mDeviceEntries) {
-                    if (device.hashCode() == d.hashCode()) {
-                        flagDuplicate = true;
+        public void put(Device newDevice) {
+            Preconditions.checkNotNull(newDevice);
+            boolean flagUpdatedExisting = false;
+            for (Device device : mDeviceEntries) {
+                if (newDevice.isVersionOf(device)) {
+                    int index = mDeviceEntries.indexOf(device);
+                    if(index != -1) {
+                        mDeviceEntries.set(index, newDevice);
+                        flagUpdatedExisting = true;
                         break;
+                    } else {
+                        throw new IllegalStateException("[TECActivity.DeviceListAdapter.put] Cannot find device index!");
                     }
                 }
-                if (!flagDuplicate) {
-                    mDeviceEntries.add(device);
-                    notifyDataSetChanged();
-                    TECDataAdapter.putDevice(device);
-                }
             }
+            //If an existing device was not updated, then this is a new device, add it to the list
+            if (!flagUpdatedExisting) {
+                mDeviceEntries.add(newDevice);
+            }
+            TECDataAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
          * If the given device exists in storage, delete it and remove it from the mDeviceListView.
-         *
          * @param device
          */
         public void delete(Device device) {
-            if (device != null) {
-                //Remove device from mDeviceEntries
-                for (Iterator<Device> i = mDeviceEntries.iterator(); i.hasNext(); ) {
-                    Device d = i.next();
-                    if (device.equals(d)) {
-                        i.remove(); //Removes currently indexed item
-                        notifyDataSetChanged();
-                        TECDataAdapter.deleteDevice(device);
-                    }
+            Preconditions.checkNotNull(device);
+            //Remove device from mDeviceEntries
+            Iterator iterator = mDeviceEntries.iterator();
+            while(iterator.hasNext()) {
+                Device d = (Device) iterator.next();
+                if(device.isVersionOf(d)) {
+                    iterator.remove();
                 }
             }
+            TECDataAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
@@ -194,7 +201,8 @@ public class TECActivity extends ActionBarActivity {
          * array responsible for displaying the entries in the listView.
          */
         public void populateFromStorage() {
-            mDeviceEntries = Preconditions.checkNotNull(TECDataAdapter.readDevicesFromFile());
+            List<Device> temp = Preconditions.checkNotNull(TECDataAdapter.getDevices());
+            mDeviceEntries = temp;
             notifyDataSetChanged();
         }
 
@@ -215,16 +223,13 @@ public class TECActivity extends ActionBarActivity {
 
         public View getView(final int position, View convertView, ViewGroup parent) {
             LinearLayout view;
-
-            if (convertView == null) //Regenerate the view
+            if (convertView == null || mForceRedraw) //Regenerate the view
             {
                 final Device device = mDeviceEntries.get(position);
                 view = new LinearLayout(mContext);
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                /*
-                 * Below, inflate a different layout of list item depending on what
-                 * type of connections each device has.
-                 */
+
+                //Inflate list items
                 inflater.inflate(R.layout.device_list_item, view, true);
                 ((TextView) view.findViewById(R.id.bt_name)).setText(device.getName());
                 if(device.getBluetoothConnection() != null) {
@@ -238,7 +243,6 @@ public class TECActivity extends ActionBarActivity {
                 } else {
                     btButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
                 }
-
                 btButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -248,12 +252,11 @@ public class TECActivity extends ActionBarActivity {
                     }
                 });
 
-                //Set the RelativeLayout of the list item (a sizeable chunk) as clickable
+                //Set the RelativeLayout of the list item (a sizable chunk) as clickable
                 RelativeLayout listClickable = (RelativeLayout) view.findViewById(R.id.list_clickable);
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
                         Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
                         intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
                         startActivity(intent);
@@ -312,6 +315,13 @@ public class TECActivity extends ActionBarActivity {
                 view = (LinearLayout) convertView;
             }
             return view;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            mForceRedraw = true;
+            super.notifyDataSetChanged();
+            mForceRedraw = false;
         }
     }
 }
