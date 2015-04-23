@@ -24,7 +24,7 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.Connection.Connection;
+import org.tec_hub.tecuniversalcomm.connection.Connection;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -117,9 +117,7 @@ public class TECActivity extends ActionBarActivity {
                 if (resultCode == RESULT_OK) {
                     Connection connection = data.getParcelableExtra(ConnectionDiscoveryActivity.EXTRA_CONNECTION);
                     //TODO put option to put connection in existing devices
-                    ArrayList<Connection> connections = new ArrayList<>();
-                    connections.add(connection);
-                    Device device = Device.build("Dummy", connections);
+                    Device device = Device.build(connection.getName(), connection);
                     mDeviceAdapter.put(device);
                 }
                 break;
@@ -223,97 +221,96 @@ public class TECActivity extends ActionBarActivity {
 
         public View getView(final int position, View convertView, ViewGroup parent) {
             LinearLayout view;
-            if (convertView == null || mForceRedraw) //Regenerate the view
-            {
-                final Device device = mDeviceEntries.get(position);
+            if (convertView == null || mForceRedraw) { //Regenerate the view
                 view = new LinearLayout(mContext);
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-                //Inflate list items
                 inflater.inflate(R.layout.device_list_item, view, true);
-                ((TextView) view.findViewById(R.id.bt_name)).setText(device.getName());
-                if(device.getBluetoothConnection() != null) {
-                    ((TextView) view.findViewById(R.id.bt_address)).setText(device.getBluetoothConnection().getAddress());
-                }
-
-                //Set the image resource of the bluetooth icon button based on SDK version
-                ImageButton btButton = (ImageButton) view.findViewById(R.id.list_bt_btn);
-                if (Build.VERSION.SDK_INT >= 16) {
-                    btButton.setBackground(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
-                } else {
-                    btButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
-                }
-                btButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        //TODO obviously disabling a button will make this unreachable, find another icon changing method
-                        ImageButton button = (ImageButton) v;
-                        button.setEnabled(!button.isEnabled());
-                    }
-                });
-
-                //Set the RelativeLayout of the list item (a sizable chunk) as clickable
-                RelativeLayout listClickable = (RelativeLayout) view.findViewById(R.id.list_clickable);
-                listClickable.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
-                        intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
-                        startActivity(intent);
-                    }
-                });
-
-                //Set an option button that opens a popup menu with a delete option.
-                ImageButton optionButton = (ImageButton) view.findViewById(R.id.device_options);
-                final PopupMenu optionMenu = new PopupMenu(TECActivity.this, optionButton);
-                optionMenu.inflate(R.menu.menu_device_options);
-                optionMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        int id = item.getItemId();
-                        if(id == R.id.action_rename_device) {
-                            AlertDialog.Builder alert = new AlertDialog.Builder(TECActivity.this);
-
-                            alert.setTitle("Title");
-                            alert.setMessage("Message");
-
-                            // Set an EditText view to get user input
-                            final EditText input = new EditText(TECActivity.this);
-                            alert.setView(input);
-
-                            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    String value = input.getText().toString();
-                                    // Do something with value!
-                                }
-                            });
-
-                            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    // Canceled.
-                                }
-                            });
-
-                            alert.show();
-                        } else if(id == R.id.action_delete_device) {
-                            delete(device);
-                            return true;
-                        }
-                        return false;
-                    }
-                });
-
-                optionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        //Show the menu for the selected device
-                        optionMenu.show();
-                    }
-                });
-            } else //Reuse the view
-            {
+            } else { //Reuse the view
                 view = (LinearLayout) convertView;
             }
+
+            final Device device = (Device) getItem(position);
+
+            ((TextView) view.findViewById(R.id.bt_name)).setText(device.getName());
+            if (device.getBluetoothConnection() != null) {
+                ((TextView) view.findViewById(R.id.bt_address)).setText(device.getBluetoothConnection().getAddress());
+            }
+
+            //Set the image resource of the bluetooth icon button based on SDK version
+            ImageButton btButton = (ImageButton) view.findViewById(R.id.list_bt_btn);
+            if (Build.VERSION.SDK_INT >= 16) {
+                btButton.setBackground(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+            } else {
+                btButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+            }
+            btButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //TODO obviously disabling a button will make this unreachable, find another icon changing method
+                    ImageButton button = (ImageButton) v;
+                    button.setEnabled(!button.isEnabled());
+                }
+            });
+
+            //Set the RelativeLayout of the list item (a sizable chunk) as clickable
+            RelativeLayout listClickable = (RelativeLayout) view.findViewById(R.id.list_clickable);
+            listClickable.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
+                    intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
+                    startActivity(intent);
+                }
+            });
+
+            //Set an option button that opens a popup menu with a delete option.
+            ImageButton optionButton = (ImageButton) view.findViewById(R.id.device_options);
+            final PopupMenu optionMenu = new PopupMenu(TECActivity.this, optionButton);
+            optionMenu.inflate(R.menu.menu_device_options);
+            optionMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    int id = item.getItemId();
+                    if (id == R.id.action_rename_device) {
+                        AlertDialog.Builder alert = new AlertDialog.Builder(TECActivity.this);
+
+                        alert.setTitle("Title");
+                        alert.setMessage("Message");
+
+                        // Set an EditText view to get user input
+                        final EditText input = new EditText(TECActivity.this);
+                        alert.setView(input);
+
+                        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                String value = input.getText().toString();
+                                // Do something with value!
+                            }
+                        });
+
+                        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                // Canceled.
+                            }
+                        });
+
+                        alert.show();
+                    } else if (id == R.id.action_delete_device) {
+                        delete(device);
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            optionButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //Show the menu for the selected device
+                    optionMenu.show();
+                }
+            });
+
             return view;
         }
 

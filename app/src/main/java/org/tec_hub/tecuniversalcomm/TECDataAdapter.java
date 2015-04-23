@@ -12,8 +12,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.Connection.Connection;
+import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.connection.Connection;
 
 import java.io.BufferedReader;
 import java.io.File;
