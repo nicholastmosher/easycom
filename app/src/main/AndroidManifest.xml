@@ -31,7 +31,7 @@
 
         </activity>
         <service
-            android:name=".Connection.BluetoothConnectionService"
+            android:name=".connection.BluetoothConnectionService"
             android:label="Manage Bluetooth Connections" >
         </service>
     </application>

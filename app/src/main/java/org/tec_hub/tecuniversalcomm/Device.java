@@ -5,8 +5,8 @@ import android.os.Parcelable;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.Connection.Connection;
+import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.connection.Connection;
 
 import java.io.Serializable;
 import java.util.ArrayList;

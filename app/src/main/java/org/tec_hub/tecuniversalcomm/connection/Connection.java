@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.Connection;
+package org.tec_hub.tecuniversalcomm.connection;
 
 import android.content.Context;
 import android.os.Parcel;
