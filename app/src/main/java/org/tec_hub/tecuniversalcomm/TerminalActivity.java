@@ -28,7 +28,7 @@ import java.io.OutputStream;
  * Created by Nick Mosher on 4/13/15.
  * Opens a terminal-like interface for sending data over an established connection.
  */
-public class ConnectionTerminalActivity extends ActionBarActivity {
+public class TerminalActivity extends ActionBarActivity {
 
     private BluetoothConnection mConnection;
 

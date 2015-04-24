@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,7 +49,7 @@ public class TECActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tec);
 
-        TECDataAdapter.init(this);
+        StorageAdapter.init(this);
         mDeviceAdapter = new DeviceListAdapter(this);
         mDeviceListView = (ListView) findViewById(R.id.tec_activity_listview);
         mDeviceListView.setAdapter(mDeviceAdapter);
@@ -84,11 +85,11 @@ public class TECActivity extends ActionBarActivity {
             System.out.println("Settings button!");
             return true;
         } else if(id == R.id.action_add_device) {
-            //Open the ConnectionDiscoveryActivity when the Add button is pressed.
-            startActivityForResult(new Intent(TECActivity.this, ConnectionDiscoveryActivity.class), REQUEST_DISCOVERY);
+            //Open the DiscoveryActivity when the Add button is pressed.
+            startActivityForResult(new Intent(TECActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
             return true;
         } else if(id == R.id.action_delete_all_devices) {
-            TECDataAdapter.wipeDevicesFile();
+            StorageAdapter.wipeDevicesFile();
             mDeviceAdapter.populateFromStorage();
             return true;
         } else if(id == R.id.action_refresh_devices) {
@@ -114,7 +115,7 @@ public class TECActivity extends ActionBarActivity {
         switch (requestCode) {
             case REQUEST_DISCOVERY:
                 if (resultCode == RESULT_OK) {
-                    Connection connection = data.getParcelableExtra(ConnectionDiscoveryActivity.EXTRA_CONNECTION);
+                    Connection connection = data.getParcelableExtra(DiscoveryActivity.EXTRA_CONNECTION);
                     //TODO put option to put connection in existing devices
                     Device device = Device.build(connection.getName(), connection);
                     mDeviceAdapter.put(device);
@@ -171,8 +172,7 @@ public class TECActivity extends ActionBarActivity {
             if (!flagUpdatedExisting) {
                 mDeviceEntries.add(newDevice);
             }
-            TECDataAdapter.setDevices(mDeviceEntries);
-            notifyDataSetChanged();
+            StorageAdapter.setDevices(mDeviceEntries);
         }
 
         /**
@@ -189,8 +189,7 @@ public class TECActivity extends ActionBarActivity {
                     iterator.remove();
                 }
             }
-            TECDataAdapter.setDevices(mDeviceEntries);
-            notifyDataSetChanged();
+            StorageAdapter.setDevices(mDeviceEntries);
         }
 
         /**
@@ -198,9 +197,8 @@ public class TECActivity extends ActionBarActivity {
          * array responsible for displaying the entries in the listView.
          */
         public void populateFromStorage() {
-            List<Device> temp = Preconditions.checkNotNull(TECDataAdapter.getDevices());
+            List<Device> temp = Preconditions.checkNotNull(StorageAdapter.getDevices());
             mDeviceEntries = temp;
-            notifyDataSetChanged();
         }
 
         public int getCount() {
@@ -256,7 +254,7 @@ public class TECActivity extends ActionBarActivity {
             listClickable.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
+                    Intent intent = new Intent(TECActivity.this, TerminalActivity.class);
                     intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, device.getBluetoothConnection());
                     startActivity(intent);
                 }

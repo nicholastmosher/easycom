@@ -27,7 +27,7 @@ import java.util.Vector;
 /**
  * Created by user on 3/3/2015.
  */
-public class ConnectionDiscoveryActivity extends ActionBarActivity {
+public class DiscoveryActivity extends ActionBarActivity {
     public static final String EXTRA_CONNECTION = "connection";
     public static final int REQUEST_ENABLE_BT = 1;
 
@@ -150,8 +150,8 @@ public class ConnectionDiscoveryActivity extends ActionBarActivity {
             LinearLayout view;
 
             if (convertView == null) {
-                view = new LinearLayout(ConnectionDiscoveryActivity.this);
-                LayoutInflater inflater = (LayoutInflater) ConnectionDiscoveryActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                view = new LinearLayout(DiscoveryActivity.this);
+                LayoutInflater inflater = (LayoutInflater) DiscoveryActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 inflater.inflate(R.layout.discovered_bt_device_list_item, view, true);
             } else {
                 view = (LinearLayout) convertView;

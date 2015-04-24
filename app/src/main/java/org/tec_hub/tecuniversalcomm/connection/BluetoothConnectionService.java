@@ -14,7 +14,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.ConnectionTerminalActivity;
+import org.tec_hub.tecuniversalcomm.TerminalActivity;
 import org.tec_hub.tecuniversalcomm.TECIntent;
 
 import java.io.BufferedReader;
@@ -237,7 +237,7 @@ public class BluetoothConnectionService extends Service {
             super.onProgressUpdate(values);
 
             //Construct data intent
-            Intent receivedInputIntent = new Intent(BluetoothConnectionService.this, ConnectionTerminalActivity.class);
+            Intent receivedInputIntent = new Intent(BluetoothConnectionService.this, TerminalActivity.class);
             receivedInputIntent.setAction(TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT);
             receivedInputIntent.putExtra(TECIntent.BLUETOOTH_RECEIVED_DATA, values[0]);
 

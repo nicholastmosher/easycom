@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm;
+package org.tec_hub.tecuniversalcomm.data;
 
 import android.content.Context;
 import android.os.Handler;
@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import org.tec_hub.tecuniversalcomm.Device;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
 
@@ -35,7 +36,7 @@ import java.util.Map;
  * The mode of data storage is through GSON to files
  * where object data is kept.
  */
-public class TECDataAdapter {
+public class StorageAdapter {
     public static final String FILE_DEVICES = "devices.ser";
 
     private static File mDevicesFolder;
@@ -48,7 +49,7 @@ public class TECDataAdapter {
     private static Gson mGson;
 
     static {
-        mHandlerThread = new HandlerThread("TECDataAdapter Handler Thread");
+        mHandlerThread = new HandlerThread("StorageAdapter Handler Thread");
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
 
@@ -169,7 +170,7 @@ public class TECDataAdapter {
     }
 
     /**
-     * Building block class meant to be passed to TECDataAdapter's Handler,
+     * Building block class meant to be passed to StorageAdapter's Handler,
      * which runs on a separate thread so that this heavy lifting doesn't
      * interfere with the main UI thread.
      */
@@ -204,7 +205,7 @@ public class TECDataAdapter {
                         flagUpdateExisting = true;
                         break;
                     } else {
-                        throw new IllegalStateException("[TECDataAdapter.AddDeviceTask.run] Cannot find device index!");
+                        throw new IllegalStateException("[StorageAdapter.AddDeviceTask.run] Cannot find device index!");
                     }
                 }
             }
@@ -228,7 +229,7 @@ public class TECDataAdapter {
     }
 
     /**
-     * Building block class meant to be passed to TECDataAdapter's Handler,
+     * Building block class meant to be passed to StorageAdapter's Handler,
      * which runs on a separate thread so that this heavy lifting doesn't
      * interfere with the main UI thread.
      */

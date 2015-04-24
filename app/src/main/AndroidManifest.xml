@@ -20,12 +20,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ConnectionDiscoveryActivity"
+            android:name=".DiscoveryActivity"
             android:label="Discover New Devices" >
 
         </activity>
         <activity
-            android:name=".ConnectionTerminalActivity"
+            android:name=".TerminalActivity"
             android:label="Send Data Over Connections"
             android:parentActivityName=".TECActivity">
 
