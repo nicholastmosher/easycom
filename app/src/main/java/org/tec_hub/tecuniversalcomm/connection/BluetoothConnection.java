@@ -1,19 +1,19 @@
 package org.tec_hub.tecuniversalcomm.connection;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.os.AsyncTask;
+import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
+
+import org.tec_hub.tecuniversalcomm.TECIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -34,34 +34,24 @@ public class BluetoothConnection extends Connection implements Parcelable {
     };
 
     private final String mBluetoothAddress;
-
-    private transient BluetoothAdapter mBluetoothAdapter; //BluetoothAdapter is not Serializable
     private BluetoothSocket mBluetoothSocket;
-    private OutputStream mOutputStream;
-    private InputStream mInputStream;
+
+    private Intent mConnectIntent;
+    private Intent mDisconnectIntent;
 
     public BluetoothConnection(String name, String address) {
         super(Preconditions.checkNotNull(name));
         mBluetoothAddress = Preconditions.checkNotNull(address);
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        mConnected = false;
     }
 
     public BluetoothConnection(Parcel in) {
         super(Preconditions.checkNotNull(in));
         mBluetoothAddress = Preconditions.checkNotNull(in.readString());
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        //Android framework is lacking here (no readBoolean()), have to do array workaround.
-        boolean[] connected = {false};
-        in.readBooleanArray(connected);
-        mConnected = connected[0];
     }
 
     public void writeToParcel(Parcel out, int flags) {
         super.writeToParcel(out, flags);
         out.writeString(mBluetoothAddress);
-        out.writeBooleanArray(new boolean[]{mConnected});
     }
 
     public String getAddress() {
@@ -69,18 +59,45 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     public boolean isConnected() {
-        return mConnected;
-    }
-
-    public void connect() {
-        if(!mConnected) {
-            new BluetoothConnectTask().execute();
+        if(mBluetoothSocket != null) {
+            return mBluetoothSocket.isConnected();
+        } else {
+            return false;
         }
     }
 
-    public void disconnect() {
-        if(mConnected) {
-            new BluetoothDisconnectTask().execute();
+    /**
+     * Send connect request to BluetoothConnectionService to open a BluetoothConnection
+     * using this object's data.
+     * @param context The context to send the intent to launch the Service.
+     */
+    public void connect(Context context) {
+        if(!isConnected()) {
+
+            //Build intent with this connection data to send to service
+            mConnectIntent = new Intent(context, BluetoothConnectionService.class);
+            mConnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_CONNECT);
+            mConnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+
+            //Send intent through LocalBroadcastManager
+            LocalBroadcastManager.getInstance(context).sendBroadcast(mConnectIntent);
+        }
+    }
+
+    /**
+     * Send disconnect request to BluetoothConnectionService to close a BluetoothConnection
+     * using this object's data.
+     * @param context The context to send the intent to launch the Service.
+     */
+    public void disconnect(Context context) {
+        if(isConnected()) {
+            //Build intent with this connection data to send to service
+            mDisconnectIntent = new Intent(context, BluetoothConnectionService.class);
+            mDisconnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_DISCONNECT);
+            mDisconnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+
+            //Send intent through LocalBroadcastManager
+            LocalBroadcastManager.getInstance(context).sendBroadcast(mDisconnectIntent);
         }
     }
 
@@ -90,8 +107,12 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * @return The OutputStream to the remote bluetooth device.
      */
     public OutputStream getOutputStream() {
-        if(mConnected && mOutputStream != null) {
-            return mOutputStream;
+        if(isConnected()) {
+            try {
+                return mBluetoothSocket.getOutputStream();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
         }
         return null;
     }
@@ -102,154 +123,33 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * @return The InputStream from the remote bluetooth device.
      */
     public InputStream getInputStream() {
-        if(mConnected && mInputStream != null) {
-            return mInputStream;
+        if(isConnected()) {
+            try {
+                return mBluetoothSocket.getInputStream();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
         }
         return null;
     }
 
     /**
-     * Adds a new OnConnectStatusChangedListener to the map.  The Context
-     * is used as the map key so that more than one activity may set
-     * callbacks but no activity may have duplicate listeners.
-     * @param context The context of the listener.
-     * @param listener The OnConnectStatusChangedListener to associate with the context.
+     * Assigns the BluetoothSocket for this BluetoothConnection.
+     * @param bluetoothSocket
      */
-    public void setOnConnectStatusChangedListener(Context context, OnConnectStatusChangedListener listener) {
-        mOnConnectStatusChangedListeners.put(context, listener);
+    void setBluetoothSocket(BluetoothSocket bluetoothSocket) {
+        Preconditions.checkNotNull(bluetoothSocket);
+        mBluetoothSocket = bluetoothSocket;
     }
 
     /**
-     * Loops through all registered OnConnectStatusChangedListeners and notifies them of connection.
+     * Gets this BluetoothConnection's BluetoothSocket if it exists.
+     * @return This BluetoothSocket.
      */
-    protected void notifyConnected() {
-        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
-        for(Context c : listenerKeys) {
-            mOnConnectStatusChangedListeners.get(c).onConnect();
+    public BluetoothSocket getBluetoothSocket() {
+        if(mBluetoothSocket != null) {
+            return mBluetoothSocket;
         }
-    }
-
-    /**
-     * Loops through all registered OnConnectStatusChangedListeners and notifies them of disconnection.
-     */
-    protected void notifyDisconnected() {
-        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
-        for(Context c : listenerKeys) {
-            mOnConnectStatusChangedListeners.get(c).onDisconnect();
-        }
-    }
-
-    private class BluetoothConnectTask extends AsyncTask<Void, Void, Boolean> {
-
-        protected Boolean doInBackground(Void... params) {
-            //Check if BT is enabled
-            if (!mBluetoothAdapter.isEnabled()) {
-                System.out.println("Bluetooth not enabled!"); //TODO better handling.
-            }
-
-            //Define a BluetoothDevice with the address from our Connection.
-            String address = getAddress();
-            BluetoothDevice device;
-            if(address != null  && BluetoothAdapter.checkBluetoothAddress(address)) {
-                device = mBluetoothAdapter.getRemoteDevice(address);
-            } else {
-                return false;
-            }
-
-            //Try to retrieve a BluetoothSocket from the BluetoothDevice.
-            try {
-                mBluetoothSocket = device.createRfcommSocketToServiceRecord(BLUETOOTH_SERIAL_UUID);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-
-            //Shouldn't need to be discovering at this point.
-            mBluetoothAdapter.cancelDiscovery();
-
-            //Attempt to connect to the bluetooth device and receive a BluetoothSocket
-            try {
-                mBluetoothSocket.connect();
-            } catch (IOException e) {
-                e.printStackTrace();
-                try {
-                    mBluetoothSocket.close();
-                } catch (IOException e2) {
-                    e2.printStackTrace();
-                }
-                return false;
-            }
-
-            //Retrieve the output stream to the device.
-            try {
-                mOutputStream = mBluetoothSocket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-
-            //Retrieve the input stream from the device.
-            try {
-                mInputStream = mBluetoothSocket.getInputStream();
-            } catch(IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-
-            //If we've made it this far, must have been a success.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            super.onPostExecute(success);
-            mConnected = true;
-            if(mOnConnectStatusChangedListeners != null) {
-                notifyConnected();
-            }
-        }
-    }
-
-    private class BluetoothDisconnectTask extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            mConnected = false;
-            boolean success = true;
-            if(mConnected && mBluetoothSocket != null) {
-                try {
-                    mBluetoothSocket.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    success = false;
-                }
-            }
-            if(mOutputStream != null) {
-                try {
-                    mOutputStream.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    success = false;
-                }
-            }
-            if(mInputStream != null) {
-                try {
-                    mInputStream.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    success = false;
-                }
-            }
-            return success;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            super.onPostExecute(success);
-            if(success) {
-                if(mOnConnectStatusChangedListeners != null) {
-                    notifyDisconnected();
-                }
-            }
-        }
+        return null;
     }
 }

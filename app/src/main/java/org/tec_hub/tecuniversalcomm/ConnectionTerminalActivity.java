@@ -1,22 +1,27 @@
 package org.tec_hub.tecuniversalcomm;
 
-import android.os.AsyncTask;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.Connection.Connection;
+import com.google.common.base.Preconditions;
+
+import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.connection.BluetoothConnectionService;
+import org.tec_hub.tecuniversalcomm.connection.Connection;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -24,8 +29,6 @@ import java.io.OutputStream;
  * Opens a terminal-like interface for sending data over an established connection.
  */
 public class ConnectionTerminalActivity extends ActionBarActivity {
-
-    public static final String CONNECTION_DATA = "connection_data";
 
     private BluetoothConnection mConnection;
 
@@ -40,8 +43,13 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connection_terminal);
 
+        if(!BluetoothConnectionService.isLaunched()) {
+            startService(new Intent(this, BluetoothConnectionService.class));
+        }
+
         Bundle extras = getIntent().getExtras();
-        mConnection = extras.getParcelable(CONNECTION_DATA);
+        BluetoothConnection tempConnection = extras.getParcelable(TECIntent.BLUETOOTH_CONNECTION_DATA);
+        mConnection = Preconditions.checkNotNull(tempConnection);
 
         getSupportActionBar().setTitle(mConnection.getName());
         getSupportActionBar().setSubtitle(mConnection.getAddress());
@@ -65,8 +73,6 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
             }
         });
 
-        mConnection.connect();
-
         //Set a listener to accordingly change the status of the connection indicator
         mConnection.setOnConnectStatusChangedListener(this, new Connection.OnConnectStatusChangedListener() {
             @Override
@@ -74,9 +80,6 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
                 if(mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
                 }
-
-                //Start input listening task when we connect
-                new ReceiveInputTask().execute();
             }
 
             @Override
@@ -86,12 +89,28 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
                 }
             }
         });
+        mConnection.connect(this);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                switch(intent.getAction()) {
+                    case TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT:
+                        receivedData(intent.getStringExtra(TECIntent.BLUETOOTH_RECEIVED_DATA));
+                        break;
+                    default:
+                }
+            }
+        }, intentFilter);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mConnection.disconnect();
+        mConnection.disconnect(this);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -116,9 +135,9 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
 
             //Toggle between connected and disconnected
             if(mConnection.isConnected()) {
-                mConnection.disconnect();
+                mConnection.disconnect(this);
             } else {
-                mConnection.connect();
+                mConnection.connect(this);
             }
         }
         return super.onOptionsItemSelected(item);
@@ -160,32 +179,5 @@ public class ConnectionTerminalActivity extends ActionBarActivity {
 
     private void clearTerminal() {
         mTerminalWindow.setText("");
-    }
-
-    private class ReceiveInputTask extends AsyncTask<Void, String, Void> {
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            while(mConnection.isConnected()) {
-                byte[] buffer = new byte[256];
-                int bytes = 0;
-                try {
-                    InputStream input = mConnection.getInputStream();
-                    bytes = input.read(buffer);
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-                String message = new String(buffer, 0, bytes);
-                System.out.println(message);
-                publishProgress(message);
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            receivedData(values[0]);
-        }
     }
 }

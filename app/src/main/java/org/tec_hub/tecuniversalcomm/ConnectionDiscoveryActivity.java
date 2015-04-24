@@ -18,8 +18,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.Connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.Connection.Connection;
+import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.connection.Connection;
 
 import java.util.Random;
 import java.util.Vector;

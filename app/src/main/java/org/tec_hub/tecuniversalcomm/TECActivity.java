@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -258,7 +257,7 @@ public class TECActivity extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(TECActivity.this, ConnectionTerminalActivity.class);
-                    intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) device.getBluetoothConnection());
+                    intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, device.getBluetoothConnection());
                     startActivity(intent);
                 }
             });
