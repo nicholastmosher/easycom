@@ -50,14 +50,21 @@ public class BluetoothConnectionService extends Service {
 
                     //Received action to establish connection
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
+                        System.out.println("Service -> Connecting...");
                         //Create callbacks for successful connection and disconnection
-                        bluetoothConnection.setOnConnectStatusChangedListener(
+                        bluetoothConnection.setOnStatusChangedListener(
                                 BluetoothConnectionService.this,
-                                new Connection.OnConnectStatusChangedListener() {
+                                new Connection.OnStatusChangedListener() {
+
+                                    ReceiveInputThread receiveInputThread;
                                     @Override
                                     public void onConnect() {
                                         System.out.println("Service -> onConnect");
-                                        new ReceiveInputTask(bluetoothConnection).execute();
+                                        if(receiveInputThread != null) {
+                                            receiveInputThread.interrupt();
+                                        }
+                                        receiveInputThread = new ReceiveInputThread(bluetoothConnection);
+                                        receiveInputThread.start();
                                     }
 
                                     @Override
@@ -71,6 +78,7 @@ public class BluetoothConnectionService extends Service {
 
                     //Received action to disconnect
                     case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
+                        System.out.println("Service -> Disconnecting...");
                         //Initiate disconnecting
                         new BluetoothDisconnectTask(bluetoothConnection).execute();
                         break;
@@ -80,6 +88,10 @@ public class BluetoothConnectionService extends Service {
         }, intentFilter);
 
         return Service.START_STICKY;
+    }
+
+    public void onDestroy() {
+        launched = false;
     }
 
     public IBinder onBind(Intent intent) {
@@ -171,26 +183,6 @@ public class BluetoothConnectionService extends Service {
                     success = false;
                 }
             }
-
-            OutputStream outputStream;
-            if((outputStream = mConnection.getOutputStream()) != null) {
-                try {
-                    outputStream.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    success = false;
-                }
-            }
-
-            InputStream inputStream;
-            if((inputStream = mConnection.getInputStream()) != null) {
-                try {
-                    inputStream.close();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    success = false;
-                }
-            }
             return success;
         }
 
@@ -203,19 +195,27 @@ public class BluetoothConnectionService extends Service {
         }
     }
 
-    private class ReceiveInputTask extends AsyncTask<Void, String, Void> {
+    //TODO Put data sending responsibilities in service
+
+    private class ReceiveInputThread extends Thread {
 
         private BluetoothConnection mConnection;
+        private boolean isRunning;
+        private Intent mReceivedInputIntent;
 
-        public ReceiveInputTask(BluetoothConnection connection) {
+        public ReceiveInputThread(BluetoothConnection connection) {
             mConnection = Preconditions.checkNotNull(connection);
+            isRunning = true;
+            mReceivedInputIntent = new Intent(BluetoothConnectionService.this, TerminalActivity.class);
+            mReceivedInputIntent.setAction(TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT);
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        public void run() {
+            super.run();
             String line = "";
             BufferedReader bufferedReader = null;
-            while(mConnection.isConnected()) {
+            while(mConnection.isConnected() && !isInterrupted()) {
                 try {
                     if(bufferedReader == null) {
                         InputStream inputStream = Preconditions.checkNotNull(mConnection.getInputStream());
@@ -227,22 +227,16 @@ public class BluetoothConnectionService extends Service {
                     e.printStackTrace();
                 }
                 System.out.println(line);
-                publishProgress(line);
+                mReceivedInputIntent.putExtra(TECIntent.BLUETOOTH_RECEIVED_DATA, line);
+                LocalBroadcastManager.getInstance(BluetoothConnectionService.this).sendBroadcast(mReceivedInputIntent);
+
+                try {
+                    Thread.sleep(20);
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                    isRunning = false;
+                }
             }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-
-            //Construct data intent
-            Intent receivedInputIntent = new Intent(BluetoothConnectionService.this, TerminalActivity.class);
-            receivedInputIntent.setAction(TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT);
-            receivedInputIntent.putExtra(TECIntent.BLUETOOTH_RECEIVED_DATA, values[0]);
-
-            //Send data intent
-            LocalBroadcastManager.getInstance(BluetoothConnectionService.this).sendBroadcast(receivedInputIntent);
         }
     }
 }

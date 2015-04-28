@@ -14,6 +14,8 @@ import org.tec_hub.tecuniversalcomm.TECIntent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -21,6 +23,9 @@ import java.util.UUID;
  */
 public class BluetoothConnection extends Connection implements Parcelable {
 
+    /**
+     * UUID used for connecting to Serial boards.
+     */
     public static final UUID BLUETOOTH_SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     public static final Parcelable.Creator<BluetoothConnection> CREATOR = new Parcelable.Creator<BluetoothConnection>() {
@@ -32,6 +37,13 @@ public class BluetoothConnection extends Connection implements Parcelable {
             return new BluetoothConnection[size];
         }
     };
+
+    /**
+     * Static Map is used to store object references to BluetoothSockets, since
+     * BluetoothSockets do not transmit through the Parcelable framework well.
+     * This connection's UUID is used as the key.
+     */
+    private static Map<UUID, BluetoothSocket> sockets = new HashMap<>();
 
     private final String mBluetoothAddress;
     private BluetoothSocket mBluetoothSocket;
@@ -47,11 +59,13 @@ public class BluetoothConnection extends Connection implements Parcelable {
     public BluetoothConnection(Parcel in) {
         super(Preconditions.checkNotNull(in));
         mBluetoothAddress = Preconditions.checkNotNull(in.readString());
+        mBluetoothSocket = sockets.get(mUUID);
     }
 
     public void writeToParcel(Parcel out, int flags) {
         super.writeToParcel(out, flags);
         out.writeString(mBluetoothAddress);
+        sockets.put(mUUID, mBluetoothSocket);
     }
 
     public String getAddress() {
@@ -104,15 +118,18 @@ public class BluetoothConnection extends Connection implements Parcelable {
     /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
+     * @throws java.lang.IllegalStateException If not connected.
      * @return The OutputStream to the remote bluetooth device.
      */
-    public OutputStream getOutputStream() {
+    public OutputStream getOutputStream() throws IllegalStateException {
         if(isConnected()) {
             try {
                 return mBluetoothSocket.getOutputStream();
             } catch(IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            throw new IllegalStateException("Connection is not active!");
         }
         return null;
     }
@@ -120,36 +137,42 @@ public class BluetoothConnection extends Connection implements Parcelable {
     /**
      * Retrieves the Input Stream if this Connection is connected and
      * the Input Stream is not null.
+     * @throws java.lang.IllegalStateException If not connected.
      * @return The InputStream from the remote bluetooth device.
      */
-    public InputStream getInputStream() {
+    public InputStream getInputStream() throws IllegalStateException {
         if(isConnected()) {
             try {
                 return mBluetoothSocket.getInputStream();
             } catch(IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            throw new IllegalStateException("Connection is not active!");
         }
         return null;
     }
 
     /**
      * Assigns the BluetoothSocket for this BluetoothConnection.
-     * @param bluetoothSocket
+     * @param bluetoothSocket New BluetoothSocket.
      */
     void setBluetoothSocket(BluetoothSocket bluetoothSocket) {
         Preconditions.checkNotNull(bluetoothSocket);
         mBluetoothSocket = bluetoothSocket;
+        sockets.put(mUUID, mBluetoothSocket);
     }
 
     /**
      * Gets this BluetoothConnection's BluetoothSocket if it exists.
+     * @throws java.lang.NullPointerException If BluetoothSocket is null.
      * @return This BluetoothSocket.
      */
-    public BluetoothSocket getBluetoothSocket() {
+    public BluetoothSocket getBluetoothSocket() throws NullPointerException {
         if(mBluetoothSocket != null) {
             return mBluetoothSocket;
+        } else {
+            throw new NullPointerException("Bluetooth Socket is null!");
         }
-        return null;
     }
 }

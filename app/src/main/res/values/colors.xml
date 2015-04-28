@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color mName="background_screen">#111</color>
+    <color name="background_screen">#777</color>
+    <color name="green">#0C0</color>
+    <color name="red">#F00</color>
 </resources>

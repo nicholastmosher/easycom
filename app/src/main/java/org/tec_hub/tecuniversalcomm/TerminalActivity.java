@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.Packet;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,6 +40,7 @@ public class TerminalActivity extends ActionBarActivity {
     private Button mTerminalSend;
     private MenuItem mConnectedIndicator;
 
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connection_terminal);
@@ -68,23 +70,23 @@ public class TerminalActivity extends ActionBarActivity {
                 String data = mTerminalInput.getText().toString();
                 if(data != null && !data.equals("")) {
                     sendData(data);
-                    mTerminalInput.setText("");
+                    mTerminalInput.setText("{\"mData\":,\"mName\":\"\"}");
                 }
             }
         });
 
         //Set a listener to accordingly change the status of the connection indicator
-        mConnection.setOnConnectStatusChangedListener(this, new Connection.OnConnectStatusChangedListener() {
+        mConnection.setOnStatusChangedListener(this, new Connection.OnStatusChangedListener() {
             @Override
             public void onConnect() {
-                if(mConnectedIndicator != null) {
+                if (mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
                 }
             }
 
             @Override
             public void onDisconnect() {
-                if(mConnectedIndicator != null) {
+                if (mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
                 }
             }
@@ -108,21 +110,39 @@ public class TerminalActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        mConnection.disconnect(this);
+    protected void onStart() {
+        super.onStart();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(mConnectedIndicator != null) {
+            initIndicator();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_connection_terminal, menu);
 
         //Isolate the connected indicator and set it to a member variable for dynamic icon
         mConnectedIndicator = menu.findItem(R.id.connected_indicator);
-        mConnectedIndicator.setIcon(getResources().getDrawable(
-                (mConnection.isConnected() ? R.drawable.ic_connected : R.drawable.ic_disconnected)));
+        initIndicator();
         return true;
     }
 
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
@@ -139,18 +159,29 @@ public class TerminalActivity extends ActionBarActivity {
             } else {
                 mConnection.connect(this);
             }
+        } else if(id == R.id.Kudos) {
+            Intent kudosIntent = new Intent(this, DriveKudosActivity.class);
+            kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
+            startActivity(kudosIntent);
         }
         return super.onOptionsItemSelected(item);
     }
 
+    private void initIndicator() {
+        mConnectedIndicator.setIcon(getResources().getDrawable(
+                (mConnection.isConnected() ? R.drawable.ic_connected : R.drawable.ic_disconnected)));
+    }
+
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
+
         if(mConnection.isConnected()) {
             OutputStream outputStream = mConnection.getOutputStream();
             if(outputStream != null) {
                 try {
+                    String packet = Packet.asString("Terminal", data).toJson();
                     outputStream.write(data.getBytes());
-                    appendTerminal("Me: " + data);
+                    appendTerminal("Me: " + packet);
                     return true;
                 } catch(IOException e) {
                     e.printStackTrace();

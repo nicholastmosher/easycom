@@ -10,22 +10,49 @@ import org.tec_hub.tecuniversalcomm.Device;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
 public abstract class Connection implements Parcelable {
 
+
+    /**
+     * All Connections will eventually be transmitted through the Parcelable
+     * framework, however the Parcel methods do not support Generics like
+     * Maps well.  To compensate for this, a static Map is held in Connection
+     * with a key of a Connection's UUID and a value of that Connection's
+     * Map of OnStatusChangedListeners.  The Connection instance's Map
+     * is put into the static Map at writeToParcel() and retrieved at the
+     * Parcel Constructor of Connection.
+     */
+    private static Map<UUID, Map<Context, OnStatusChangedListener>> mConnectionListenerMaps = new HashMap<>();
+
+    /**
+     * The immutable name of this Connection.
+     */
     private final String mConnectionName;
+
+    /**
+     * A unique identifier for this Connection, used as a reliable key
+     * for storing and retrieving data from static Maps.
+     */
+    protected transient final UUID mUUID;
 
     //Transient to prevent infinite loops during JSON serialization.
     protected transient Device mParent = null;
 
-    protected Map<Context, OnConnectStatusChangedListener> mOnConnectStatusChangedListeners;
+    /**
+     * Contains all registered OnStatusChangedListeners for this Connection.
+     * OnStatusChangedListeners are stored using a Context as a key in order
+     * to prevent duplicates being created from repeated onCreate() calls
+     * or the like.
+     */
+    protected Map<Context, OnStatusChangedListener> mOnStatusChangedListeners;
 
     /**
      * Constructs a Connection using a given name.  Addresses or
@@ -34,18 +61,21 @@ public abstract class Connection implements Parcelable {
      */
     public Connection(String name) {
         mConnectionName = Preconditions.checkNotNull(name);
-        mOnConnectStatusChangedListeners = new HashMap<>();
+        mOnStatusChangedListeners = new HashMap<>();
+        mUUID = UUID.randomUUID();
     }
 
     public Connection(Parcel in) {
         Preconditions.checkNotNull(in);
         mConnectionName = Preconditions.checkNotNull(in.readString());
-        mOnConnectStatusChangedListeners = (HashMap<Context, OnConnectStatusChangedListener>) in.readSerializable();
+        mUUID = Preconditions.checkNotNull(UUID.fromString(in.readString()));
+        mOnStatusChangedListeners = Preconditions.checkNotNull(mConnectionListenerMaps.get(mUUID));
     }
 
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(mConnectionName);
-        out.writeSerializable((Serializable) mOnConnectStatusChangedListeners);
+        out.writeString(mUUID.toString());
+        mConnectionListenerMaps.put(mUUID, mOnStatusChangedListeners);
     }
 
     /**
@@ -56,8 +86,16 @@ public abstract class Connection implements Parcelable {
         this.mParent = mParent;
     }
 
-    public Device getParent() {
-        return this.mParent;
+    /**
+     * Returns the Device object that is this Connection's parent.
+     * @return This Connection's parent Device.
+     */
+    public Device getParent() throws IllegalStateException {
+        if(mParent != null) {
+            return mParent;
+        } else {
+            throw new IllegalStateException("This connection has no parent!");
+        }
     }
 
     /**
@@ -68,53 +106,85 @@ public abstract class Connection implements Parcelable {
         return this.mConnectionName;
     }
 
+    /**
+     * Requirement of Parcelable, not sure what for.
+     * @return 0.
+     */
     public int describeContents() {
         return 0;
     }
 
+    /**
+     * Tells whether this Connection is actively connected.
+     * @return True if connected.
+     */
     public abstract boolean isConnected();
 
+    /**
+     * Launches a Service action that initiates this connection's communication
+     * link.
+     * @param context The context to launch the Service from.
+     */
     public abstract void connect(Context context);
 
+    /**
+     * Launches a Service action that disconnects this connection's communication
+     * link.
+     * @param context The context to launch the Service from.
+     */
     public abstract void disconnect(Context context);
 
-    public abstract InputStream getInputStream();
+    /**
+     * Returns an InputStream that reads from this Connection's remote source.
+     * @return An InputStream that reads from this Connection's remote source.
+     * @throws IllegalStateException If this Connection is not connected.
+     */
+    public abstract InputStream getInputStream() throws IllegalStateException;
 
-    public abstract OutputStream getOutputStream();
+    /**
+     * Returns an OutputStream that writes to this Connection's remote destination.
+     * @return An OutputStream that writes to this Connection's remote destination.
+     * @throws IllegalStateException If this Connection is not connected.
+     */
+    public abstract OutputStream getOutputStream() throws IllegalStateException;
 
-    public interface OnConnectStatusChangedListener {
+    /**
+     * Gives a callback to listen for this connection's successful connection
+     * or disconnection.
+     */
+    public interface OnStatusChangedListener {
         public void onConnect();
         public void onDisconnect();
     }
 
     /**
-     * Adds a new OnConnectStatusChangedListener to the map.  The Context
+     * Adds a new OnStatusChangedListener to the map.  The Context
      * is used as the map key so that more than one activity may set
      * callbacks but no activity may have duplicate listeners.
      * @param context The context of the listener.
-     * @param listener The OnConnectStatusChangedListener to associate with the context.
+     * @param listener The OnStatusChangedListener to associate with the context.
      */
-    public void setOnConnectStatusChangedListener(Context context, OnConnectStatusChangedListener listener) {
-        mOnConnectStatusChangedListeners.put(context, listener);
+    public void setOnStatusChangedListener(Context context, OnStatusChangedListener listener) {
+        mOnStatusChangedListeners.put(context, listener);
     }
 
-    public void setOnConnectStatusChangedListeners(Map<Context, OnConnectStatusChangedListener> listeners) {
+    public void setOnStatusChangedListeners(Map<Context, OnStatusChangedListener> listeners) {
         Preconditions.checkNotNull(listeners);
-        mOnConnectStatusChangedListeners = listeners;
+        mOnStatusChangedListeners = listeners;
     }
 
-    public Map<Context, OnConnectStatusChangedListener> getOnConnectStatusChangedListeners() {
-        return mOnConnectStatusChangedListeners;
+    public Map<Context, OnStatusChangedListener> getOnConnectStatusChangedListeners() {
+        return mOnStatusChangedListeners;
     }
 
     /**
      * Loops through all registered OnConnectStatusChangedListeners and notifies them of connection.
      */
     protected void notifyConnected() {
-        Preconditions.checkNotNull(mOnConnectStatusChangedListeners);
-        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
+        Preconditions.checkNotNull(mOnStatusChangedListeners);
+        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
         for(Context c : listenerKeys) {
-            mOnConnectStatusChangedListeners.get(c).onConnect();
+            mOnStatusChangedListeners.get(c).onConnect();
         }
     }
 
@@ -122,10 +192,10 @@ public abstract class Connection implements Parcelable {
      * Loops through all registered OnConnectStatusChangedListeners and notifies them of disconnection.
      */
     protected void notifyDisconnected() {
-        Preconditions.checkNotNull(mOnConnectStatusChangedListeners);
-        Set<Context> listenerKeys = mOnConnectStatusChangedListeners.keySet();
+        Preconditions.checkNotNull(mOnStatusChangedListeners);
+        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
         for(Context c : listenerKeys) {
-            mOnConnectStatusChangedListeners.get(c).onDisconnect();
+            mOnStatusChangedListeners.get(c).onDisconnect();
         }
     }
 }

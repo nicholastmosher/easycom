@@ -3,6 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/Kudos"
+        android:title="Kudos" />
+
+    <item
         android:id="@+id/connected_indicator"
         android:title="Connected"
         app:showAsAction="always"/>

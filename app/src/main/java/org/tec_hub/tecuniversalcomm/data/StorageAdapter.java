@@ -285,7 +285,7 @@ public class StorageAdapter {
          */
         public static final String BLUETOOTH_ADDRESS = "BluetoothAddress";
 
-        private Type mOnConnectStatusChangedListenersMapType = new TypeToken<Map<Context, Connection.OnConnectStatusChangedListener>>(){}.getType();
+        private Type mOnConnectStatusChangedListenersMapType = new TypeToken<Map<Context, Connection.OnStatusChangedListener>>(){}.getType();
 
         @Override
         public void write(JsonWriter writer, List<Connection> connections) throws IOException {
@@ -324,7 +324,7 @@ public class StorageAdapter {
             while(reader.hasNext()) {
                 //Create local variables as a cache to build a Connection
                 String connectionName = null;
-                Map<Context, Connection.OnConnectStatusChangedListener> onConnectStatusChangedListenerMap = null;
+                Map<Context, Connection.OnStatusChangedListener> onConnectStatusChangedListenerMap = null;
                 String connectionImpl = null;
                 String bluetoothConnectionAddress = null;
 
@@ -352,7 +352,7 @@ public class StorageAdapter {
                 if(connectionImpl.equals(IMPL_BLUETOOTH)) { //If this Connection is a BluetoothConnection
                     Preconditions.checkNotNull(bluetoothConnectionAddress);
                     BluetoothConnection bluetoothConnection = new BluetoothConnection(connectionName, bluetoothConnectionAddress);
-                    bluetoothConnection.setOnConnectStatusChangedListeners(onConnectStatusChangedListenerMap);
+                    bluetoothConnection.setOnStatusChangedListeners(onConnectStatusChangedListenerMap);
                     connections.add(bluetoothConnection);
                 }
             }
