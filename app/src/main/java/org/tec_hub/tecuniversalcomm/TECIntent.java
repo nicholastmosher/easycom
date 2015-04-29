@@ -45,4 +45,5 @@ public interface TECIntent {
      * by an active BluetoothConnection.
      */
     public static final String BLUETOOTH_RECEIVED_DATA = "bluetooth_input_data";
+    public static final String DEVICE_DATA = "device_data";
 }

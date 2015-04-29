@@ -6,12 +6,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -50,7 +53,7 @@ public class TECActivity extends ActionBarActivity {
         setContentView(R.layout.activity_tec);
 
         StorageAdapter.init(this);
-        mDeviceAdapter = new DeviceListAdapter(this);
+        mDeviceAdapter = new DeviceListAdapter();
         mDeviceListView = (ListView) findViewById(R.id.tec_activity_listview);
         mDeviceListView.setAdapter(mDeviceAdapter);
         mDeviceListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -75,29 +78,17 @@ public class TECActivity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if(id == R.id.action_settings) {
-            System.out.println("Settings button!");
-            return true;
-        } else if(id == R.id.action_add_device) {
-            //Open the DiscoveryActivity when the Add button is pressed.
-            startActivityForResult(new Intent(TECActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
-            return true;
-        } else if(id == R.id.action_delete_all_devices) {
-            StorageAdapter.wipeDevicesFile();
-            mDeviceAdapter.populateFromStorage();
-            return true;
-        } else if(id == R.id.action_refresh_devices) {
-            mDeviceAdapter.populateFromStorage();
-            return true;
+        switch(item.getItemId()) {
+            case R.id.action_settings:
+                System.out.println("Settings button!");
+                return true;
+            case R.id.action_add_device:
+                //Open the DiscoveryActivity when the Add button is pressed.
+                startActivityForResult(new Intent(TECActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-
-        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -105,7 +96,6 @@ public class TECActivity extends ActionBarActivity {
      * with a response.  The requestCode is the code we gave when launching the activity for result,
      * the resultCode is a code given by the launched activity that indicates the status of the
      * result given.
-     *
      * @param requestCode The code given during startActivityForResult().
      * @param resultCode  A code indicating the status of the return (e.g. RESULT_OK).
      * @param data        An intent with data relevant to the activity that was launched.
@@ -115,7 +105,7 @@ public class TECActivity extends ActionBarActivity {
         switch (requestCode) {
             case REQUEST_DISCOVERY:
                 if (resultCode == RESULT_OK) {
-                    Connection connection = data.getParcelableExtra(DiscoveryActivity.EXTRA_CONNECTION);
+                    Connection connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
                     //TODO put option to put connection in existing devices
                     Device device = Device.build(connection.getName(), connection);
                     mDeviceAdapter.put(device);
@@ -133,18 +123,14 @@ public class TECActivity extends ActionBarActivity {
      */
     private class DeviceListAdapter extends BaseAdapter {
 
-        private boolean mForceRedraw = false;
-
         /**
          * Dynamic array that keeps track of all devices currently being managed.
          * This is held in memory and is readily accessible so that system calls
          * requesting View updates can be satisfied quickly.
          */
         private List<Device> mDeviceEntries;
-        private Context mContext;
 
-        public DeviceListAdapter(Context context) {
-            this.mContext = context;
+        public DeviceListAdapter() {
             this.mDeviceEntries = new ArrayList<>();
             populateFromStorage();
         }
@@ -164,7 +150,7 @@ public class TECActivity extends ActionBarActivity {
                         flagUpdatedExisting = true;
                         break;
                     } else {
-                        throw new IllegalStateException("[TECActivity.DeviceListAdapter.put] Cannot find device index!");
+                        throw new IllegalStateException("Cannot find device index!");
                     }
                 }
             }
@@ -172,7 +158,7 @@ public class TECActivity extends ActionBarActivity {
             if (!flagUpdatedExisting) {
                 mDeviceEntries.add(newDevice);
             }
-            StorageAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
@@ -189,7 +175,7 @@ public class TECActivity extends ActionBarActivity {
                     iterator.remove();
                 }
             }
-            StorageAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
@@ -199,6 +185,12 @@ public class TECActivity extends ActionBarActivity {
         public void populateFromStorage() {
             List<Device> temp = Preconditions.checkNotNull(StorageAdapter.getDevices());
             mDeviceEntries = temp;
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            StorageAdapter.setDevices(mDeviceEntries);
+            super.notifyDataSetChanged();
         }
 
         public int getCount() {
@@ -217,30 +209,41 @@ public class TECActivity extends ActionBarActivity {
         }
 
         public View getView(final int position, View convertView, ViewGroup parent) {
-            LinearLayout view;
-            if (convertView == null || mForceRedraw) { //Regenerate the view
-                view = new LinearLayout(mContext);
-                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.device_list_item, view, true);
-            } else { //Reuse the view
-                view = (LinearLayout) convertView;
-            }
+            LinearLayout root;
 
-            final Device device = (Device) getItem(position);
-
-            ((TextView) view.findViewById(R.id.bt_name)).setText(device.getName());
-            if (device.getBluetoothConnection() != null) {
-                ((TextView) view.findViewById(R.id.bt_address)).setText(device.getBluetoothConnection().getAddress());
-            }
-
-            //Set the image resource of the bluetooth icon button based on SDK version
-            ImageButton btButton = (ImageButton) view.findViewById(R.id.list_bt_btn);
-            if (Build.VERSION.SDK_INT >= 16) {
-                btButton.setBackground(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+            //Inflate or instantiate the root view
+            if (convertView != null) {
+                root = (LinearLayout) convertView;
             } else {
-                btButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+                root = new LinearLayout(TECActivity.this);
+                LayoutInflater inflater = (LayoutInflater) TECActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                inflater.inflate(R.layout.device_list_item, root, true);
             }
-            btButton.setOnClickListener(new View.OnClickListener() {
+
+            //Retrieve current Device object
+            final Device device = (Device) getItem(position);
+            Preconditions.checkNotNull(device);
+
+            //Load views from xml
+            TextView nameView = (TextView) root.findViewById(R.id.device_name);
+            TextView detailsView = (TextView) root.findViewById(R.id.device_details);
+            ImageButton deviceImageButton = (ImageButton) root.findViewById(R.id.device_image_button);
+            RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
+            ImageButton optionButton = (ImageButton) root.findViewById(R.id.device_options);
+
+            //Set the title to the device name
+            nameView.setText(device.getName());
+            detailsView.setText("Connections: " + device.getConnections().size());
+
+            //Set the image resource of the device icon button based on SDK version
+            if (Build.VERSION.SDK_INT >= 16) {
+                deviceImageButton.setBackground(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+            } else {
+                deviceImageButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+            }
+
+            //Set action to do on device icon button pressed
+            deviceImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     //TODO obviously disabling a button will make this unreachable, find another icon changing method
@@ -249,73 +252,83 @@ public class TECActivity extends ActionBarActivity {
                 }
             });
 
-            //Set the RelativeLayout of the list item (a sizable chunk) as clickable
-            RelativeLayout listClickable = (RelativeLayout) view.findViewById(R.id.list_clickable);
+            //Set the clickable area of the list item
+            listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
             listClickable.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(TECActivity.this, TerminalActivity.class);
-                    intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, device.getBluetoothConnection());
+                    Intent intent = new Intent(TECActivity.this, DeviceManagerActivity.class);
+                    intent.putExtra(TECIntent.DEVICE_DATA, (Device) mDeviceAdapter.getItem(position));
                     startActivity(intent);
                 }
             });
 
-            //Set an option button that opens a popup menu with a delete option.
-            ImageButton optionButton = (ImageButton) view.findViewById(R.id.device_options);
+            //Create a popup menu to launch when the options button is pressed
             final PopupMenu optionMenu = new PopupMenu(TECActivity.this, optionButton);
             optionMenu.inflate(R.menu.menu_device_options);
             optionMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    int id = item.getItemId();
-                    if (id == R.id.action_rename_device) {
-                        AlertDialog.Builder alert = new AlertDialog.Builder(TECActivity.this);
+                    //Switch action based on clicked item
+                    switch(item.getItemId()) {
+                        case R.id.action_rename_device:
 
-                        alert.setTitle("Title");
-                        alert.setMessage("Message");
+                            //Create an EditText view to get user input
+                            final EditText input = new EditText(TECActivity.this);
+                            input.setText(device.getName());
+                            input.selectAll();
 
-                        // Set an EditText view to get user input
-                        final EditText input = new EditText(TECActivity.this);
-                        alert.setView(input);
+                            //Use a Dialog Builder to set Positive and Negative action buttons
+                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(TECActivity.this);
+                            dialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    String value = input.getText().toString();
+                                    if(value != null && !value.equals("")) {
+                                        device.setName(value);
+                                        notifyDataSetChanged();
+                                    }
+                                }
+                            });
+                            dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    // Canceled.
+                                }
+                            });
 
-                        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                String value = input.getText().toString();
-                                // Do something with value!
-                            }
-                        });
+                            //Create AlertDialog from builder
+                            AlertDialog dialog = dialogBuilder.create();
+                            dialog.setTitle("Rename Device");
+                            dialog.setView(input);
 
-                        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                // Canceled.
-                            }
-                        });
+                            //Set action to happen when dialog shows
+                            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                                @Override
+                                public void onShow(DialogInterface dialog) {
+                                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                                            .toggleSoftInputFromWindow(input.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
+                                }
+                            });
 
-                        alert.show();
-                    } else if (id == R.id.action_delete_device) {
-                        delete(device);
-                        return true;
+                            //Show the dialog
+                            dialog.show();
+                            return true;
+                        case R.id.action_delete_device:
+                            delete(device);
+                            return true;
                     }
                     return false;
                 }
             });
 
+            //Show options menu on option button clicked
             optionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //Show the menu for the selected device
                     optionMenu.show();
                 }
             });
 
-            return view;
-        }
-
-        @Override
-        public void notifyDataSetChanged() {
-            mForceRedraw = true;
-            super.notifyDataSetChanged();
-            mForceRedraw = false;
+            return root;
         }
     }
 }

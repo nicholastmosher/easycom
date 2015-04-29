@@ -11,7 +11,9 @@ import org.tec_hub.tecuniversalcomm.connection.Connection;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -23,7 +25,7 @@ import java.util.UUID;
  * Each avenue of connection is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device implements Parcelable, Serializable {
+public class Device implements Parcelable {
 
     public static final Parcelable.Creator<Device> CREATOR = new Parcelable.Creator<Device>() {
         public Device createFromParcel(Parcel in) {
@@ -35,7 +37,7 @@ public class Device implements Parcelable, Serializable {
         }
     };
 
-    private static final long serialVersionUID = -4431171658721312519L;
+    private static Map<UUID, List<Connection>> connectionListsMap = new HashMap<>();
 
     private String mName;
     private final UUID mUUID;
@@ -45,6 +47,8 @@ public class Device implements Parcelable, Serializable {
         mName = Preconditions.checkNotNull(name);
         mConnections = Preconditions.checkNotNull(connections);
         mUUID = Preconditions.checkNotNull(uuid);
+
+        connectionListsMap.put(mUUID, mConnections);
     }
 
     /**
@@ -95,26 +99,19 @@ public class Device implements Parcelable, Serializable {
 
     /**
      * Constructs this device from it's parcelable representation.
-     *
      * @param in The parcelable representation of this object.
      */
     public Device(Parcel in) {
         mName = Preconditions.checkNotNull(in.readString());
-        mConnections = Preconditions.checkNotNull(
-                new ArrayList<>(
-                Arrays.asList((Connection[]) in.readParcelableArray(
-                Connection.class.getClassLoader()))));
-        for (Connection c : mConnections) {
-            c.setParent(this);
-        }
         String uuidString = Preconditions.checkNotNull(in.readString());
         mUUID = UUID.fromString(uuidString);
+        mConnections = Preconditions.checkNotNull(connectionListsMap.get(mUUID));
     }
 
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(mName);
-        out.writeParcelableArray((Connection[]) mConnections.toArray(), flags);
         out.writeString(mUUID.toString());
+        connectionListsMap.put(mUUID, mConnections);
     }
 
     public void setName(String mName) {
@@ -133,12 +130,12 @@ public class Device implements Parcelable, Serializable {
         return mConnections;
     }
 
-    /**
+/*    *//**
      * Returns an ArrayList of all BT mConnections that are associated with the
      * given device.
      * //FIXME will cause problems when multiple bluetooth connections are assigned to one device
      * @return
-     */
+     *//*
     public BluetoothConnection getBluetoothConnection() {
         if(mConnections != null) {
             for (Connection c : mConnections) {
@@ -148,7 +145,7 @@ public class Device implements Parcelable, Serializable {
             }
         }
         return null;
-    }
+    }*/
 
     public int hashCode() {
         int hash = 2;

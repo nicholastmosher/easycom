@@ -19,25 +19,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".DiscoveryActivity"
-            android:label="Discover New Devices" >
+            android:label="Discover New Devices" />
 
-        </activity>
         <activity
             android:name=".TerminalActivity"
             android:label="Send Data Over Connections"
-            android:parentActivityName=".TECActivity">
-        </activity>
+            android:parentActivityName=".DeviceManagerActivity" />
+
         <activity
-            android:name=".DriveKudosActivity"
-            android:label="Control Kudos!"
-            android:parentActivityName=".TECActivity"
-            android:screenOrientation="portrait">
-            </activity>
+            android:name=".DeviceManagerActivity"
+            android:label="Manage Device Connections"
+            android:parentActivityName=".TECActivity"  />
+
         <service
             android:name=".connection.BluetoothConnectionService"
-            android:label="Manage Bluetooth Connections" >
-        </service>
+            android:label="Manage Bluetooth Connections" />
+
     </application>
 </manifest>
