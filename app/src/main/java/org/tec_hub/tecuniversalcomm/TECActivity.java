@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -149,7 +150,7 @@ public class TECActivity extends ActionBarActivity {
                         flagUpdatedExisting = true;
                         break;
                     } else {
-                        throw new IllegalStateException("[TECActivity.DeviceListAdapter.put] Cannot find device index!");
+                        throw new IllegalStateException("Cannot find device index!");
                     }
                 }
             }
@@ -157,7 +158,7 @@ public class TECActivity extends ActionBarActivity {
             if (!flagUpdatedExisting) {
                 mDeviceEntries.add(newDevice);
             }
-            StorageAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
@@ -174,7 +175,7 @@ public class TECActivity extends ActionBarActivity {
                     iterator.remove();
                 }
             }
-            StorageAdapter.setDevices(mDeviceEntries);
+            notifyDataSetChanged();
         }
 
         /**
@@ -257,7 +258,7 @@ public class TECActivity extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(TECActivity.this, DeviceManagerActivity.class);
-                    intent.putExtra(TECIntent.DEVICE_DATA, device);
+                    intent.putExtra(TECIntent.DEVICE_DATA, (Device) mDeviceAdapter.getItem(position));
                     startActivity(intent);
                 }
             });
