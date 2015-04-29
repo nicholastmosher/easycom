@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:padding="8dp" >
 
-    <ImageButton android:id="@+id/device_image_button"
+    <ImageButton android:id="@+id/connection_image_button"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="4dp"
         android:layout_gravity="center"
         android:scaleType="fitCenter"
-        android:contentDescription="Device Icon"
+        android:contentDescription="Connection Icon"
         android:focusable="true"
         android:paddingLeft="8dp"
         android:paddingRight="8dp" />
@@ -26,16 +25,16 @@
         android:paddingRight="8dp" >
 
         <TextView
-            android:id="@+id/device_details"
+            android:id="@+id/connection_details"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="#777"
+            android:textColor="#333"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true" />
 
         <TextView
-            android:id="@+id/device_name"
+            android:id="@+id/connection_name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="4dp"
@@ -43,11 +42,11 @@
             android:textStyle="bold"
             android:textColor="#333"
             android:textSize="18sp"
-            android:layout_below="@id/device_details"
+            android:layout_below="@id/connection_details"
             android:layout_alignParentLeft="true" />
 
         <ImageButton
-            android:id="@+id/device_options"
+            android:id="@+id/options_button"
             android:background="@drawable/ic_overflow_live"
             android:layout_width="32dp"
             android:layout_height="32dp"

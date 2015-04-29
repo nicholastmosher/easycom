@@ -21,14 +21,15 @@ import android.widget.TextView;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.Vector;
 
 /**
- * Created by user on 3/3/2015.
+ * Created by Nick Mosher on 3/3/2015.
  */
 public class DiscoveryActivity extends ActionBarActivity {
-    public static final String EXTRA_CONNECTION = "connection";
+
     public static final int REQUEST_ENABLE_BT = 1;
 
     /**
@@ -75,7 +76,7 @@ public class DiscoveryActivity extends ActionBarActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent();
-                intent.putExtra(EXTRA_CONNECTION, (Parcelable) connectionAdapter.getItem(position));
+                intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) connectionAdapter.getItem(position));
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -105,7 +106,11 @@ public class DiscoveryActivity extends ActionBarActivity {
     }
 
     private class ConnectionListAdapter extends BaseAdapter {
-        private Vector<Connection> discoveredConnections = new Vector<Connection>();
+        private List<Connection> discoveredConnections;
+
+        public ConnectionListAdapter() {
+            discoveredConnections = new ArrayList<>();
+        }
 
         public void add(Connection connection) {
             if (connection != null) {
@@ -140,7 +145,6 @@ public class DiscoveryActivity extends ActionBarActivity {
 
         /**
          * Returns a view that represents a discovered device.
-         *
          * @param position    The position of this discovered device in it's parent ListView.
          * @param convertView The previous instance of this view, can be used to refresh view.
          * @param parent      The parent of the view to return.
