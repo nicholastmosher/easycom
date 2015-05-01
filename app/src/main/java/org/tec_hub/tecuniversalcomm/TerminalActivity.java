@@ -20,10 +20,7 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
-import org.tec_hub.tecuniversalcomm.data.Packet;
-
-import java.io.IOException;
-import java.io.OutputStream;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 /**
  * Created by Nick Mosher on 4/13/15.
@@ -76,9 +73,10 @@ public class TerminalActivity extends ActionBarActivity {
         });
 
         //Set a listener to accordingly change the status of the connection indicator
-        mConnection.setOnStatusChangedListener(this, new Connection.OnStatusChangedListener() {
+        mConnection.putOnStatusChangedListener(this, new Connection.OnStatusChangedListener() {
             @Override
             public void onConnect() {
+                System.out.println("TerminalActivity -> onConnect");
                 if (mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
                 }
@@ -86,6 +84,7 @@ public class TerminalActivity extends ActionBarActivity {
 
             @Override
             public void onDisconnect() {
+                System.out.println("TerminalActivity -> onDisconnect");
                 if (mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
                 }
@@ -117,9 +116,6 @@ public class TerminalActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(mConnectedIndicator != null) {
-            initIndicator();
-        }
     }
 
     @Override
@@ -138,61 +134,63 @@ public class TerminalActivity extends ActionBarActivity {
 
         //Isolate the connected indicator and set it to a member variable for dynamic icon
         mConnectedIndicator = menu.findItem(R.id.connected_indicator);
-        initIndicator();
+        updateIndicator();
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        switch(item.getItemId()) {
+            //Clicked the clear button
+            case R.id.terminal_button_clear:
+                //Erase all text in the terminal window
+                clearTerminal();
+                return true;
 
-        if(id == R.id.terminal_button_clear) {
+            //Clicked the connection indicator
+            case R.id.connected_indicator:
+                //Toggle between connected and disconnected
+                if(mConnection.isConnected()) {
+                    mConnection.disconnect(this);
+                } else {
+                    mConnection.connect(this);
+                }
+                return true;
 
-            //Erase all text in the terminal window
-            clearTerminal();
-            return true;
-        } else if(id == R.id.connected_indicator) {
+            //Pressed Kudos button
+            case R.id.Kudos:
+                Intent kudosIntent = new Intent(this, DriveKudosActivity.class);
+                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
+                startActivity(kudosIntent);
+                return true;
 
-            //Toggle between connected and disconnected
-            if(mConnection.isConnected()) {
-                mConnection.disconnect(this);
-            } else {
-                mConnection.connect(this);
-            }
-        } else if(id == R.id.Kudos) {
-            Intent kudosIntent = new Intent(this, DriveKudosActivity.class);
-            kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
-            startActivity(kudosIntent);
+            //If the up button is pressed, act like the back button
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
-    private void initIndicator() {
-        mConnectedIndicator.setIcon(getResources().getDrawable(
-                (mConnection.isConnected() ? R.drawable.ic_connected : R.drawable.ic_disconnected)));
+    private void updateIndicator() {
+        if(mConnection.isConnected()) {
+            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
+        } else {
+            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+        }
     }
 
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
 
-        if(mConnection.isConnected()) {
-            OutputStream outputStream = mConnection.getOutputStream();
-            if(outputStream != null) {
-                try {
-                    String packet = Packet.asString("Terminal", data).toJson();
-                    outputStream.write(data.getBytes());
-                    appendTerminal("Me: " + packet);
-                    return true;
-                } catch(IOException e) {
-                    e.printStackTrace();
-                    appendTerminal("Error sending: " + data);
-                    return false;
-                }
-            }
-            return false;
-        } else {
-            appendTerminal("Error sending: " + data);
-        }
+        Intent sendDataIntent = new Intent(this, BluetoothConnectionService.class);
+        sendDataIntent.setAction(TECIntent.ACTION_BLUETOOTH_SEND_DATA);
+        sendDataIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
+        sendDataIntent.putExtra(TECIntent.BLUETOOTH_SEND_DATA, data);
+
+        LocalBroadcastManager.getInstance(this).sendBroadcast(sendDataIntent);
         return false;
     }
 

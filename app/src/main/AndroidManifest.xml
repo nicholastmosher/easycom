@@ -1,42 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.tec_hub.tecuniversalcomm" >
+    package="org.tec_hub.tecuniversalcomm">
 
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_tec_universal_comm"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".TECActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
         <activity
             android:name=".DiscoveryActivity"
-            android:label="Discover New Devices" />
+            android:label="Discover New Devices"/>
 
         <activity
             android:name=".TerminalActivity"
-            android:label="Send Data Over Connections"
-            android:parentActivityName=".DeviceManagerActivity" />
+            android:label="Send Data Over Connections"/>
 
         <activity
             android:name=".DeviceManagerActivity"
-            android:label="Manage Device Connections"
-            android:parentActivityName=".TECActivity"  />
+            android:label="Manage Device Connections"/>
+
+        <activity
+            android:name=".DriveKudosActivity"
+            android:label="Launch Kudos Controls"
+            android:screenOrientation="portrait"/>
 
         <service
             android:name=".connection.BluetoothConnectionService"
-            android:label="Manage Bluetooth Connections" />
+            android:label="Manage Bluetooth Connections"/>
 
     </application>
 </manifest>

@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +32,7 @@ import java.util.List;
 public class DeviceManagerActivity extends ActionBarActivity {
 
     //Stores reference to the last device used here to restore if user uses back navigation
-    private static Device lastDevice;
+    //private static Device lastDevice;
 
     private ListView mListView;
     private ConnectionListAdapter mConnectionAdapter;
@@ -46,14 +48,6 @@ public class DeviceManagerActivity extends ActionBarActivity {
         //Parse the device sent to us on the launching intent
         Device activeDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
 
-        //If there was no device sent with the intent, restore last device data (up navigation)
-        if(activeDevice != null) {
-            lastDevice = activeDevice;
-        } else {
-            Preconditions.checkNotNull(lastDevice);
-            activeDevice = lastDevice;
-        }
-
         //Set the title of the activity to the device name
         getSupportActionBar().setTitle(activeDevice.getName());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -62,6 +56,25 @@ public class DeviceManagerActivity extends ActionBarActivity {
         mListView = (ListView) findViewById(R.id.device_manager_list);
         mConnectionAdapter = new ConnectionListAdapter(activeDevice.getConnections());
         mListView.setAdapter(mConnectionAdapter);
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_device_options, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+
+            //If the up button is pressed act like the back button.
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private class ConnectionListAdapter extends BaseAdapter {

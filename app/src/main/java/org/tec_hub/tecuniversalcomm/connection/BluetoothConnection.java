@@ -9,7 +9,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.TECIntent;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,9 +47,6 @@ public class BluetoothConnection extends Connection implements Parcelable {
 
     private final String mBluetoothAddress;
     private BluetoothSocket mBluetoothSocket;
-
-    private Intent mConnectIntent;
-    private Intent mDisconnectIntent;
 
     public BluetoothConnection(String name, String address) {
         super(Preconditions.checkNotNull(name));
@@ -89,12 +86,12 @@ public class BluetoothConnection extends Connection implements Parcelable {
         if(!isConnected()) {
 
             //Build intent with this connection data to send to service
-            mConnectIntent = new Intent(context, BluetoothConnectionService.class);
-            mConnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_CONNECT);
-            mConnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+            Intent connectIntent = new Intent(context, BluetoothConnectionService.class);
+            connectIntent.setAction(TECIntent.ACTION_BLUETOOTH_CONNECT);
+            connectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
 
             //Send intent through LocalBroadcastManager
-            LocalBroadcastManager.getInstance(context).sendBroadcast(mConnectIntent);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
         }
     }
 
@@ -105,13 +102,14 @@ public class BluetoothConnection extends Connection implements Parcelable {
      */
     public void disconnect(Context context) {
         if(isConnected()) {
+
             //Build intent with this connection data to send to service
-            mDisconnectIntent = new Intent(context, BluetoothConnectionService.class);
-            mDisconnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_DISCONNECT);
-            mDisconnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+            Intent disconnectIntent = new Intent(context, BluetoothConnectionService.class);
+            disconnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_DISCONNECT);
+            disconnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
 
             //Send intent through LocalBroadcastManager
-            LocalBroadcastManager.getInstance(context).sendBroadcast(mDisconnectIntent);
+            LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
         }
     }
 

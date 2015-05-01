@@ -1,4 +1,6 @@
-package org.tec_hub.tecuniversalcomm;
+package org.tec_hub.tecuniversalcomm.intents;
+
+import android.content.Intent;
 
 /**
  * Created by Nick Mosher on 4/17/15.
@@ -34,6 +36,8 @@ public interface TECIntent {
      */
     public static final String ACTION_BLUETOOTH_UPDATE_INPUT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_UPDATE_INPUT";
 
+    public static final String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_SEND_DATA";
+
     //Extras
     /**
      * Used by any intent carrying a BluetoothConnection as a Parcelable Extra.
@@ -45,5 +49,8 @@ public interface TECIntent {
      * by an active BluetoothConnection.
      */
     public static final String BLUETOOTH_RECEIVED_DATA = "bluetooth_input_data";
+
+    public static final String BLUETOOTH_SEND_DATA = "bluetooth_send_data";
+
     public static final String DEVICE_DATA = "device_data";
 }

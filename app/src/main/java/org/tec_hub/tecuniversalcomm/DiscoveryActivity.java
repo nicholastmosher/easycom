@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.ArrayList;
 import java.util.List;

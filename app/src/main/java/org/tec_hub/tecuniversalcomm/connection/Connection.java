@@ -20,7 +20,6 @@ import java.util.UUID;
  */
 public abstract class Connection implements Parcelable {
 
-
     /**
      * All Connections will eventually be transmitted through the Parcelable
      * framework, however the Parcel methods do not support Generics like
@@ -42,9 +41,6 @@ public abstract class Connection implements Parcelable {
      * for storing and retrieving data from static Maps.
      */
     protected transient final UUID mUUID;
-
-    //Transient to prevent infinite loops during JSON serialization.
-    protected transient Device mParent = null;
 
     /**
      * Contains all registered OnStatusChangedListeners for this Connection.
@@ -76,26 +72,6 @@ public abstract class Connection implements Parcelable {
         out.writeString(mConnectionName);
         out.writeString(mUUID.toString());
         mConnectionListenerMaps.put(mUUID, mOnStatusChangedListeners);
-    }
-
-    /**
-     * Sets the device object that this connection is a part of.
-     * @param mParent The Device that is the parent to this connection.
-     */
-    public void setParent(Device mParent) {
-        this.mParent = mParent;
-    }
-
-    /**
-     * Returns the Device object that is this Connection's parent.
-     * @return This Connection's parent Device.
-     */
-    public Device getParent() throws IllegalStateException {
-        if(mParent != null) {
-            return mParent;
-        } else {
-            throw new IllegalStateException("This connection has no parent!");
-        }
     }
 
     /**
@@ -164,7 +140,9 @@ public abstract class Connection implements Parcelable {
      * @param context The context of the listener.
      * @param listener The OnStatusChangedListener to associate with the context.
      */
-    public void setOnStatusChangedListener(Context context, OnStatusChangedListener listener) {
+    public void putOnStatusChangedListener(Context context, OnStatusChangedListener listener) {
+        Preconditions.checkNotNull(context);
+        Preconditions.checkNotNull(listener);
         mOnStatusChangedListeners.put(context, listener);
     }
 

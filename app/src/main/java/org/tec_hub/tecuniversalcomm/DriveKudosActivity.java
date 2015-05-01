@@ -2,11 +2,14 @@ package org.tec_hub.tecuniversalcomm;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
 
@@ -14,18 +17,24 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.Packet;
-
-import java.io.IOException;
-import java.io.OutputStream;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 /**
  * Created by Nick Mosher on 4/24/15.
+ * Temporary activity made to demonstrate use of the BluetoothConnection
+ * in a practical application, namely the driving of the Kudos rover.
+ * Senses Accelerometer readings and sends Json data of drive commands
+ * in a UDP-style packet spamming with no verification.
  */
 public class DriveKudosActivity extends ActionBarActivity {
 
     private BluetoothConnection mConnection;
     private BigPanel mPanel;
     private Thread mDriveThread;
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+
     private boolean panelHeldDown = false;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -53,11 +62,35 @@ public class DriveKudosActivity extends ActionBarActivity {
         super.onResume();
         mDriveThread = new DriveKudosThread();
         mDriveThread.start();
+        mSensorManager.registerListener((SensorEventListener) mDriveThread, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    public void onPause() {
+        super.onPause();
+        mDriveThread.interrupt();
+        mSensorManager.unregisterListener((SensorEventListener) mDriveThread);
     }
 
     public void onStop() {
         super.onStop();
         mDriveThread.interrupt();
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        mDriveThread.interrupt();
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+
+            //If the up button is pressed, act like the back button.
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private class BigPanel extends FrameLayout {
@@ -81,51 +114,112 @@ public class DriveKudosActivity extends ActionBarActivity {
             }
             return true;
         }
+
+        public boolean isHeldDown() {
+            return panelHeldDown;
+        }
     }
 
-    public class DriveKudosThread extends Thread {
+    public class DriveKudosThread extends Thread implements SensorEventListener {
+        private boolean running;
 
-        private boolean isRunning;
+        private double mX = 0.0;
+        private double mY = 0.0;
+        private double mZ = 0.0;
 
         public DriveKudosThread() {
-            isRunning = true;
+            running = true;
+            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            Sensor sensor = event.sensor;
+
+            if(sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                mX = event.values[0];
+                mY = event.values[1];
+                mZ = event.values[2];
+
+                System.out.println("Accelerometer values: x=" + mX + ", y=" + mY + ", z=" + mZ);
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
         }
 
         @Override
         public void run() {
-            isRunning = true;
+            running = true;
             System.out.println("Started background task");
-            OutputStream writer;
-            boolean requestedConnect = false;
-            while(isRunning) {
-                if(!mConnection.isConnected() && !requestedConnect) {
-                    mConnection.connect(DriveKudosActivity.this);
-                    requestedConnect = true;
+
+            int thinner = 0;
+            while(running) {
+
+                String sendData = null;
+
+                if(mPanel.isHeldDown()) {
+
+                    thinner = (++thinner % 5);
+                    if(thinner % 5 == 0) {
+                        sendData = Packet.asBoolean("KudosEnable", true).toJson();
+                        System.out.println("Data to send: " + sendData);
+                        BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
+                        LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(enableKudosIntent);
+                    }
+
+                    double x = mX;
+                    double y = mY;
+
+                    double upperCap = 7.0;
+                    double lowerCap = -7.0;
+
+                    if(x > upperCap) {
+                        x = upperCap;
+                    } else if(x < lowerCap) {
+                        x = lowerCap;
+                    }
+
+                    if(y > upperCap) {
+                        y = upperCap;
+                    } else if(y < lowerCap) {
+                        y = lowerCap;
+                    }
+
+                    x = map(x, lowerCap, upperCap, 150, 30);
+                    y = map(y, lowerCap, upperCap, 30, 150);
+
+                    //Trim to two decimals
+                    x = Math.floor(x * 100) / 100;
+                    y = Math.floor(y * 100) / 100;
+
+                    sendData = Packet.asDoubleArray("KudosDrive", new double[]{x, y}).toJson();
+                    System.out.println("Data to send: " + sendData);
+                    BluetoothSendIntent driveKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
+                    LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(driveKudosIntent);
+                } else {
+                    sendData = Packet.asBoolean("KudosEnable", false).toJson();
+                    System.out.println("Data to send: " + sendData);
+                    BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
+                    LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(enableKudosIntent);
                 }
 
-                if(mConnection.isConnected()) {
-                    writer = mConnection.getOutputStream();
-                    String data;
-                    if(panelHeldDown) {
-                        data = Packet.asDoubleArray("KudosDrive", new double[]{1.0, -1.0}).toJson();
-                    } else {
-                        data = Packet.asDoubleArray("KudosDrive", new double[]{0.0, 0.0}).toJson();
-                    }
-                    System.out.println(data);
-                    try {
-                        writer.write(data.getBytes());
-                    } catch(IOException e) {
-                        e.printStackTrace();
-                    }
-                }
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch(InterruptedException e) {
                     e.printStackTrace();
-                    isRunning = false;
+                    running = false;
                 }
             }
             System.out.println("Ended background task");
+        }
+
+        private double map(double x, double in_min, double in_max, double out_min, double out_max)
+        {
+            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
         }
     }
 }
