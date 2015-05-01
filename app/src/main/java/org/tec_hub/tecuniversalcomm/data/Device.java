@@ -1,16 +1,13 @@
-package org.tec_hub.tecuniversalcomm;
+package org.tec_hub.tecuniversalcomm.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

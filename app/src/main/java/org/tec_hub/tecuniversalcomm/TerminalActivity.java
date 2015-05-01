@@ -17,9 +17,9 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnectionService;
-import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
+import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 /**

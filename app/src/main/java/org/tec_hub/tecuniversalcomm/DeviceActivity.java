@@ -19,8 +19,9 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.List;
 /**
  * Created by Nick Mosher on 3/18/2015.
  */
-public class DeviceManagerActivity extends ActionBarActivity {
+public class DeviceActivity extends ActionBarActivity {
 
     //Stores reference to the last device used here to restore if user uses back navigation
     //private static Device lastDevice;
@@ -112,8 +113,8 @@ public class DeviceManagerActivity extends ActionBarActivity {
             if(convertView != null) {
                 root = (RelativeLayout) convertView;
             } else {
-                root = new RelativeLayout(DeviceManagerActivity.this);
-                LayoutInflater inflater = (LayoutInflater) DeviceManagerActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                root = new RelativeLayout(DeviceActivity.this);
+                LayoutInflater inflater = (LayoutInflater) DeviceActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 inflater.inflate(R.layout.connection_list_item, root);
             }
 
@@ -162,14 +163,14 @@ public class DeviceManagerActivity extends ActionBarActivity {
                 });
 
                 //Set up options menu, anchored to optionsButton
-                final PopupMenu optionsMenu = new PopupMenu(DeviceManagerActivity.this, optionsButton);
+                final PopupMenu optionsMenu = new PopupMenu(DeviceActivity.this, optionsButton);
                 optionsMenu.inflate(R.menu.menu_connection_options);
                 optionsMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         switch(item.getItemId()) {
                             case R.id.action_open_terminal:
-                                Intent terminalIntent = new Intent(DeviceManagerActivity.this, TerminalActivity.class);
+                                Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
                                 terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
                                 startActivity(terminalIntent);
                                 return true;

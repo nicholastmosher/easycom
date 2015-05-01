@@ -15,7 +15,7 @@ import android.widget.FrameLayout;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.Packet;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;

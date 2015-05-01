@@ -1,12 +1,10 @@
-package org.tec_hub.tecuniversalcomm.connection;
+package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.common.base.Preconditions;
-
-import org.tec_hub.tecuniversalcomm.Device;
 
 import java.io.InputStream;
 import java.io.OutputStream;

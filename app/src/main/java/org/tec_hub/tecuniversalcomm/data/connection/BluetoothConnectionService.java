@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.connection;
+package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;

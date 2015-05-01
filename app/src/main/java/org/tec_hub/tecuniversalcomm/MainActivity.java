@@ -24,7 +24,8 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
@@ -32,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TECActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity {
 
     public static final int REQUEST_DISCOVERY = 2;
 
@@ -83,7 +84,7 @@ public class TECActivity extends ActionBarActivity {
                 return true;
             case R.id.action_add_device:
                 //Open the DiscoveryActivity when the Add button is pressed.
-                startActivityForResult(new Intent(TECActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
+                startActivityForResult(new Intent(MainActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -214,8 +215,8 @@ public class TECActivity extends ActionBarActivity {
             if (convertView != null) {
                 root = (LinearLayout) convertView;
             } else {
-                root = new LinearLayout(TECActivity.this);
-                LayoutInflater inflater = (LayoutInflater) TECActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                root = new LinearLayout(MainActivity.this);
+                LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 inflater.inflate(R.layout.device_list_item, root, true);
             }
 
@@ -236,9 +237,9 @@ public class TECActivity extends ActionBarActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
             } else {
-                deviceImageButton.setImageDrawable(TECActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
             }
 
             //Set action to do on device icon button pressed
@@ -256,14 +257,14 @@ public class TECActivity extends ActionBarActivity {
             listClickable.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(TECActivity.this, DeviceManagerActivity.class);
+                    Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
                     intent.putExtra(TECIntent.DEVICE_DATA, (Device) mDeviceAdapter.getItem(position));
                     startActivity(intent);
                 }
             });
 
             //Create a popup menu to launch when the options button is pressed
-            final PopupMenu optionMenu = new PopupMenu(TECActivity.this, optionButton);
+            final PopupMenu optionMenu = new PopupMenu(MainActivity.this, optionButton);
             optionMenu.inflate(R.menu.menu_device_options);
             optionMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -273,12 +274,12 @@ public class TECActivity extends ActionBarActivity {
                         case R.id.action_rename_device:
 
                             //Create an EditText view to get user input
-                            final EditText input = new EditText(TECActivity.this);
+                            final EditText input = new EditText(MainActivity.this);
                             input.setText(device.getName());
                             input.selectAll();
 
                             //Use a Dialog Builder to set Positive and Negative action buttons
-                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(TECActivity.this);
+                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this);
                             dialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int whichButton) {
                                     String value = input.getText().toString();

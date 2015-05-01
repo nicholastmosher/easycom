@@ -5,8 +5,8 @@ import android.content.Intent;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.connection.BluetoothConnectionService;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 
 /**
  * Created by Nick Mosher on 4/29/15.
