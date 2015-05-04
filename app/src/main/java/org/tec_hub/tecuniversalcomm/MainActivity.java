@@ -50,7 +50,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tec);
+        setContentView(R.layout.activity_main);
 
         StorageAdapter.init(this);
         mDeviceAdapter = new DeviceListAdapter();
@@ -217,7 +217,7 @@ public class MainActivity extends ActionBarActivity {
             } else {
                 root = new LinearLayout(MainActivity.this);
                 LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.device_list_item, root, true);
+                inflater.inflate(R.layout.list_item_device, root, true);
             }
 
             //Retrieve current Device object

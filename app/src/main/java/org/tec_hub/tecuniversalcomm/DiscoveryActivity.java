@@ -61,7 +61,7 @@ public class DiscoveryActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("Discovered Devices");
-        setContentView(R.layout.discovered_devices_list);
+        setContentView(R.layout.activity_discover_connections);
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -157,7 +157,7 @@ public class DiscoveryActivity extends ActionBarActivity {
             if (convertView == null) {
                 view = new LinearLayout(DiscoveryActivity.this);
                 LayoutInflater inflater = (LayoutInflater) DiscoveryActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.discovered_bt_device_list_item, view, true);
+                inflater.inflate(R.layout.list_item_discovered_connection, view, true);
             } else {
                 view = (LinearLayout) convertView;
             }

@@ -32,9 +32,6 @@ import java.util.List;
  */
 public class DeviceActivity extends ActionBarActivity {
 
-    //Stores reference to the last device used here to restore if user uses back navigation
-    //private static Device lastDevice;
-
     private ListView mListView;
     private ConnectionListAdapter mConnectionAdapter;
 
@@ -115,7 +112,7 @@ public class DeviceActivity extends ActionBarActivity {
             } else {
                 root = new RelativeLayout(DeviceActivity.this);
                 LayoutInflater inflater = (LayoutInflater) DeviceActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.connection_list_item, root);
+                inflater.inflate(R.layout.list_item_connection, root);
             }
 
             //Retrieve current Connection object
@@ -140,10 +137,11 @@ public class DeviceActivity extends ActionBarActivity {
                 detailsView.setText(bluetoothConnection.getAddress());
 
                 //Set button icon based on sdk version
+                int bluetoothIconId = bluetoothConnection.isConnected() ? R.drawable.ic_bluetooth : R.drawable.ic_bluetooth_grey;
                 if(Build.VERSION.SDK_INT >= 16) {
-                    iconButton.setBackground(getResources().getDrawable(R.drawable.bt_icon_live));
+                    iconButton.setBackground(getResources().getDrawable(bluetoothIconId));
                 } else {
-                    iconButton.setImageDrawable(getResources().getDrawable(R.drawable.bt_icon_live));
+                    iconButton.setImageDrawable(getResources().getDrawable(bluetoothIconId));
                 }
 
                 //Set action to do on icon button click
@@ -158,7 +156,9 @@ public class DeviceActivity extends ActionBarActivity {
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
+                        terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                        startActivity(terminalIntent);
                     }
                 });
 
@@ -173,6 +173,9 @@ public class DeviceActivity extends ActionBarActivity {
                                 Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
                                 terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
                                 startActivity(terminalIntent);
+                                return true;
+                            case R.id.action_open_kudos:
+                                //Kudos code here
                                 return true;
                             default:
                                 return false;
