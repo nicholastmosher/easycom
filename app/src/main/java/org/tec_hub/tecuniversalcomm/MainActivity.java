@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
@@ -43,7 +44,7 @@ public class MainActivity extends ActionBarActivity {
     private ListView mDeviceListView;
 
     /**
-     * The custom data adapter that ports device metadata to the mDeviceListView.
+     * The custom data adapter that ports device data to the mDeviceListView.
      */
     private DeviceListAdapter mDeviceAdapter;
 
@@ -52,11 +53,15 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getSupportActionBar().setTitle("TEC COMM | Devices");
+
         StorageAdapter.init(this);
         mDeviceAdapter = new DeviceListAdapter();
         mDeviceListView = (ListView) findViewById(R.id.tec_activity_listview);
         mDeviceListView.setAdapter(mDeviceAdapter);
         mDeviceListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+        BluetoothConnectionService.launch(this);
     }
 
     @Override
@@ -237,23 +242,20 @@ public class MainActivity extends ActionBarActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_bluetooth));
             } else {
-                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.bt_icon_live));
+                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_bluetooth));
             }
 
             //Set action to do on device icon button pressed
             deviceImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //TODO obviously disabling a button will make this unreachable, find another icon changing method
-                    ImageButton button = (ImageButton) v;
-                    button.setEnabled(!button.isEnabled());
+
                 }
             });
 
             //Set the clickable area of the list item
-            listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
             listClickable.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

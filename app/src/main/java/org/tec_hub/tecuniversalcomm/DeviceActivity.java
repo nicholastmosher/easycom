@@ -2,8 +2,10 @@ package org.tec_hub.tecuniversalcomm;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,17 +16,20 @@ import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,13 +52,15 @@ public class DeviceActivity extends ActionBarActivity {
         Device activeDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
 
         //Set the title of the activity to the device name
-        getSupportActionBar().setTitle(activeDevice.getName());
+        getSupportActionBar().setTitle(activeDevice.getName() + " | Connections");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);
         mConnectionAdapter = new ConnectionListAdapter(activeDevice.getConnections());
         mListView.setAdapter(mConnectionAdapter);
+
+        BluetoothConnectionService.launch(this);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -79,10 +86,6 @@ public class DeviceActivity extends ActionBarActivity {
 
         private List<Connection> mConnections;
 
-        public ConnectionListAdapter() {
-            mConnections = new ArrayList<>();
-        }
-
         public ConnectionListAdapter(List<Connection> connections) {
             mConnections = Preconditions.checkNotNull(connections);
         }
@@ -105,7 +108,6 @@ public class DeviceActivity extends ActionBarActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             RelativeLayout root;
-
             //Inflate or instantiate the root view
             if(convertView != null) {
                 root = (RelativeLayout) convertView;
@@ -122,8 +124,9 @@ public class DeviceActivity extends ActionBarActivity {
             //Load views from xml
             TextView nameView = (TextView) root.findViewById(R.id.connection_name);
             TextView detailsView = (TextView) root.findViewById(R.id.connection_details);
-            ImageButton iconButton = (ImageButton) root.findViewById(R.id.connection_image_button);
+            final ImageButton iconButton = (ImageButton) root.findViewById(R.id.connection_image_button);
             RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
+            final ProgressBar progressIndicator = (ProgressBar) root.findViewById(R.id.progress_indicator);
             final ImageButton optionsButton = (ImageButton) root.findViewById(R.id.options_button);
 
             //Do actions common to all Connections
@@ -138,17 +141,45 @@ public class DeviceActivity extends ActionBarActivity {
 
                 //Set button icon based on sdk version
                 int bluetoothIconId = bluetoothConnection.isConnected() ? R.drawable.ic_bluetooth : R.drawable.ic_bluetooth_grey;
-                if(Build.VERSION.SDK_INT >= 16) {
-                    iconButton.setBackground(getResources().getDrawable(bluetoothIconId));
-                } else {
-                    iconButton.setImageDrawable(getResources().getDrawable(bluetoothIconId));
-                }
+                setImageButtonDrawable(iconButton, bluetoothIconId);
+
+                //FIXME due to context mapping on OnStatusChangedListeners, only one view will probably be updated
+                //Set callback for connection status changed to change icon
+                bluetoothConnection.putOnStatusChangedListener(DeviceActivity.this, new Connection.OnStatusChangedListener() {
+                    @Override
+                    public void onConnect() {
+                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth);
+                        progressIndicator.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onDisconnect() {
+                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_grey);
+                        progressIndicator.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onConnectFailed() {
+                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_grey);
+                        progressIndicator.setVisibility(View.GONE);
+                    }
+                });
 
                 //Set action to do on icon button click
                 iconButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        if(bluetoothConnection.isConnected()) {
+                            //Send disconnect intent
+                            System.out.println("IconButton pressed -> sendDisconnect");
+                            progressIndicator.setVisibility(View.VISIBLE);
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothDisconnectIntent(DeviceActivity.this, bluetoothConnection));
+                        } else {
+                            //Send connect intent
+                            System.out.println("IconButton pressed -> sendConnect");
+                            progressIndicator.setVisibility(View.VISIBLE);
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothConnectIntent(DeviceActivity.this, bluetoothConnection));
+                        }
                     }
                 });
 
@@ -162,7 +193,7 @@ public class DeviceActivity extends ActionBarActivity {
                     }
                 });
 
-                //Set up options menu, anchored to optionsButton
+                //Set up options menu anchored to optionsButton
                 final PopupMenu optionsMenu = new PopupMenu(DeviceActivity.this, optionsButton);
                 optionsMenu.inflate(R.menu.menu_connection_options);
                 optionsMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -192,7 +223,19 @@ public class DeviceActivity extends ActionBarActivity {
                     }
                 });
             }
+
+            //Insert unique inflation of other Connection types in the future
+
             return root;
+        }
+
+        private void setImageButtonDrawable(final ImageButton button, int resourceId) {
+            if(Build.VERSION.SDK_INT >= 16) {
+                button.setBackground(getResources().getDrawable(resourceId));
+            } else {
+                button.setImageDrawable(getResources().getDrawable(resourceId));
+            }
+            button.setColorFilter(0xFFFF0000);
         }
     }
 }

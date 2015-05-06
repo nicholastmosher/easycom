@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 /**
@@ -42,9 +43,7 @@ public class TerminalActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connection_terminal);
 
-        if(!BluetoothConnectionService.isLaunched()) {
-            startService(new Intent(this, BluetoothConnectionService.class));
-        }
+        BluetoothConnectionService.launch(this);
 
         Bundle extras = getIntent().getExtras();
         BluetoothConnection tempConnection = extras.getParcelable(TECIntent.BLUETOOTH_CONNECTION_DATA);
@@ -86,6 +85,13 @@ public class TerminalActivity extends ActionBarActivity {
             public void onDisconnect() {
                 System.out.println("TerminalActivity -> onDisconnect");
                 if (mConnectedIndicator != null) {
+                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                }
+            }
+
+            @Override
+            public void onConnectFailed() {
+                if(mConnectedIndicator != null) {
                     mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
                 }
             }
