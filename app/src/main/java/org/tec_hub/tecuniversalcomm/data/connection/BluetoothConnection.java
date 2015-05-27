@@ -71,6 +71,14 @@ public class BluetoothConnection extends Connection implements Parcelable {
 
     public boolean isConnected() {
         if(mBluetoothSocket != null) {
+            if(!mBluetoothSocket.isConnected()) {
+                try {
+                    mBluetoothSocket.close();
+                } catch(IOException e) {
+                    System.out.println("Bluetooth socket not connected; error closing socket!");
+                    e.printStackTrace();
+                }
+            }
             return mBluetoothSocket.isConnected();
         } else {
             return false;

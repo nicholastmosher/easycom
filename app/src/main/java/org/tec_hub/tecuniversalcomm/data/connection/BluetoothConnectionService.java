@@ -78,6 +78,11 @@ public class BluetoothConnectionService extends Service {
                                         }
                                         receiveInputThread = null;
                                     }
+
+                                    @Override
+                                    public void onConnectFailed() {
+
+                                    }
                                 });
                         //Initiate connecting
                         new BluetoothConnectTask(bluetoothConnection).execute();
@@ -109,6 +114,16 @@ public class BluetoothConnectionService extends Service {
         launched = false;
     }
 
+    /**
+     * Launches the BluetoothConnectionService if it is not already active.
+     * @param context The context to launch the Service from.
+     */
+    public static void launch(Context context) {
+        if(!launched) {
+            context.startService(new Intent(context, BluetoothConnectionService.class));
+        }
+    }
+
     public IBinder onBind(Intent intent) {
         return null;
     }
@@ -136,39 +151,51 @@ public class BluetoothConnectionService extends Service {
         }
     }
 
-    private class BluetoothConnectTask extends AsyncTask<Void, Void, Boolean> {
+    private static class BluetoothConnectTask extends AsyncTask<Void, Void, Boolean> {
 
         private BluetoothConnection mConnection;
         private BluetoothAdapter mBluetoothAdapter;
         private BluetoothSocket mBluetoothSocket;
+        private static int retryCount;
 
-        public BluetoothConnectTask(BluetoothConnection connection) {
+        private BluetoothConnectTask(BluetoothConnection connection, int retry) {
             mConnection = Preconditions.checkNotNull(connection);
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            mBluetoothSocket = null;
+            retryCount = retry;
+        }
+
+        public BluetoothConnectTask(BluetoothConnection connection) {
+            this(connection, 0);
         }
 
         protected Boolean doInBackground(Void... params) {
             //Check if BT is enabled
             if (!mBluetoothAdapter.isEnabled()) {
                 System.out.println("Bluetooth not enabled!"); //TODO better handling.
-                throw new IllegalStateException("Cannot connect, Bluetooth is disabled!");
+                new IllegalStateException("Cannot connect, Bluetooth is disabled!").printStackTrace();
             }
+            System.out.println("BluetoothAdapter Enabled...");
 
             //Define a BluetoothDevice with the address from our Connection.
             String address = mConnection.getAddress();
-            BluetoothDevice device;
+            BluetoothDevice device = null;
             if(address != null  && BluetoothAdapter.checkBluetoothAddress(address)) {
                 device = mBluetoothAdapter.getRemoteDevice(address);
+                System.out.println("Bluetooth Device parsed from BluetoothAdapter...");
             } else {
-                throw new IllegalStateException("Error connecting to bluetooth! Problem with address.");
+                new IllegalStateException("Error connecting to bluetooth! Problem with address.").printStackTrace();
+                return false;
             }
 
             //Try to retrieve a BluetoothSocket from the BluetoothDevice.
             try {
                 mBluetoothSocket = device.createRfcommSocketToServiceRecord(BluetoothConnection.BLUETOOTH_SERIAL_UUID);
+                System.out.println("BluetoothSocket retrieved from Bluetooth Device...");
+
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new IllegalStateException("Error retrieving bluetooth socket!");
+                return false;
             }
 
             //Shouldn't need to be discovering at this point.
@@ -178,15 +205,15 @@ public class BluetoothConnectionService extends Service {
             try {
                 mBluetoothSocket.connect();
                 mConnection.setBluetoothSocket(mBluetoothSocket);
+                System.out.println("BluetoothSocket connected, success!");
             } catch (IOException e) {
                 e.printStackTrace();
                 try {
                     mBluetoothSocket.close();
                 } catch (IOException e2) {
                     e2.printStackTrace();
-                    throw new IllegalStateException("Error closing BT socket after error connecting!");
                 }
-                throw new IllegalStateException("Error connecting to BT socket!");
+                return false;
             }
 
             //If we've made it this far, must have been a success.
@@ -196,7 +223,29 @@ public class BluetoothConnectionService extends Service {
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
-            mConnection.notifyConnected();
+            if(success) {
+                System.out.println("Connect success");
+                mConnection.notifyConnected();
+            } else {
+                System.out.println("Connect failed");
+                if(mBluetoothSocket.isConnected()) {
+                    System.out.println("WARNING: BluetoothConnectTask reported error, but is connected.");
+                    mConnection.notifyConnected();
+                } else {
+                    if(retryCount < 3) {
+                        retryCount++;
+                        System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
+                        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                        mBluetoothSocket = null;
+                        new BluetoothConnectTask(mConnection, retryCount).execute();
+                        BluetoothConnectTask.this.cancel(true);
+                    } else {
+                        retryCount = 0;
+                        System.out.println("Error connecting, Aborting!");
+                        mConnection.notifyConnectFailed();
+                    }
+                }
+            }
         }
     }
 
@@ -256,9 +305,13 @@ public class BluetoothConnectionService extends Service {
                 } catch(IOException e) {
                     e.printStackTrace();
                 }
-                System.out.println(line);
-                BluetoothReceiveIntent receivedInputIntent = new BluetoothReceiveIntent(BluetoothConnectionService.this, TerminalActivity.class, line);
-                LocalBroadcastManager.getInstance(BluetoothConnectionService.this).sendBroadcast(receivedInputIntent);
+
+                //Ensure that we're not just sending blank strings; can happen if connection ends.
+                if(!line.equals("")) {
+                    System.out.println(line);
+                    BluetoothReceiveIntent receivedInputIntent = new BluetoothReceiveIntent(BluetoothConnectionService.this, TerminalActivity.class, line);
+                    LocalBroadcastManager.getInstance(BluetoothConnectionService.this).sendBroadcast(receivedInputIntent);
+                }
 
                 try {
                     Thread.sleep(50);
