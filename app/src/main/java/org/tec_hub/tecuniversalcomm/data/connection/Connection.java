@@ -129,6 +129,7 @@ public abstract class Connection implements Parcelable {
     public interface OnStatusChangedListener {
         public void onConnect();
         public void onDisconnect();
+        public void onConnectFailed();
     }
 
     /**
@@ -172,6 +173,14 @@ public abstract class Connection implements Parcelable {
         Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
         for(Context c : listenerKeys) {
             mOnStatusChangedListeners.get(c).onDisconnect();
+        }
+    }
+
+    protected void notifyConnectFailed() {
+        Preconditions.checkNotNull(mOnStatusChangedListeners);
+        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
+        for(Context c : listenerKeys) {
+            mOnStatusChangedListeners.get(c).onConnectFailed();
         }
     }
 }
