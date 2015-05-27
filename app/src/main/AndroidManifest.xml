@@ -35,7 +35,7 @@
         <activity
             android:name=".DriveKudosActivity"
             android:label="Launch Kudos Controls"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="landscape"/>
 
         <service
             android:name=".data.connection.BluetoothConnectionService"

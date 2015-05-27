@@ -1,7 +1,12 @@
 package org.tec_hub.tecuniversalcomm.data;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 import com.google.common.base.Preconditions;
 
@@ -175,5 +180,45 @@ public class Device implements Parcelable {
 
     public int describeContents() {
         return 0;
+    }
+
+    public static void promptRename(final Device device, final Context context) {
+        //Create an EditText view to get user input
+        final EditText input = new EditText(context);
+        input.setText(device.getName());
+        input.selectAll();
+
+        //Use a Dialog Builder to set Positive and Negative action buttons
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
+        dialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                if(value != null && !value.equals("")) {
+                    device.setName(value);
+                }
+            }
+        });
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+
+        //Create AlertDialog from builder
+        AlertDialog dialog = dialogBuilder.create();
+        dialog.setTitle("Rename Device");
+        dialog.setView(input);
+
+        //Set action to happen when dialog shows
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                ((InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE))
+                        .toggleSoftInputFromWindow(input.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
+            }
+        });
+
+        //Show the dialog
+        dialog.show();
     }
 }

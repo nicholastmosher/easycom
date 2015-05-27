@@ -2,7 +2,6 @@ package org.tec_hub.tecuniversalcomm;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.PorterDuff;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -39,6 +38,7 @@ public class DeviceActivity extends ActionBarActivity {
 
     private ListView mListView;
     private ConnectionListAdapter mConnectionAdapter;
+    private Device mDevice;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,15 +49,15 @@ public class DeviceActivity extends ActionBarActivity {
         Preconditions.checkNotNull(launchIntent);
 
         //Parse the device sent to us on the launching intent
-        Device activeDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
+        mDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
 
         //Set the title of the activity to the device name
-        getSupportActionBar().setTitle(activeDevice.getName() + " | Connections");
+        getSupportActionBar().setTitle(mDevice.getName() + " | Connections");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);
-        mConnectionAdapter = new ConnectionListAdapter(activeDevice.getConnections());
+        mConnectionAdapter = new ConnectionListAdapter(mDevice.getConnections());
         mListView.setAdapter(mConnectionAdapter);
 
         BluetoothConnectionService.launch(this);
@@ -71,6 +71,14 @@ public class DeviceActivity extends ActionBarActivity {
 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+
+            case R.id.action_rename_device:
+                Device.promptRename(mDevice, DeviceActivity.this);
+                return true;
+
+            case R.id.action_delete_device:
+
+                return true;
 
             //If the up button is pressed act like the back button.
             case android.R.id.home:
@@ -206,7 +214,9 @@ public class DeviceActivity extends ActionBarActivity {
                                 startActivity(terminalIntent);
                                 return true;
                             case R.id.action_open_kudos:
-                                //Kudos code here
+                                Intent kudosIntent = new Intent(DeviceActivity.this, DriveKudosActivity.class);
+                                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                                startActivity(kudosIntent);
                                 return true;
                             default:
                                 return false;

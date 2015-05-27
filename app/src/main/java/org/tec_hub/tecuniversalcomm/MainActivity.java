@@ -1,8 +1,6 @@
 package org.tec_hub.tecuniversalcomm;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,9 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -242,9 +238,9 @@ public class MainActivity extends ActionBarActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_bluetooth));
+                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_integrated_circuit));
             } else {
-                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_bluetooth));
+                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_integrated_circuit));
             }
 
             //Set action to do on device icon button pressed
@@ -274,45 +270,8 @@ public class MainActivity extends ActionBarActivity {
                     //Switch action based on clicked item
                     switch(item.getItemId()) {
                         case R.id.action_rename_device:
-
-                            //Create an EditText view to get user input
-                            final EditText input = new EditText(MainActivity.this);
-                            input.setText(device.getName());
-                            input.selectAll();
-
-                            //Use a Dialog Builder to set Positive and Negative action buttons
-                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(MainActivity.this);
-                            dialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    String value = input.getText().toString();
-                                    if(value != null && !value.equals("")) {
-                                        device.setName(value);
-                                        notifyDataSetChanged();
-                                    }
-                                }
-                            });
-                            dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int whichButton) {
-                                    // Canceled.
-                                }
-                            });
-
-                            //Create AlertDialog from builder
-                            AlertDialog dialog = dialogBuilder.create();
-                            dialog.setTitle("Rename Device");
-                            dialog.setView(input);
-
-                            //Set action to happen when dialog shows
-                            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                                @Override
-                                public void onShow(DialogInterface dialog) {
-                                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
-                                            .toggleSoftInputFromWindow(input.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
-                                }
-                            });
-
-                            //Show the dialog
-                            dialog.show();
+                            Device.promptRename(device, MainActivity.this); //FIXME does not change persistently
+                            notifyDataSetChanged();
                             return true;
                         case R.id.action_delete_device:
                             delete(device);
