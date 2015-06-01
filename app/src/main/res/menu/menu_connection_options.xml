@@ -6,4 +6,7 @@
     <item
         android:id="@+id/action_open_kudos"
         android:title="Kudos"/>
+    <item
+        android:id="@+id/action_open_controller"
+        android:title="Controls"/>
 </menu>

@@ -218,6 +218,11 @@ public class DeviceActivity extends ActionBarActivity {
                                 kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
                                 startActivity(kudosIntent);
                                 return true;
+                            case R.id.action_open_controller:
+                                Intent controlIntent = new Intent(DeviceActivity.this, ControllerActivity.class);
+                                controlIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                                startActivity(controlIntent);
+                                return true;
                             default:
                                 return false;
                         }

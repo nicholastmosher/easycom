@@ -37,6 +37,11 @@
             android:label="Launch Kudos Controls"
             android:screenOrientation="landscape"/>
 
+        <activity
+            android:name=".ControllerActivity"
+            android:label="Control Devices"
+            android:screenOrientation="landscape"/>
+
         <service
             android:name=".data.connection.BluetoothConnectionService"
             android:label="Manage Bluetooth Connections"/>

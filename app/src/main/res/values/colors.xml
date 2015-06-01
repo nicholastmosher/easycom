@@ -3,4 +3,6 @@
     <color name="background_screen">#777</color>
     <color name="green">#0C0</color>
     <color name="red">#F00</color>
+    <color name="joystick_base">#000</color>
+    <color name="joystick_stick">#888</color>
 </resources>
