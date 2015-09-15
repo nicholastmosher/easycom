@@ -47,6 +47,11 @@ public class StorageAdapter {
     private static Type mConnectionListType;
     private static Gson mGson;
 
+    /*
+     * Since the StorageAdapter is used entirely statically, this
+     * initializes all values so we don't get any null pointer
+     * exceptions.
+     */
     static {
         mHandlerThread = new HandlerThread("StorageAdapter Handler Thread");
         mHandlerThread.start();
@@ -60,6 +65,11 @@ public class StorageAdapter {
         mGson = mGsonBuilder.create();
     }
 
+    /**
+     * Initializes the StorageAdapter within a certain context.  This is
+     * how the StorageAdapter has access to the filesystem and such.
+     * @param context The context of the application.
+     */
     public static void init(Context context) {
         mDevicesFolder = context.getFilesDir();
         mDevicesFile = new File(mDevicesFolder, FILE_DEVICES);
@@ -176,6 +186,11 @@ public class StorageAdapter {
     private static class AddDeviceTask implements Runnable {
         private Device mDevice;
 
+        /**
+         * Constructs a new AddDeviceTask with a reference to a device to
+         * write to the persistent data file.
+         * @param device The device to write to storage.
+         */
         public AddDeviceTask(Device device) {
             mDevice = Preconditions.checkNotNull(device);
         }
@@ -190,31 +205,47 @@ public class StorageAdapter {
         @Override
         public void run() {
             List<Device> fileDevices = readDevicesFromFile();
-            boolean flagUpdateExisting = false;
+            boolean flagNewDevice = true;
             for (Device fileDevice : fileDevices) {
                 /*
                  * If the device from the parameter is a version of the existing
-                 * file device (regardless if the data is identical or changed),
-                 * replace the file device with the parameter device.
+                 * file device AND the new device has different member data,
+                 * write the new device over the old device in persistent storage.
                  */
                 if (mDevice.isVersionOf(fileDevice)) {
-                    int index = fileDevices.indexOf(fileDevice);
-                    if (index != -1) {
-                        fileDevices.set(index, mDevice);
-                        flagUpdateExisting = true;
-                        break;
-                    } else {
-                        throw new IllegalStateException("[StorageAdapter.AddDeviceTask.run] Cannot find device index!");
+                    /*
+                     * If the data in the two devices does not match, update the
+                     * file version of the device to match the new device.
+                     */
+                    if(!mDevice.equals(fileDevice)) {
+                        int index = fileDevices.indexOf(fileDevice);
+                        if (index != -1) {
+                            fileDevices.set(index, mDevice);
+                            break;
+                        } else {
+                            throw new IllegalStateException("[StorageAdapter.AddDeviceTask.run] Cannot find device index!");
+                        }
                     }
+                    //This device already exists, we don't need a new device entry for it.
+                    flagNewDevice = false;
                 }
             }
-            if (!flagUpdateExisting) {
+            /*
+             * If this device is brand new, and NOT just an updated version of
+             * an existing device, just add the new device to the device list.
+             */
+            if (flagNewDevice) {
                 fileDevices.add(mDevice);
             }
             writeDevicesToFile(fileDevices);
         }
     }
 
+    /**
+     * This class can be instantiated to run on a handler in a different thread.
+     * At construction, this class takes a List of Devices and writes it into
+     * the persistent storage, erasing all previous data.
+     */
     private static class SetDevicesTask implements Runnable {
         private List<Device> mDevices;
         public SetDevicesTask(List<Device> devices) {
@@ -286,6 +317,12 @@ public class StorageAdapter {
 
         private Type mOnConnectStatusChangedListenersMapType = new TypeToken<Map<Context, Connection.OnStatusChangedListener>>(){}.getType();
 
+        /**
+         * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
+         * @param writer The JsonWriter to write the objects into.
+         * @param connections The Connections data to convert into JSON.
+         * @throws IOException
+         */
         @Override
         public void write(JsonWriter writer, List<Connection> connections) throws IOException {
             //Begin array of Connections
@@ -314,6 +351,12 @@ public class StorageAdapter {
             writer.endArray();
         }
 
+        /**
+         * Parses data from a JsonReader back into a List of Connections.
+         * @param reader The source of a JSON string to convert.
+         * @return A List of Connections parsed from the reader.
+         * @throws IOException
+         */
         @Override
         public List<Connection> read(JsonReader reader) throws IOException {
             List<Connection> connections = new ArrayList<>();

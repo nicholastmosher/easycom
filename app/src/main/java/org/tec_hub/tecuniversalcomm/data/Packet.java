@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 /**
  * Created by Nick Mosher on 4/24/15.
  */
-public class Packet {
+public class Packet<T> {
 
     private String mName;
     private Object mData;
