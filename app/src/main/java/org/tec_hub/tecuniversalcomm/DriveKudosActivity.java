@@ -8,7 +8,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.widget.FrameLayout;
@@ -27,7 +28,7 @@ import org.tec_hub.tecuniversalcomm.intents.TECIntent;
  * Senses Accelerometer readings and sends Json data of drive commands
  * in a UDP-style packet spamming with no verification.
  */
-public class DriveKudosActivity extends ActionBarActivity {
+public class DriveKudosActivity extends AppCompatActivity {
 
     private BluetoothConnection mConnection;
     private BigPanel mPanel;
@@ -45,9 +46,10 @@ public class DriveKudosActivity extends ActionBarActivity {
         mConnection = launchIntent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
         Preconditions.checkNotNull(mConnection);
 
-        getSupportActionBar().setTitle("Kudos Controller");
-        getSupportActionBar().setSubtitle("Hold down screen and tilt to move");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Toolbar toolbar = new Toolbar(this);
+        toolbar.setTitle("Kudos Controller");
+        toolbar.setSubtitle("Hold down screen and tilt to move");
+        setSupportActionBar(toolbar);
 
         FrameLayout frameLayout = (FrameLayout) findViewById(R.id.kudos_screen);
         mPanel = new BigPanel(this);

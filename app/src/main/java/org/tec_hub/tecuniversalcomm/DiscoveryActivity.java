@@ -47,7 +47,7 @@ public class DiscoveryActivity extends ActionBarActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (connectionAdapter != null) {
                     BluetoothConnection btConnection = new BluetoothConnection(
-                            device.getName(),
+                            (device.getName() != null) ? device.getName() : "Unnamed", //TODO Use @string resource.
                             device.getAddress());
                     connectionAdapter.add(btConnection);
                 }

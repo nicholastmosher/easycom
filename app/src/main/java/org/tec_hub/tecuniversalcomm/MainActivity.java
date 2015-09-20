@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     public static final int REQUEST_DISCOVERY = 2;
 
@@ -49,7 +51,10 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getSupportActionBar().setTitle("TEC COMM | Devices");
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("TEC COMM | Devices");
+        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
+        setSupportActionBar(toolbar);
 
         StorageAdapter.init(this);
         mDeviceAdapter = new DeviceListAdapter();
@@ -238,9 +243,9 @@ public class MainActivity extends ActionBarActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_integrated_circuit));
+                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_memory_black_36dp));
             } else {
-                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_integrated_circuit));
+                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_memory_black_36dp));
             }
 
             //Set action to do on device icon button pressed

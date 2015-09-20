@@ -6,7 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,14 +21,16 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Created by Nick Mosher on 4/13/15.
  * Opens a terminal-like interface for sending data over an established connection.
  */
-public class TerminalActivity extends ActionBarActivity {
+public class TerminalActivity extends AppCompatActivity {
 
     private BluetoothConnection mConnection;
 
@@ -49,9 +52,10 @@ public class TerminalActivity extends ActionBarActivity {
         BluetoothConnection tempConnection = extras.getParcelable(TECIntent.BLUETOOTH_CONNECTION_DATA);
         mConnection = Preconditions.checkNotNull(tempConnection);
 
-        getSupportActionBar().setTitle(mConnection.getName());
-        getSupportActionBar().setSubtitle(mConnection.getAddress());
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(mConnection.getName());
+        toolbar.setSubtitle(mConnection.getAddress());
+        setSupportActionBar(toolbar);
 
         mTerminalScroll = (ScrollView) findViewById(R.id.terminal_scrollview);
         mTerminalWindow = (TextView) findViewById(R.id.terminal_window);
@@ -64,35 +68,37 @@ public class TerminalActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 String data = mTerminalInput.getText().toString();
-                if(data != null && !data.equals("")) {
+                if (!data.equals("")) {
                     sendData(data);
-                    mTerminalInput.setText("{\"mData\":,\"mName\":\"\"}");
+                    //mTerminalInput.setText("{\"mData\":,\"mName\":\"\"}");
                 }
             }
         });
 
         //Set a listener to accordingly change the status of the connection indicator
-        mConnection.putOnStatusChangedListener(this, new Connection.OnStatusChangedListener() {
+        mConnection.addObserver(new Observer() {
             @Override
-            public void onConnect() {
-                System.out.println("TerminalActivity -> onConnect");
-                if (mConnectedIndicator != null) {
-                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
-                }
-            }
-
-            @Override
-            public void onDisconnect() {
-                System.out.println("TerminalActivity -> onDisconnect");
-                if (mConnectedIndicator != null) {
-                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
-                }
-            }
-
-            @Override
-            public void onConnectFailed() {
-                if(mConnectedIndicator != null) {
-                    mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+            public void update(Observable observable, Object data) {
+                if(data instanceof Connection.ObserverCues) {
+                    Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                    switch(cue) {
+                        case Connected:
+                            if (mConnectedIndicator != null) {
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
+                            }
+                            break;
+                        case Disconnected:
+                            if (mConnectedIndicator != null) {
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                            }
+                            break;
+                        case ConnectFailed:
+                            if(mConnectedIndicator != null) {
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                            }
+                            break;
+                        default:
+                    }
                 }
             }
         });

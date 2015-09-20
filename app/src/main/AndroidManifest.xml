@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.tec_hub.tecuniversalcomm">
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
@@ -9,7 +10,7 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_tec_comm"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/MyTheme">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name">
@@ -22,25 +23,50 @@
 
         <activity
             android:name=".DiscoveryActivity"
-            android:label="Discover New Devices"/>
+            android:label="Discover New Devices"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.MainActivity"/>
+        </activity>
 
         <activity
             android:name=".TerminalActivity"
-            android:label="Send Data Over Connections"/>
+            android:label="Send Data Over Connections"
+            android:parentActivityName=".DeviceActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
+        </activity>
 
         <activity
             android:name=".DeviceActivity"
-            android:label="Manage Device Connections"/>
+            android:label="Manage Device Connections"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.MainActivity"/>
+        </activity>
 
         <activity
             android:name=".DriveKudosActivity"
             android:label="Launch Kudos Controls"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape"
+            android:parentActivityName=".DeviceActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
+        </activity>
 
         <activity
             android:name=".ControllerActivity"
             android:label="Control Devices"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="landscape"
+            android:parentActivityName=".DeviceActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
+        </activity>
 
         <service
             android:name=".data.connection.BluetoothConnectionService"

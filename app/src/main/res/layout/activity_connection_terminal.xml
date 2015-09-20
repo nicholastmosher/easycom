@@ -4,18 +4,26 @@
     android:layout_height="match_parent"
     android:background="#DDD">
 
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
     <ScrollView
         android:id="@+id/terminal_scrollview"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/toolbar"
         android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
         android:layout_above="@+id/terminal_input_bar">
 
         <TextView
             android:id="@+id/terminal_window"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"/>
+            android:layout_height="wrap_content"/>
 
     </ScrollView>
 
@@ -31,8 +39,10 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/terminal_input_button"
+            android:layout_toStartOf="@+id/terminal_input_button"
             android:inputType="textCapSentences"/>
 
         <Button
@@ -40,6 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"/>
 
     </RelativeLayout>

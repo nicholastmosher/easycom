@@ -11,7 +11,7 @@
         android:layout_height="64dp"
         android:layout_gravity="center"
         android:scaleType="fitCenter"
-        android:background="@drawable/ic_bluetooth"
+        android:background="@drawable/ic_bluetooth_black_36dp"
         android:contentDescription="Bluetooth Icon"
         android:focusable="false"
         android:enabled="true"

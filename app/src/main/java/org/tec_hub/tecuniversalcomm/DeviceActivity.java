@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,11 +27,14 @@ import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
+import org.tec_hub.tecuniversalcomm.data.connection.WifiConnection;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Created by Nick Mosher on 3/18/2015.
@@ -52,8 +57,9 @@ public class DeviceActivity extends ActionBarActivity {
         mDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
 
         //Set the title of the activity to the device name
-        getSupportActionBar().setTitle(mDevice.getName() + " | Connections");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(mDevice.getName() + " | Connections");
+        setSupportActionBar(toolbar);
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);
@@ -148,28 +154,34 @@ public class DeviceActivity extends ActionBarActivity {
                 detailsView.setText(bluetoothConnection.getAddress());
 
                 //Set button icon based on sdk version
-                int bluetoothIconId = bluetoothConnection.isConnected() ? R.drawable.ic_bluetooth : R.drawable.ic_bluetooth_grey;
+                int bluetoothIconId = bluetoothConnection.isConnected() ?
+                        R.drawable.ic_bluetooth_connected_black_36dp :
+                        R.drawable.ic_bluetooth_disabled_black_36dp;
                 setImageButtonDrawable(iconButton, bluetoothIconId);
+                iconButton.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.colorAccent));
 
-                //FIXME due to context mapping on OnStatusChangedListeners, only one view will probably be updated
                 //Set callback for connection status changed to change icon
-                bluetoothConnection.putOnStatusChangedListener(DeviceActivity.this, new Connection.OnStatusChangedListener() {
+                bluetoothConnection.addObserver(new Observer() {
                     @Override
-                    public void onConnect() {
-                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth);
-                        progressIndicator.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onDisconnect() {
-                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_grey);
-                        progressIndicator.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onConnectFailed() {
-                        setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_grey);
-                        progressIndicator.setVisibility(View.GONE);
+                    public void update(Observable observable, Object data) {
+                        if (data instanceof Connection.ObserverCues) {
+                            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                            switch (cue) {
+                                case Connected:
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_connected_black_36dp);
+                                    progressIndicator.setVisibility(View.GONE);
+                                    break;
+                                case Disconnected:
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_36dp);
+                                    progressIndicator.setVisibility(View.GONE);
+                                    break;
+                                case ConnectFailed:
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_36dp);
+                                    progressIndicator.setVisibility(View.GONE);
+                                    break;
+                                default:
+                            }
+                        }
                     }
                 });
 
@@ -179,12 +191,10 @@ public class DeviceActivity extends ActionBarActivity {
                     public void onClick(View v) {
                         if(bluetoothConnection.isConnected()) {
                             //Send disconnect intent
-                            System.out.println("IconButton pressed -> sendDisconnect");
                             progressIndicator.setVisibility(View.VISIBLE);
                             LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothDisconnectIntent(DeviceActivity.this, bluetoothConnection));
                         } else {
                             //Send connect intent
-                            System.out.println("IconButton pressed -> sendConnect");
                             progressIndicator.setVisibility(View.VISIBLE);
                             LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothConnectIntent(DeviceActivity.this, bluetoothConnection));
                         }
@@ -207,7 +217,7 @@ public class DeviceActivity extends ActionBarActivity {
                 optionsMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        switch(item.getItemId()) {
+                        switch (item.getItemId()) {
                             case R.id.action_open_terminal:
                                 Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
                                 terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
@@ -234,6 +244,86 @@ public class DeviceActivity extends ActionBarActivity {
                     @Override
                     public void onClick(View v) {
                         //Open options menu
+                        optionsMenu.show();
+                    }
+                });
+
+            //If this connection is Wifi.
+            } else if(connection instanceof WifiConnection) {
+                final WifiConnection wifiConnection = (WifiConnection) connection;
+
+                int wifiIconId = wifiConnection.isConnected() ?
+                        R.drawable.ic_signal_wifi_4_bar_black_36dp :
+                        R.drawable.ic_signal_wifi_off_black_36dp;
+                setImageButtonDrawable(iconButton, wifiIconId);
+
+                wifiConnection.addObserver(new Observer() {
+                    @Override
+                    public void update(Observable observable, Object data) {
+                        if (data instanceof Connection.ObserverCues) {
+                            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                            switch (cue) {
+                                case Connected:
+
+                                    break;
+                                case Disconnected:
+
+                                    break;
+                                case ConnectFailed:
+
+                                    break;
+                                default:
+                            }
+                        }
+                    }
+                });
+
+                //Define what to do when the icon is pressed.
+                iconButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (wifiConnection.isConnected()) {
+
+                        } else {
+
+                        }
+                    }
+                });
+
+                //Define what to do when the list item is clicked.
+                listClickable.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
+
+                //Define the options menu and what to do on different menu clicks.
+                final PopupMenu optionsMenu = new PopupMenu(DeviceActivity.this, optionsButton);
+                optionsMenu.inflate(R.menu.menu_connection_options);
+                optionsMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.action_open_terminal:
+
+                                return true;
+                            case R.id.action_open_kudos:
+
+                                return true;
+                            case R.id.action_open_controller:
+
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+
+                //Show the options menu when the options button is clicked.
+                optionsButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
                         optionsMenu.show();
                     }
                 });
