@@ -10,24 +10,20 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public abstract class Connection implements Parcelable {
+public abstract class Connection extends Observable implements Parcelable {
 
-    /**
-     * All Connections will eventually be transmitted through the Parcelable
-     * framework, however the Parcel methods do not support Generics like
-     * Maps well.  To compensate for this, a static Map is held in Connection
-     * with a key of a Connection's UUID and a value of that Connection's
-     * Map of OnStatusChangedListeners.  The Connection instance's Map
-     * is put into the static Map at writeToParcel() and retrieved at the
-     * Parcel Constructor of Connection.
-     */
-    private static Map<UUID, Map<Context, OnStatusChangedListener>> mConnectionListenerMaps = new HashMap<>();
+    public enum ObserverCues {
+        Connected,
+        Disconnected,
+        ConnectFailed
+    }
 
     /**
      * The immutable name of this Connection.
@@ -41,21 +37,12 @@ public abstract class Connection implements Parcelable {
     protected transient final UUID mUUID;
 
     /**
-     * Contains all registered OnStatusChangedListeners for this Connection.
-     * OnStatusChangedListeners are stored using a Context as a key in order
-     * to prevent duplicates being created from repeated onCreate() calls
-     * or the like.
-     */
-    protected Map<Context, OnStatusChangedListener> mOnStatusChangedListeners;
-
-    /**
      * Constructs a Connection using a given name.  Addresses or
      * connection information are managed by subclasses.
      * @param name The name of the connection.
      */
     public Connection(String name) {
         mConnectionName = Preconditions.checkNotNull(name);
-        mOnStatusChangedListeners = new HashMap<>();
         mUUID = UUID.randomUUID();
     }
 
@@ -63,13 +50,11 @@ public abstract class Connection implements Parcelable {
         Preconditions.checkNotNull(in);
         mConnectionName = Preconditions.checkNotNull(in.readString());
         mUUID = Preconditions.checkNotNull(UUID.fromString(in.readString()));
-        mOnStatusChangedListeners = Preconditions.checkNotNull(mConnectionListenerMaps.get(mUUID));
     }
 
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(mConnectionName);
         out.writeString(mUUID.toString());
-        mConnectionListenerMaps.put(mUUID, mOnStatusChangedListeners);
     }
 
     /**
@@ -89,12 +74,6 @@ public abstract class Connection implements Parcelable {
     }
 
     /**
-     * Tells whether this Connection is actively connected.
-     * @return True if connected.
-     */
-    public abstract boolean isConnected();
-
-    /**
      * Launches a Service action that initiates this connection's communication
      * link.
      * @param context The context to launch the Service from.
@@ -107,6 +86,12 @@ public abstract class Connection implements Parcelable {
      * @param context The context to launch the Service from.
      */
     public abstract void disconnect(Context context);
+
+    /**
+     * Tells whether this Connection is actively connected.
+     * @return True if connected.
+     */
+    public abstract boolean isConnected();
 
     /**
      * Returns an InputStream that reads from this Connection's remote source.
@@ -122,65 +107,10 @@ public abstract class Connection implements Parcelable {
      */
     public abstract OutputStream getOutputStream() throws IllegalStateException;
 
-    /**
-     * Gives a callback to listen for this connection's successful connection
-     * or disconnection.
-     */
-    public interface OnStatusChangedListener {
-        public void onConnect();
-        public void onDisconnect();
-        public void onConnectFailed();
-    }
-
-    /**
-     * Adds a new OnStatusChangedListener to the map.  The Context
-     * is used as the map key so that more than one activity may set
-     * callbacks but no activity may have duplicate listeners.
-     * @param context The context of the listener.
-     * @param listener The OnStatusChangedListener to associate with the context.
-     */
-    public void putOnStatusChangedListener(Context context, OnStatusChangedListener listener) {
-        Preconditions.checkNotNull(context);
-        Preconditions.checkNotNull(listener);
-        mOnStatusChangedListeners.put(context, listener);
-    }
-
-    public void setOnStatusChangedListeners(Map<Context, OnStatusChangedListener> listeners) {
-        Preconditions.checkNotNull(listeners);
-        mOnStatusChangedListeners = listeners;
-    }
-
-    public Map<Context, OnStatusChangedListener> getOnConnectStatusChangedListeners() {
-        return mOnStatusChangedListeners;
-    }
-
-    /**
-     * Loops through all registered OnConnectStatusChangedListeners and notifies them of connection.
-     */
-    protected void notifyConnected() {
-        Preconditions.checkNotNull(mOnStatusChangedListeners);
-        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
-        for(Context c : listenerKeys) {
-            mOnStatusChangedListeners.get(c).onConnect();
-        }
-    }
-
-    /**
-     * Loops through all registered OnConnectStatusChangedListeners and notifies them of disconnection.
-     */
-    protected void notifyDisconnected() {
-        Preconditions.checkNotNull(mOnStatusChangedListeners);
-        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
-        for(Context c : listenerKeys) {
-            mOnStatusChangedListeners.get(c).onDisconnect();
-        }
-    }
-
-    protected void notifyConnectFailed() {
-        Preconditions.checkNotNull(mOnStatusChangedListeners);
-        Set<Context> listenerKeys = mOnStatusChangedListeners.keySet();
-        for(Context c : listenerKeys) {
-            mOnStatusChangedListeners.get(c).onConnectFailed();
-        }
+    @Override
+    public void notifyObservers(Object data) {
+        setChanged();
+        super.notifyObservers(data);
+        clearChanged();
     }
 }
