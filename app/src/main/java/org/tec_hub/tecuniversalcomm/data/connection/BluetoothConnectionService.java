@@ -22,13 +22,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * Created by Nick Mosher on 4/23/15.
  */
-public class BluetoothConnectionService extends Service {
+public class BluetoothConnectionService extends Service implements Observer {
 
     private static boolean launched = false;
+
+    //Thread to run an input reading loop
+    ReceiveInputThread receiveInputThread;
 
     public void onCreate() {
         launched = true;
@@ -51,46 +56,16 @@ public class BluetoothConnectionService extends Service {
 
                     //Received action to establish connection
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
-                        System.out.println("Service -> Connecting...");
+
                         //Create callbacks for successful connection and disconnection
-                        bluetoothConnection.putOnStatusChangedListener(
-                                BluetoothConnectionService.this,
-                                new Connection.OnStatusChangedListener() {
+                        bluetoothConnection.addObserver(BluetoothConnectionService.this);
 
-                                    //Thread to run an input reading loop
-                                    ReceiveInputThread receiveInputThread;
-
-                                    @Override
-                                    public void onConnect() {
-                                        System.out.println("Service -> onConnect");
-                                        if (receiveInputThread != null) {
-                                            receiveInputThread.interrupt();
-                                        }
-                                        receiveInputThread = new ReceiveInputThread(bluetoothConnection);
-                                        receiveInputThread.start();
-                                    }
-
-                                    @Override
-                                    public void onDisconnect() {
-                                        System.out.println("Service -> onDisconnect");
-                                        if(receiveInputThread != null) {
-                                            receiveInputThread.interrupt();
-                                        }
-                                        receiveInputThread = null;
-                                    }
-
-                                    @Override
-                                    public void onConnectFailed() {
-
-                                    }
-                                });
                         //Initiate connecting
                         new BluetoothConnectTask(bluetoothConnection).execute();
                         break;
 
                     //Received action to disconnect
                     case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
-                        System.out.println("Service -> Disconnecting...");
                         //Initiate disconnecting
                         new BluetoothDisconnectTask(bluetoothConnection).execute();
                         break;
@@ -130,6 +105,39 @@ public class BluetoothConnectionService extends Service {
 
     public static boolean isLaunched() {
         return launched;
+    }
+
+    @Override
+    public void update(Observable observable, Object data) {
+        if(!(observable instanceof BluetoothConnection)) {
+            throw new IllegalStateException("Update did not originate at a BluetoothConnection!");
+        }
+
+        if(data instanceof Connection.ObserverCues) {
+            BluetoothConnection bluetoothConnection = (BluetoothConnection) observable;
+            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+            switch(cue) {
+                case Connected:
+                    System.out.println("Observer -> Connected");
+                    if (receiveInputThread != null) {
+                        receiveInputThread.interrupt();
+                    }
+                    receiveInputThread = new ReceiveInputThread(bluetoothConnection);
+                    receiveInputThread.start();
+                    break;
+                case Disconnected:
+                    System.out.println("Observer -> Disconnected");
+                    if(receiveInputThread != null) {
+                        receiveInputThread.interrupt();
+                    }
+                    receiveInputThread = null;
+                    break;
+                case ConnectFailed:
+                    System.out.println("Observer -> ConnectFailed");
+                    break;
+                default:
+            }
+        }
     }
 
     private void sendBluetoothData(BluetoothConnection connection, String data) {
@@ -179,11 +187,12 @@ public class BluetoothConnectionService extends Service {
 
             //Define a BluetoothDevice with the address from our Connection.
             String address = mConnection.getAddress();
-            BluetoothDevice device = null;
+            BluetoothDevice device;
             if(address != null  && BluetoothAdapter.checkBluetoothAddress(address)) {
                 device = mBluetoothAdapter.getRemoteDevice(address);
                 System.out.println("Bluetooth Device parsed from BluetoothAdapter...");
             } else {
+                //FIXME What have I done?
                 new IllegalStateException("Error connecting to bluetooth! Problem with address.").printStackTrace();
                 return false;
             }
@@ -224,13 +233,13 @@ public class BluetoothConnectionService extends Service {
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
             if(success) {
-                System.out.println("Connect success");
-                mConnection.notifyConnected();
+                System.out.println("Connected success");
+                mConnection.notifyObservers(Connection.ObserverCues.Connected);
             } else {
-                System.out.println("Connect failed");
+                System.out.println("Connected failed");
                 if(mBluetoothSocket.isConnected()) {
                     System.out.println("WARNING: BluetoothConnectTask reported error, but is connected.");
-                    mConnection.notifyConnected();
+                    mConnection.notifyObservers(Connection.ObserverCues.Connected);
                 } else {
                     if(retryCount < 3) {
                         retryCount++;
@@ -242,7 +251,7 @@ public class BluetoothConnectionService extends Service {
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
-                        mConnection.notifyConnectFailed();
+                        mConnection.notifyObservers(Connection.ObserverCues.ConnectFailed);
                     }
                 }
             }
@@ -274,7 +283,7 @@ public class BluetoothConnectionService extends Service {
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
             if(!mConnection.isConnected()) {
-                mConnection.notifyDisconnected();
+                mConnection.notifyObservers(Connection.ObserverCues.Disconnected);
             }
         }
     }
@@ -303,6 +312,7 @@ public class BluetoothConnectionService extends Service {
                     line = bufferedReader.readLine();
 
                 } catch(IOException e) {
+                    //Happens if the bufferedReader's stream is closed.
                     e.printStackTrace();
                 }
 
@@ -320,7 +330,6 @@ public class BluetoothConnectionService extends Service {
                     isRunning = false;
                 }
             }
-            System.out.println("Ended ReceiveInputThread");
         }
     }
 }

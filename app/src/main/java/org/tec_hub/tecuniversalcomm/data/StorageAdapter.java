@@ -159,10 +159,8 @@ public class StorageAdapter {
             List<Device> temp = mGson.fromJson(jsonFile, mDeviceListType);
             Preconditions.checkNotNull(temp);
             devices = temp;
-        } catch(IOException ioe) {
+        } catch(IOException | IllegalStateException ioe) {
             ioe.printStackTrace();
-        } catch(IllegalStateException ise) {
-            ise.printStackTrace();
         }
         return devices;
     }
@@ -296,8 +294,6 @@ public class StorageAdapter {
          */
         public static final String CONNECTION_NAME = "mName";
 
-        public static final String CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS = "mOnStatusChangedListeners";
-
         /**
          * Key of Connection Implementation.
          */
@@ -315,8 +311,6 @@ public class StorageAdapter {
          */
         public static final String BLUETOOTH_ADDRESS = "BluetoothAddress";
 
-        private Type mOnConnectStatusChangedListenersMapType = new TypeToken<Map<Context, Connection.OnStatusChangedListener>>(){}.getType();
-
         /**
          * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
          * @param writer The JsonWriter to write the objects into.
@@ -333,10 +327,6 @@ public class StorageAdapter {
                 //Begin this Connection
                 writer.beginObject();
                 writer.name(CONNECTION_NAME).value(connection.getName()); //Write connection name
-
-                //Give back to Gson for writing map
-                writer.name(CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS);
-                mGson.toJson(connection.getOnConnectStatusChangedListeners(), mOnConnectStatusChangedListenersMapType, writer);
 
                 //Write all properties specific to BluetoothConnections.
                 if(connection instanceof BluetoothConnection) {
@@ -366,7 +356,6 @@ public class StorageAdapter {
             while(reader.hasNext()) {
                 //Create local variables as a cache to build a Connection
                 String connectionName = null;
-                Map<Context, Connection.OnStatusChangedListener> onConnectStatusChangedListenerMap = null;
                 String connectionImpl = null;
                 String bluetoothConnectionAddress = null;
 
@@ -374,14 +363,17 @@ public class StorageAdapter {
                 reader.beginObject();
                 while(reader.hasNext()) {
                     String name = reader.nextName();
-                    if(name.equals(CONNECTION_NAME)) { //Read Connection name
-                        connectionName = reader.nextString();
-                    } else if(name.equals(CONNECTION_ON_CONNECT_STATUS_CHANGED_LISTENERS)) { //Read listeners map
-                        onConnectStatusChangedListenerMap = mGson.fromJson(reader, mOnConnectStatusChangedListenersMapType);
-                    } else if(name.equals(CONNECTION_IMPL)) { //Read Connection implementation
-                        connectionImpl = reader.nextString();
-                    } else if(name.equals(BLUETOOTH_ADDRESS)) { //Read BluetoothConnection address
-                        bluetoothConnectionAddress = reader.nextString();
+                    switch(name) {
+                        case CONNECTION_NAME: //Read Connection name
+                            connectionName = reader.nextString();
+                            break;
+                        case CONNECTION_IMPL: //Read Connection implementation
+                            connectionImpl = reader.nextString();
+                            break;
+                        case BLUETOOTH_ADDRESS: //Read BluetoothConnection address
+                            bluetoothConnectionAddress = reader.nextString();
+                            break;
+                        default:
                     }
                 }
                 //End this Connection
@@ -390,11 +382,9 @@ public class StorageAdapter {
                 //Parse Connection data into object
                 Preconditions.checkNotNull(connectionName);
                 Preconditions.checkNotNull(connectionImpl);
-                Preconditions.checkNotNull(onConnectStatusChangedListenerMap);
                 if(connectionImpl.equals(IMPL_BLUETOOTH)) { //If this Connection is a BluetoothConnection
                     Preconditions.checkNotNull(bluetoothConnectionAddress);
                     BluetoothConnection bluetoothConnection = new BluetoothConnection(connectionName, bluetoothConnectionAddress);
-                    bluetoothConnection.setOnStatusChangedListeners(onConnectStatusChangedListenerMap);
                     connections.add(bluetoothConnection);
                 }
             }

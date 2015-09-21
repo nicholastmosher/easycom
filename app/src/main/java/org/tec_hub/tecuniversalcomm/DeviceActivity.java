@@ -6,7 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,7 +39,7 @@ import java.util.Observer;
 /**
  * Created by Nick Mosher on 3/18/2015.
  */
-public class DeviceActivity extends ActionBarActivity {
+public class DeviceActivity extends AppCompatActivity {
 
     private ListView mListView;
     private ConnectionListAdapter mConnectionAdapter;

@@ -9,6 +9,8 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.io.IOException;
@@ -28,6 +30,9 @@ public class BluetoothConnection extends Connection implements Parcelable {
      */
     public static final UUID BLUETOOTH_SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
+    /**
+     * Required for Parcelable framework.
+     */
     public static final Parcelable.Creator<BluetoothConnection> CREATOR = new Parcelable.Creator<BluetoothConnection>() {
         public BluetoothConnection createFromParcel(Parcel in) {
             return new BluetoothConnection(in);
@@ -45,14 +50,31 @@ public class BluetoothConnection extends Connection implements Parcelable {
      */
     private static Map<UUID, BluetoothSocket> sockets = new HashMap<>();
 
+    /**
+     * The MAC Address of the remote bluetooth device for this Connection.
+     */
     private final String mBluetoothAddress;
+
+    /**
+     * The Bluetooth Socket used to communicate to the remote device.
+     */
     private BluetoothSocket mBluetoothSocket;
 
+    /**
+     * Constructs a BluetoothConnection from a name and bluetooth MAC address.
+     * @param name The name of this BluetoothConnection.
+     * @param address The MAC Address of the remote device to connect to.
+     */
     public BluetoothConnection(String name, String address) {
         super(Preconditions.checkNotNull(name));
         mBluetoothAddress = Preconditions.checkNotNull(address);
     }
 
+    /**
+     * Constructs a BluetoothConnection from a Parcel.  This happens when passing
+     * objects across the Android framework e.g. through intents.
+     * @param in The input Parcel to recreate the BluetoothConnection from.
+     */
     public BluetoothConnection(Parcel in) {
         super(Preconditions.checkNotNull(in));
         mBluetoothAddress = Preconditions.checkNotNull(in.readString());
@@ -65,24 +87,12 @@ public class BluetoothConnection extends Connection implements Parcelable {
         sockets.put(mUUID, mBluetoothSocket);
     }
 
+    /**
+     * Gets the Bluetooth MAC Address of the remote device of this BluetoothConnection.
+     * @return A Bluetooth MAC Address.
+     */
     public String getAddress() {
         return mBluetoothAddress;
-    }
-
-    public boolean isConnected() {
-        if(mBluetoothSocket != null) {
-            if(!mBluetoothSocket.isConnected()) {
-                try {
-                    mBluetoothSocket.close();
-                } catch(IOException e) {
-                    System.out.println("Bluetooth socket not connected; error closing socket!");
-                    e.printStackTrace();
-                }
-            }
-            return mBluetoothSocket.isConnected();
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -94,9 +104,7 @@ public class BluetoothConnection extends Connection implements Parcelable {
         if(!isConnected()) {
 
             //Build intent with this connection data to send to service
-            Intent connectIntent = new Intent(context, BluetoothConnectionService.class);
-            connectIntent.setAction(TECIntent.ACTION_BLUETOOTH_CONNECT);
-            connectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+            BluetoothConnectIntent connectIntent = new BluetoothConnectIntent(context, this);
 
             //Send intent through LocalBroadcastManager
             LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
@@ -112,12 +120,30 @@ public class BluetoothConnection extends Connection implements Parcelable {
         if(isConnected()) {
 
             //Build intent with this connection data to send to service
-            Intent disconnectIntent = new Intent(context, BluetoothConnectionService.class);
-            disconnectIntent.setAction(TECIntent.ACTION_BLUETOOTH_DISCONNECT);
-            disconnectIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, this);
+            BluetoothDisconnectIntent disconnectIntent = new BluetoothDisconnectIntent(context, this);
 
             //Send intent through LocalBroadcastManager
             LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
+        }
+    }
+
+    /**
+     * Tells whether this BluetoothConnection is actively connected.
+     * @return True if connected, false otherwise.
+     */
+    public boolean isConnected() {
+        if(mBluetoothSocket != null) {
+            if(!mBluetoothSocket.isConnected()) {
+                try {
+                    mBluetoothSocket.close();
+                } catch(IOException e) {
+                    System.out.println("Bluetooth socket not connected; error closing socket!");
+                    e.printStackTrace();
+                }
+            }
+            return mBluetoothSocket.isConnected();
+        } else {
+            return false;
         }
     }
 
