@@ -336,9 +336,9 @@ public class DeviceActivity extends AppCompatActivity {
 
         private void setImageButtonDrawable(final ImageButton button, int resourceId) {
             if(Build.VERSION.SDK_INT >= 16) {
-                button.setBackground(getResources().getDrawable(resourceId, getTheme()));
+                button.setBackground(ContextCompat.getDrawable(DeviceActivity.this, resourceId));
             } else {
-                button.setImageDrawable(getResources().getDrawable(resourceId, getTheme()));
+                button.setImageDrawable(ContextCompat.getDrawable(DeviceActivity.this, resourceId));
             }
             button.setColorFilter(0xFFFF0000);
         }
