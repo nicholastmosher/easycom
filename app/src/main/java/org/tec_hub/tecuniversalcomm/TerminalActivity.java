@@ -70,6 +70,7 @@ public class TerminalActivity extends AppCompatActivity {
                 String data = mTerminalInput.getText().toString();
                 if (!data.equals("")) {
                     sendData(data);
+                    mTerminalInput.setText("");
                     //mTerminalInput.setText("{\"mData\":,\"mName\":\"\"}");
                 }
             }
