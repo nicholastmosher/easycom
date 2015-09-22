@@ -40,7 +40,7 @@ public class DriveKudosActivity extends AppCompatActivity {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_drive_kudos);
+        setContentView(R.layout.activity_kudos);
 
         Intent launchIntent = getIntent();
         mConnection = launchIntent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);

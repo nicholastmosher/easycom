@@ -8,15 +8,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
@@ -30,7 +32,7 @@ import java.util.Random;
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public class DiscoveryActivity extends ActionBarActivity {
+public class DiscoveryActivity extends AppCompatActivity {
 
     public static final int REQUEST_ENABLE_BT = 1;
 
@@ -43,7 +45,6 @@ public class DiscoveryActivity extends ActionBarActivity {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action.equals(BluetoothDevice.ACTION_FOUND)) {
-                System.out.println("Bluetooth device discovered!");
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (connectionAdapter != null) {
                     BluetoothConnection btConnection = new BluetoothConnection(
@@ -61,9 +62,17 @@ public class DiscoveryActivity extends ActionBarActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_discovery);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("Searching for Devices: ");
+        ProgressBar progressBar = (ProgressBar) ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.progress_bar, null, false);
+        progressBar.setVisibility(View.VISIBLE);
+        toolbar.addView(progressBar);
+        setSupportActionBar(toolbar);
 
         setTitle("Discovered Devices");
-        setContentView(R.layout.activity_discover_connections);
+
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
