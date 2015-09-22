@@ -77,6 +77,8 @@ public class TerminalActivity extends AppCompatActivity {
             }
         });
 
+        mTerminalSend.setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
+
         //Set a listener to accordingly change the status of the connection indicator
         mConnection.addObserver(new Observer() {
             @Override
@@ -86,17 +88,17 @@ public class TerminalActivity extends AppCompatActivity {
                     switch(cue) {
                         case Connected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected, getTheme()));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_connected));
                             }
                             break;
                         case Disconnected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected, getTheme()));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_disconnected));
                             }
                             break;
                         case ConnectFailed:
                             if(mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected, getTheme()));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_disconnected));
                             }
                             break;
                         default:
