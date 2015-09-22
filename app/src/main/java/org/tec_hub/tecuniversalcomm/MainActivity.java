@@ -55,6 +55,14 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("TEC COMM | Devices");
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
+        FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
+        actionButton.setImageResource(R.drawable.ic_action_new);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(new Intent(MainActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
+            }
+        });
         setSupportActionBar(toolbar);
 
         StorageAdapter.init(this);
@@ -88,10 +96,6 @@ public class MainActivity extends AppCompatActivity {
         switch(item.getItemId()) {
             case R.id.action_settings:
                 System.out.println("Settings button!");
-                return true;
-            case R.id.action_add_device:
-                //Open the DiscoveryActivity when the Add button is pressed.
-                startActivityForResult(new Intent(MainActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -244,9 +248,9 @@ public class MainActivity extends AppCompatActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(MainActivity.this.getResources().getDrawable(R.drawable.ic_memory_black_36dp));
+                deviceImageButton.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_36dp));
             } else {
-                deviceImageButton.setImageDrawable(MainActivity.this.getResources().getDrawable(R.drawable.ic_memory_black_36dp));
+                deviceImageButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_36dp));
             }
 
             //Set action to do on device icon button pressed

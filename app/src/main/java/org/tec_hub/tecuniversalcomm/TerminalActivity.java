@@ -85,17 +85,17 @@ public class TerminalActivity extends AppCompatActivity {
                     switch(cue) {
                         case Connected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected, getTheme()));
                             }
                             break;
                         case Disconnected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected, getTheme()));
                             }
                             break;
                         case ConnectFailed:
                             if(mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+                                mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected, getTheme()));
                             }
                             break;
                         default:
@@ -189,9 +189,9 @@ public class TerminalActivity extends AppCompatActivity {
 
     private void updateIndicator() {
         if(mConnection.isConnected()) {
-            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected));
+            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_connected, getTheme()));
         } else {
-            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected));
+            mConnectedIndicator.setIcon(getResources().getDrawable(R.drawable.ic_disconnected, getTheme()));
         }
     }
 

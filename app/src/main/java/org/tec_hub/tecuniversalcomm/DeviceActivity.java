@@ -2,8 +2,6 @@ package org.tec_hub.tecuniversalcomm;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.ColorFilter;
-import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -338,9 +336,9 @@ public class DeviceActivity extends AppCompatActivity {
 
         private void setImageButtonDrawable(final ImageButton button, int resourceId) {
             if(Build.VERSION.SDK_INT >= 16) {
-                button.setBackground(getResources().getDrawable(resourceId));
+                button.setBackground(getResources().getDrawable(resourceId, getTheme()));
             } else {
-                button.setImageDrawable(getResources().getDrawable(resourceId));
+                button.setImageDrawable(getResources().getDrawable(resourceId, getTheme()));
             }
             button.setColorFilter(0xFFFF0000);
         }
