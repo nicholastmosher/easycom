@@ -81,18 +81,11 @@ public class BluetoothConnection extends Connection implements Parcelable {
         mBluetoothSocket = sockets.get(mUUID);
     }
 
+    @Override
     public void writeToParcel(Parcel out, int flags) {
         super.writeToParcel(out, flags);
         out.writeString(mBluetoothAddress);
         sockets.put(mUUID, mBluetoothSocket);
-    }
-
-    /**
-     * Gets the Bluetooth MAC Address of the remote device of this BluetoothConnection.
-     * @return A Bluetooth MAC Address.
-     */
-    public String getAddress() {
-        return mBluetoothAddress;
     }
 
     /**
@@ -142,9 +135,8 @@ public class BluetoothConnection extends Connection implements Parcelable {
                 }
             }
             return mBluetoothSocket.isConnected();
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -186,12 +178,20 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     /**
-     * Assigns the BluetoothSocket for this BluetoothConnection.
-     * @param bluetoothSocket New BluetoothSocket.
+     * Gets the Bluetooth MAC Address of the remote device of this BluetoothConnection.
+     * @return A Bluetooth MAC Address.
      */
-    void setBluetoothSocket(BluetoothSocket bluetoothSocket) {
-        Preconditions.checkNotNull(bluetoothSocket);
-        mBluetoothSocket = bluetoothSocket;
+    public String getAddress() {
+        return mBluetoothAddress;
+    }
+
+    /**
+     * Assigns the BluetoothSocket for this BluetoothConnection.
+     * @param socket New BluetoothSocket.
+     */
+    void setBluetoothSocket(BluetoothSocket socket) {
+        Preconditions.checkNotNull(socket);
+        mBluetoothSocket = socket;
         sockets.put(mUUID, mBluetoothSocket);
     }
 

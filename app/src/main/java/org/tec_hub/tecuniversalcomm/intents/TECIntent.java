@@ -46,35 +46,47 @@ public interface TECIntent {
     public static final String ACTION_BLUETOOTH_UPDATE_INPUT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_UPDATE_INPUT";
 
     /**
-     * Sent to the WifiConnectionService by any context that wants
-     * to connect a WifiConnection.  The intent sent to the
-     * WifiConnectionService must have the WifiConnection in question
-     * added as a Parcelable Extra using the key TECIntent.WIFI_CONNECTION_DATA.
+     * Used to indicate that a BluetoothConnection has been discovered and report it back to some
+     * wanting Activity/Service.
      */
-    public static final String ACTION_WIFI_CONNECT = "org.tec_hub.tecuniversalcomm.WIFI_CONNECT";
+    public static final String ACTION_BLUETOOTH_DISCOVREED = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCOVERED";
 
     /**
-     * Sent to the WifiConnectionService by any context that wants
-     * to disconnect a WifiConnection.  The intent sent to the
-     * WifiConnectionService must have the WifiConnection in question
-     * added as a Parcelable Extra using the key TECIntent.WIFI_CONNECTION_DATA.
+     * Sent to the TcpIpConnectionService by any context that wants
+     * to connect a TcpIpConnection.  The intent sent to the
+     * TcpIpConnectionService must have the TcpIpConnection in question
+     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_DATA.
      */
-    public static final String ACTION_WIFI_DISCONNECT = "org.tec_hub.tecuniversalcomm.WIFI_DISCONNECT";
+    public static final String ACTION_TCPIP_CONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_CONNECT";
 
     /**
-     * Sent to the WifiConnectionService by any context that wants to send data
-     * over a WifiConnection.  The intent sent to the WifiConnectionService must
-     * have the WifiConnection added as a Parcelable Extra with the key TECIntent.WIFI_CONNECTION_DATA,
-     * and that WifiConnection must already be connected.
+     * Sent to the TcpIpConnectionService by any context that wants
+     * to disconnect a TcpIpConnection.  The intent sent to the
+     * TcpIpConnectionService must have the TcpIpConnection in question
+     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_DATA.
      */
-    public static final String ACTION_WIFI_SEND_DATA = "org.tec_hub.tecuniversalcomm.WIFI_SEND_DATA";
+    public static final String ACTION_TCPIP_DISCONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_DISCONNECT";
 
     /**
-     * Broadcasted by the WifiConnectionService anytime there has been data received over a
-     * WifiConnection.  The received data is packaged as a Parcelable Extra under the key
-     * TECIntent.WIFI_RECEIVED_DATA.
+     * Sent to the TcpIpConnectionService by any context that wants to send data
+     * over a TcpIpConnection.  The intent sent to the TcpIpConnectionService must
+     * have the TcpIpConnection added as a Parcelable Extra with the key TECIntent.TCPIP_CONNECTION_DATA,
+     * and that TcpIpConnection must already be connected.
      */
-    public static final String ACTION_WIFI_UPDATE_INPUT = "org.tec_hub.tecuniveralcomm.WIFI_UPDATE_INPUT";
+    public static final String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_SEND_DATA";
+
+    /**
+     * Broadcasted by the TcpIpConnectionService anytime there has been data received over a
+     * TcpIpConnection.  The received data is packaged as a Parcelable Extra under the key
+     * TECIntent.TCPIP_RECEIVED_DATA.
+     */
+    public static final String ACTION_TCPIP_UPDATE_INPUT = "org.tec_hub.tecuniveralcomm.TCPIP_UPDATE_INPUT";
+
+    /**
+     * Broadcasted by any Service or Activity that has discovered a new connection and is returning
+     * it to a waiting Activity or Service.
+     */
+    public static final String ACTION_TCPIP_DISOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
 
     //Extras////////////////////////////////////////////////////////////////////////////////////////
     /**
@@ -95,21 +107,21 @@ public interface TECIntent {
     public static final String BLUETOOTH_RECEIVED_DATA = "bluetooth_input_data";
 
     /**
-     * Used by any intent carrying a WifiConnection as a Parcelable Extra.
+     * Used by any intent carrying a TcpIpConnection as a Parcelable Extra.
      */
-    public static final String WIFI_CONNECTION_DATA = "wifi_connection_data";
+    public static final String TCPIP_CONNECTION_DATA = "tcpip_connection_data";
 
     /**
-     * Used to bundle the data that will be sent over a WifiConnection into an intent.
-     * The intent using this as an Extra key should have the action "ACTION_WIFI_SEND_DATA".
+     * Used to bundle the data that will be sent over a TcpIpConnection into an intent.
+     * The intent using this as an Extra key should have the action "ACTION_TCPIP_SEND_DATA".
      */
-    public static final String WIFI_SEND_DATA = "wifi_send_data";
+    public static final String TCPIP_SEND_DATA = "tcpip_send_data";
 
     /**
      * Used as the Extra key for any intent carrying data that has been received from a
-     * WifiConnection.
+     * TcpIpConnection.
      */
-    public static final String WIFI_RECEIVED_DATA = "wifi_input_data";
+    public static final String TCPIP_RECEIVED_DATA = "tcpip_input_data";
 
     /**
      * Used as an Extra key for any intent carrying a Device as a Parcelable.

@@ -23,11 +23,15 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -116,10 +120,21 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case REQUEST_DISCOVERY:
                 if (resultCode == RESULT_OK) {
-                    Connection connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
-                    //TODO put option to put connection in existing devices
-                    Device device = Device.build(connection.getName(), connection);
-                    mDeviceAdapter.put(device);
+
+                    System.out.println("onActivityResult");
+                    Connection connection = null;
+                    if(data instanceof BluetoothDiscoveredIntent) {
+                        connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                    } else if(data instanceof TcpIpDiscoveredIntent) {
+                        System.out.println("Got TCPIPDiscoveredIntent");
+                        connection = data.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                    }
+
+                    if(connection != null) {
+                        //TODO put option to put connection in existing devices
+                        Device device = Device.build(connection.getName(), connection);
+                        mDeviceAdapter.put(device);
+                    }
                 }
                 break;
             default:

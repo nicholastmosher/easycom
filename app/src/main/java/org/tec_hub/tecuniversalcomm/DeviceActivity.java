@@ -27,10 +27,12 @@ import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
-import org.tec_hub.tecuniversalcomm.data.connection.WifiConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpConnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpDisconnectIntent;
 
 import java.util.List;
 import java.util.Observable;
@@ -249,15 +251,15 @@ public class DeviceActivity extends AppCompatActivity {
                 });
 
             //If this connection is Wifi.
-            } else if(connection instanceof WifiConnection) {
-                final WifiConnection wifiConnection = (WifiConnection) connection;
+            } else if(connection instanceof TcpIpConnection) {
+                final TcpIpConnection tcpIpConnection = (TcpIpConnection) connection;
 
-                int wifiIconId = wifiConnection.isConnected() ?
+                int wifiIconId = tcpIpConnection.isConnected() ?
                         R.drawable.ic_signal_wifi_4_bar_black_36dp :
                         R.drawable.ic_signal_wifi_off_black_36dp;
                 setImageButtonDrawable(iconButton, wifiIconId);
 
-                wifiConnection.addObserver(new Observer() {
+                tcpIpConnection.addObserver(new Observer() {
                     @Override
                     public void update(Observable observable, Object data) {
                         if (data instanceof Connection.ObserverCues) {
@@ -278,14 +280,18 @@ public class DeviceActivity extends AppCompatActivity {
                     }
                 });
 
-                //Define what to do when the icon is pressed.
+                //Set action to do on icon button click
                 iconButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (wifiConnection.isConnected()) {
-
+                        if(tcpIpConnection.isConnected()) {
+                            //Send disconnect intent
+                            progressIndicator.setVisibility(View.VISIBLE);
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new TcpIpDisconnectIntent(DeviceActivity.this, tcpIpConnection));
                         } else {
-
+                            //Send connect intent
+                            progressIndicator.setVisibility(View.VISIBLE);
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new TcpIpConnectIntent(DeviceActivity.this, tcpIpConnection));
                         }
                     }
                 });
@@ -294,7 +300,9 @@ public class DeviceActivity extends AppCompatActivity {
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        Intent terminalIntent = new Intent(DeviceActivity.this, TerminalTCPIPActivity.class);
+                        terminalIntent.putExtra(TECIntent.TCPIP_CONNECTION_DATA, tcpIpConnection);
+                        startActivity(terminalIntent);
                     }
                 });
 

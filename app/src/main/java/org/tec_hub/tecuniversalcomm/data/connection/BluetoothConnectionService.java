@@ -49,8 +49,8 @@ public class BluetoothConnectionService extends Service implements Observer {
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                final BluetoothConnection bluetoothConnection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
-                Preconditions.checkNotNull(bluetoothConnection);
+                final BluetoothConnection connection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                Preconditions.checkNotNull(connection);
 
                 switch(intent.getAction()) {
 
@@ -58,23 +58,23 @@ public class BluetoothConnectionService extends Service implements Observer {
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
 
                         //Create callbacks for successful connection and disconnection
-                        bluetoothConnection.addObserver(BluetoothConnectionService.this);
+                        connection.addObserver(BluetoothConnectionService.this);
 
                         //Initiate connecting
-                        new BluetoothConnectTask(bluetoothConnection).execute();
+                        new ConnectTask(connection).execute();
                         break;
 
                     //Received action to disconnect
                     case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
                         //Initiate disconnecting
-                        new BluetoothDisconnectTask(bluetoothConnection).execute();
+                        new DisconnectTask(connection).execute();
                         break;
 
                     //Received intent with data to send
                     case TECIntent.ACTION_BLUETOOTH_SEND_DATA:
                         //System.out.println("Service -> Sending Data...");
                         String sendData = intent.getStringExtra(TECIntent.BLUETOOTH_SEND_DATA);
-                        sendBluetoothData(bluetoothConnection, sendData);
+                        sendData(connection, sendData);
                         break;
 
                     default:
@@ -114,66 +114,67 @@ public class BluetoothConnectionService extends Service implements Observer {
         }
 
         if(data instanceof Connection.ObserverCues) {
-            BluetoothConnection bluetoothConnection = (BluetoothConnection) observable;
+            BluetoothConnection connection = (BluetoothConnection) observable;
             Connection.ObserverCues cue = (Connection.ObserverCues) data;
             switch(cue) {
                 case Connected:
-                    System.out.println("Observer -> Connected");
                     if (receiveInputThread != null) {
                         receiveInputThread.interrupt();
                     }
-                    receiveInputThread = new ReceiveInputThread(bluetoothConnection);
+                    receiveInputThread = new ReceiveInputThread(connection);
                     receiveInputThread.start();
                     break;
                 case Disconnected:
-                    System.out.println("Observer -> Disconnected");
                     if(receiveInputThread != null) {
                         receiveInputThread.interrupt();
                     }
                     receiveInputThread = null;
                     break;
                 case ConnectFailed:
-                    System.out.println("Observer -> ConnectFailed");
                     break;
                 default:
             }
         }
     }
 
-    private void sendBluetoothData(BluetoothConnection connection, String data) {
-        Preconditions.checkNotNull(connection);
-        Preconditions.checkNotNull(data);
-
+    private void sendData(BluetoothConnection connection, String data) {
         if(!data.equals("")) {
-            if(connection.isConnected()) {
-                try {
-                    connection.getOutputStream().write(data.getBytes());
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                System.out.println("Connection is not connected!");
-            }
+            sendData(connection, data.getBytes());
         } else {
             System.out.println("Data to send is blank!");
         }
     }
 
-    private static class BluetoothConnectTask extends AsyncTask<Void, Void, Boolean> {
+    private void sendData(BluetoothConnection connection, byte[] data) {
+        Preconditions.checkNotNull(connection);
+        Preconditions.checkNotNull(data);
+
+        if(connection.isConnected()) {
+            try {
+                connection.getOutputStream().write(data);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Connection is not connected!");
+        }
+    }
+
+    private static class ConnectTask extends AsyncTask<Void, Void, Boolean> {
 
         private BluetoothConnection mConnection;
         private BluetoothAdapter mBluetoothAdapter;
         private BluetoothSocket mBluetoothSocket;
         private static int retryCount;
 
-        private BluetoothConnectTask(BluetoothConnection connection, int retry) {
+        private ConnectTask(BluetoothConnection connection, int retry) {
             mConnection = Preconditions.checkNotNull(connection);
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             mBluetoothSocket = null;
             retryCount = retry;
         }
 
-        public BluetoothConnectTask(BluetoothConnection connection) {
+        public ConnectTask(BluetoothConnection connection) {
             this(connection, 0);
         }
 
@@ -238,7 +239,7 @@ public class BluetoothConnectionService extends Service implements Observer {
             } else {
                 System.out.println("Connected failed");
                 if(mBluetoothSocket.isConnected()) {
-                    System.out.println("WARNING: BluetoothConnectTask reported error, but is connected.");
+                    System.out.println("WARNING: ConnectTask reported error, but is connected.");
                     mConnection.notifyObservers(Connection.ObserverCues.Connected);
                 } else {
                     if(retryCount < 3) {
@@ -246,8 +247,8 @@ public class BluetoothConnectionService extends Service implements Observer {
                         System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
                         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                         mBluetoothSocket = null;
-                        new BluetoothConnectTask(mConnection, retryCount).execute();
-                        BluetoothConnectTask.this.cancel(true);
+                        new ConnectTask(mConnection, retryCount).execute();
+                        ConnectTask.this.cancel(true);
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
@@ -258,11 +259,11 @@ public class BluetoothConnectionService extends Service implements Observer {
         }
     }
 
-    private class BluetoothDisconnectTask extends AsyncTask<Void, Void, Void> {
+    private class DisconnectTask extends AsyncTask<Void, Void, Void> {
 
         private BluetoothConnection mConnection;
 
-        public BluetoothDisconnectTask(BluetoothConnection connection) {
+        public DisconnectTask(BluetoothConnection connection) {
             mConnection = Preconditions.checkNotNull(connection);
         }
 

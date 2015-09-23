@@ -144,6 +144,7 @@ public class Device implements Parcelable {
      * @return A newly constructed device with data initialized from these parameters.
      */
     public static Device build(String name, Connection connection) {
+        System.out.println("Build device: " + name);
         Preconditions.checkNotNull(connection);
         List<Connection> connections = new ArrayList<>();
         connections.add(connection);

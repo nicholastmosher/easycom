@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -23,7 +24,10 @@ import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,8 +75,19 @@ public class DiscoveryActivity extends AppCompatActivity {
         toolbar.addView(progressBar);
         setSupportActionBar(toolbar);
 
-        setTitle("Discovered Devices");
-
+        FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
+        actionButton.setImageResource(R.drawable.ic_action_new);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //TODO get rid of this ridiculous hack
+                System.out.println("Clicked action button");
+                TcpIpConnection connection = new TcpIpConnection("Flipper", "129.21.82.216", 7777);
+                TcpIpDiscoveredIntent intent = new TcpIpDiscoveredIntent(DiscoveryActivity.this, MainActivity.class, connection);
+                setResult(RESULT_OK, intent);
+                //TODO Set an extra that distinguishes BT and TCPIP for the intent.
+                finish();
+            }
+        });
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -87,8 +102,11 @@ public class DiscoveryActivity extends AppCompatActivity {
         discoveredList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent();
-                intent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, (Parcelable) connectionAdapter.getItem(position));
+                BluetoothDiscoveredIntent intent = new BluetoothDiscoveredIntent(
+                        DiscoveryActivity.this,
+                        MainActivity.class,
+                        (BluetoothConnection) connectionAdapter.getItem(position));
+
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -184,7 +202,6 @@ public class DiscoveryActivity extends AppCompatActivity {
                 nameTextView.setText((name == null) ? "No name" : name);
                 addressTextView.setText(address);
             }
-
             return view;
         }
     }

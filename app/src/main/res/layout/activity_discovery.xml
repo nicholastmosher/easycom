@@ -28,11 +28,11 @@
 
     </LinearLayout>
 
-    <!--android.support.design.widget.FloatingActionButton
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
-        android:layout_gravity="end|bottom" /-->
+        android:layout_gravity="end|bottom" />
 
 </FrameLayout>
