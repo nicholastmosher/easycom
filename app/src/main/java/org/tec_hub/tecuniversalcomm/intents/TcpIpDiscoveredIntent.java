@@ -17,6 +17,7 @@ public class TcpIpDiscoveredIntent extends Intent implements TECIntent { //TODO 
         Preconditions.checkNotNull(connection);
 
         setAction(ACTION_TCPIP_DISOVERED);
+        putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
         putExtra(TCPIP_CONNECTION_DATA, connection);
     }
 }

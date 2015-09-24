@@ -15,6 +15,7 @@ public class BluetoothReceiveIntent extends Intent implements TECIntent {
         Preconditions.checkNotNull(data);
 
         setAction(ACTION_BLUETOOTH_UPDATE_INPUT);
+        putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
         putExtra(BLUETOOTH_RECEIVED_DATA, data);
     }
 }

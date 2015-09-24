@@ -18,6 +18,7 @@ public class TcpIpDisconnectIntent extends Intent implements TECIntent {
         Preconditions.checkNotNull(connection);
 
         setAction(ACTION_TCPIP_DISCONNECT);
+        putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
         putExtra(TCPIP_CONNECTION_DATA, connection);
     }
 }

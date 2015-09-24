@@ -17,11 +17,11 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.google.common.base.Preconditions;
-
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnectionService;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.Observable;
@@ -33,7 +33,9 @@ import java.util.Observer;
  */
 public class TerminalActivity extends AppCompatActivity {
 
-    private BluetoothConnection mConnection;
+    private Connection mConnection;
+    private int mConnectedIcon;
+    private int mDisconnectedIcon;
 
     //View objects
     private ScrollView mTerminalScroll;
@@ -47,15 +49,31 @@ public class TerminalActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_terminal);
 
-        BluetoothConnectionService.launch(this);
-
-        Bundle extras = getIntent().getExtras();
-        BluetoothConnection tempConnection = extras.getParcelable(TECIntent.BLUETOOTH_CONNECTION_DATA);
-        mConnection = Preconditions.checkNotNull(tempConnection);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
+
+        Intent intent = getIntent();
+        switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
+            case TECIntent.CONNECTION_TYPE_BLUETOOTH:
+
+                BluetoothConnectionService.launch(this);
+                mConnection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
+                mConnectedIcon = R.drawable.ic_bluetooth_connected_black_48dp;
+                mDisconnectedIcon = R.drawable.ic_bluetooth_disabled_black_48dp;
+                break;
+            case TECIntent.CONNECTION_TYPE_TCPIP:
+
+                TcpIpConnectionService.launch(this);
+                mConnection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
+                mConnectedIcon = R.drawable.ic_signal_wifi_4_bar_black_48dp;
+                mDisconnectedIcon = R.drawable.ic_signal_wifi_off_black_48dp;
+                break;
+            default:
+        }
+
         toolbar.setTitle(mConnection.getName());
-        toolbar.setSubtitle(mConnection.getAddress());
         setSupportActionBar(toolbar);
 
         mTerminalScroll = (ScrollView) findViewById(R.id.terminal_scrollview);
@@ -88,17 +106,17 @@ public class TerminalActivity extends AppCompatActivity {
                     switch(cue) {
                         case Connected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_connected));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mConnectedIcon));
                             }
                             break;
                         case Disconnected:
                             if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_disconnected));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
                             }
                             break;
                         case ConnectFailed:
                             if(mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_disconnected));
+                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
                             }
                             break;
                         default:
@@ -192,9 +210,9 @@ public class TerminalActivity extends AppCompatActivity {
 
     private void updateIndicator() {
         if(mConnection.isConnected()) {
-            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_connected));
+            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mConnectedIcon));
         } else {
-            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, R.drawable.ic_disconnected));
+            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
         }
     }
 
@@ -204,7 +222,7 @@ public class TerminalActivity extends AppCompatActivity {
         Intent sendDataIntent = new Intent(this, BluetoothConnectionService.class);
         sendDataIntent.setAction(TECIntent.ACTION_BLUETOOTH_SEND_DATA);
         sendDataIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
-        sendDataIntent.putExtra(TECIntent.BLUETOOTH_SEND_DATA, data);
+        sendDataIntent.putExtra(TECIntent.BLUETOOTH_TO_SEND_DATA, data);
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(sendDataIntent);
         return false;

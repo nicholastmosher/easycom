@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonWriter;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Nick Mosher on 3/2/2015.
@@ -292,24 +292,40 @@ public class StorageAdapter {
         /**
          * Name key of all Connections.
          */
-        public static final String CONNECTION_NAME = "mName";
+        public static final String CONNECTION_NAME = "name";
 
         /**
          * Key of Connection Implementation.
          */
-        public static final String CONNECTION_IMPL = "mImpl";
+        public static final String CONNECTION_IMP = "imp";
 
         //Implementations of Connection
         /**
          * Implementation key of Bluetooth Connections.
          */
-        public static final String IMPL_BLUETOOTH = "BluetoothConnection";
+        public static final String IMP_BLUETOOTH = "impBt";
+
+        /**
+         * Implementation key of TCPIP Conncetions.
+         */
+        public static final String IMP_TCPIP = "impTcp";
 
         //BluetoothConnection specific data
         /**
          * Key to store BluetoothConnection address.
          */
-        public static final String BLUETOOTH_ADDRESS = "BluetoothAddress";
+        public static final String BLUETOOTH_ADDRESS = "btAddr";
+
+        //TcpIpConnection specific data
+        /**
+         * Key to store TcpIp remote Ip.
+         */
+        public static final String TCPIP_IP = "tcpIp";
+
+        /**
+         * Key to store TcpIp remote Port.
+         */
+        public static final String TCPIP_PORT = "tcpPort";
 
         /**
          * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
@@ -331,9 +347,17 @@ public class StorageAdapter {
                 //Write all properties specific to BluetoothConnections.
                 if(connection instanceof BluetoothConnection) {
                     BluetoothConnection btConnection = (BluetoothConnection) connection;
-                    writer.name(CONNECTION_IMPL).value(IMPL_BLUETOOTH); //Write connection implementation
+                    writer.name(CONNECTION_IMP).value(IMP_BLUETOOTH); //Write connection implementation
                     writer.name(BLUETOOTH_ADDRESS).value(btConnection.getAddress()); //Write BluetoothConnection address
+
+                //Write all properties specific to TcpIpConnections.
+                } else if(connection instanceof TcpIpConnection) {
+                    TcpIpConnection tcpIpConnection = (TcpIpConnection) connection;
+                    writer.name(CONNECTION_IMP).value(IMP_TCPIP);
+                    writer.name(TCPIP_IP).value(tcpIpConnection.getServerIp());
+                    writer.name(TCPIP_PORT).value(tcpIpConnection.getServerPort());
                 }
+
                 //End this Connection
                 writer.endObject();
             }
@@ -356,8 +380,10 @@ public class StorageAdapter {
             while(reader.hasNext()) {
                 //Create local variables as a cache to build a Connection
                 String connectionName = null;
-                String connectionImpl = null;
-                String bluetoothConnectionAddress = null;
+                String imp = null;
+                String btAddr = null;
+                String tcpIp = null;
+                int tcpPort = -1;
 
                 //Begin this Connection
                 reader.beginObject();
@@ -367,11 +393,17 @@ public class StorageAdapter {
                         case CONNECTION_NAME: //Read Connection name
                             connectionName = reader.nextString();
                             break;
-                        case CONNECTION_IMPL: //Read Connection implementation
-                            connectionImpl = reader.nextString();
+                        case CONNECTION_IMP: //Read Connection implementation
+                            imp = reader.nextString();
                             break;
                         case BLUETOOTH_ADDRESS: //Read BluetoothConnection address
-                            bluetoothConnectionAddress = reader.nextString();
+                            btAddr = reader.nextString();
+                            break;
+                        case TCPIP_IP:
+                            tcpIp = reader.nextString();
+                            break;
+                        case TCPIP_PORT:
+                            tcpPort = reader.nextInt();
                             break;
                         default:
                     }
@@ -380,12 +412,24 @@ public class StorageAdapter {
                 reader.endObject();
 
                 //Parse Connection data into object
+                Connection connection = null;
                 Preconditions.checkNotNull(connectionName);
-                Preconditions.checkNotNull(connectionImpl);
-                if(connectionImpl.equals(IMPL_BLUETOOTH)) { //If this Connection is a BluetoothConnection
-                    Preconditions.checkNotNull(bluetoothConnectionAddress);
-                    BluetoothConnection bluetoothConnection = new BluetoothConnection(connectionName, bluetoothConnectionAddress);
-                    connections.add(bluetoothConnection);
+                Preconditions.checkNotNull(imp);
+
+                if(imp.equals(IMP_BLUETOOTH)) { //If this Connection is a BluetoothConnection
+                    Preconditions.checkNotNull(btAddr);
+                    connection = new BluetoothConnection(connectionName, btAddr);
+
+                } else if(imp.equals(IMP_TCPIP)) {
+                    Preconditions.checkNotNull(tcpIp);
+                    if(tcpPort == -1) throw new IllegalStateException("Port was not read!");
+                    connection = new TcpIpConnection(connectionName, tcpIp, tcpPort);
+                }
+
+                if(connection != null) {
+                    connections.add(connection);
+                } else {
+                    System.err.println("Failed to read connection: " + connectionName);
                 }
             }
             //End array of Connections

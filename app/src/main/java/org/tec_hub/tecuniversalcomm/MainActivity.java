@@ -23,23 +23,17 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-    public static final int REQUEST_DISCOVERY = 2;
 
     /**
      * The View item that displays all device items in a list.
@@ -60,11 +54,11 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitle("TEC COMM | Devices");
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
         FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
-        actionButton.setImageResource(R.drawable.ic_action_new);
+        actionButton.setImageResource(R.drawable.ic_add_white_48dp);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(MainActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
+
             }
         });
         setSupportActionBar(toolbar);
@@ -103,42 +97,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    /**
-     * System callback that executes when some activity called with startActivityForResult() returns
-     * with a response.  The requestCode is the code we gave when launching the activity for result,
-     * the resultCode is a code given by the launched activity that indicates the status of the
-     * result given.
-     * @param requestCode The code given during startActivityForResult().
-     * @param resultCode  A code indicating the status of the return (e.g. RESULT_OK).
-     * @param data        An intent with data relevant to the activity that was launched.
-     */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQUEST_DISCOVERY:
-                if (resultCode == RESULT_OK) {
-
-                    System.out.println("onActivityResult");
-                    Connection connection = null;
-                    if(data instanceof BluetoothDiscoveredIntent) {
-                        connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
-                    } else if(data instanceof TcpIpDiscoveredIntent) {
-                        System.out.println("Got TCPIPDiscoveredIntent");
-                        connection = data.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
-                    }
-
-                    if(connection != null) {
-                        //TODO put option to put connection in existing devices
-                        Device device = Device.build(connection.getName(), connection);
-                        mDeviceAdapter.put(device);
-                    }
-                }
-                break;
-            default:
-                break;
         }
     }
 
@@ -263,9 +221,9 @@ public class MainActivity extends AppCompatActivity {
 
             //Set the image resource of the device icon button based on SDK version
             if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_36dp));
+                deviceImageButton.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_48dp));
             } else {
-                deviceImageButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_36dp));
+                deviceImageButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_48dp));
             }
 
             //Set action to do on device icon button pressed

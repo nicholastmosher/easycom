@@ -20,6 +20,7 @@ public class BluetoothConnectIntent extends Intent implements TECIntent {
         Preconditions.checkNotNull(connection);
 
         setAction(ACTION_BLUETOOTH_CONNECT);
+        putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
         putExtra(BLUETOOTH_CONNECTION_DATA, connection);
     }
 }

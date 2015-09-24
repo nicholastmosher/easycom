@@ -73,7 +73,7 @@ public class BluetoothConnectionService extends Service implements Observer {
                     //Received intent with data to send
                     case TECIntent.ACTION_BLUETOOTH_SEND_DATA:
                         //System.out.println("Service -> Sending Data...");
-                        String sendData = intent.getStringExtra(TECIntent.BLUETOOTH_SEND_DATA);
+                        String sendData = intent.getStringExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
                         sendData(connection, sendData);
                         break;
 

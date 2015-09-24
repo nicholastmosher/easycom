@@ -17,6 +17,7 @@ public class BluetoothDiscoveredIntent extends Intent implements TECIntent {
         Preconditions.checkNotNull(connection);
 
         setAction(ACTION_BLUETOOTH_DISCOVREED);
+        putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
         putExtra(BLUETOOTH_CONNECTION_DATA, connection);
     }
 }

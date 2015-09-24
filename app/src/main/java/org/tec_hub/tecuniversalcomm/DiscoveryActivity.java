@@ -6,9 +6,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.ColorFilter;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -16,7 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -26,7 +28,6 @@ import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 import java.util.ArrayList;
@@ -70,24 +71,11 @@ public class DiscoveryActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Searching for Devices: ");
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
         ProgressBar progressBar = (ProgressBar) ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.progress_bar, null, false);
         progressBar.setVisibility(View.VISIBLE);
         toolbar.addView(progressBar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
-        actionButton.setImageResource(R.drawable.ic_action_new);
-        actionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) { //TODO get rid of this ridiculous hack
-                System.out.println("Clicked action button");
-                TcpIpConnection connection = new TcpIpConnection("Flipper", "129.21.82.216", 7777);
-                TcpIpDiscoveredIntent intent = new TcpIpDiscoveredIntent(DiscoveryActivity.this, MainActivity.class, connection);
-                setResult(RESULT_OK, intent);
-                //TODO Set an extra that distinguishes BT and TCPIP for the intent.
-                finish();
-            }
-        });
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {

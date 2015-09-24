@@ -34,7 +34,7 @@ public interface TECIntent {
      * question added as a Parcelable Extra using the key
      * TECIntent.BLUETOOTH_CONNECTION_DATA.
      */
-    public static final String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_SEND_DATA";
+    public static final String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_TO_SEND_DATA";
 
     /**
      * Used by the BluetoothConnectionService to broadcast updates to the
@@ -73,7 +73,7 @@ public interface TECIntent {
      * have the TcpIpConnection added as a Parcelable Extra with the key TECIntent.TCPIP_CONNECTION_DATA,
      * and that TcpIpConnection must already be connected.
      */
-    public static final String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_SEND_DATA";
+    public static final String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_TO_SEND_DATA";
 
     /**
      * Broadcasted by the TcpIpConnectionService anytime there has been data received over a
@@ -88,6 +88,10 @@ public interface TECIntent {
      */
     public static final String ACTION_TCPIP_DISOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
 
+
+
+
+
     //Extras////////////////////////////////////////////////////////////////////////////////////////
     /**
      * Used by any intent carrying a BluetoothConnection as a Parcelable Extra.
@@ -98,7 +102,7 @@ public interface TECIntent {
      * Used to bundle the data that will be sent over a BluetoothConnection into an intent.
      * The intent using this as an Extra key should have the action "ACTION_BLUETOOTH_SEND_DATA".
      */
-    public static final String BLUETOOTH_SEND_DATA = "bluetooth_send_data";
+    public static final String BLUETOOTH_TO_SEND_DATA = "bluetooth_to_send_data";
 
     /**
      * Used by the BluetoothConnectionService to indicate data has been received
@@ -115,7 +119,7 @@ public interface TECIntent {
      * Used to bundle the data that will be sent over a TcpIpConnection into an intent.
      * The intent using this as an Extra key should have the action "ACTION_TCPIP_SEND_DATA".
      */
-    public static final String TCPIP_SEND_DATA = "tcpip_send_data";
+    public static final String TCPIP_TO_SEND_DATA = "tcpip_to_send_data";
 
     /**
      * Used as the Extra key for any intent carrying data that has been received from a
@@ -127,4 +131,19 @@ public interface TECIntent {
      * Used as an Extra key for any intent carrying a Device as a Parcelable.
      */
     public static final String DEVICE_DATA = "device_data";
+
+    /**
+     * Key for placing "Connection Type" extras into intents.
+     */
+    public static final String CONNECTION_TYPE = "connection_type";
+
+    /**
+     * Value for "Connection Type" extra in Bluetooth intents.
+     */
+    public static final String CONNECTION_TYPE_BLUETOOTH = "connection_type_bluetooth";
+
+    /**
+     * Value for "Connection Type" extra in TCPIP intents.
+     */
+    public static final String CONNECTION_TYPE_TCPIP = "connection_type_tcpip";
 }

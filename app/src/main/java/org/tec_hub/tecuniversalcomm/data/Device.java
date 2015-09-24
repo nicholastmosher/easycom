@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.UUID;
 
 /**
@@ -27,7 +28,11 @@ import java.util.UUID;
  * Each interface is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device implements Parcelable {
+public class Device extends Observable implements Parcelable {
+
+    public enum ObserverCues {
+        ConnectionsUpdated
+    }
 
     public static final Parcelable.Creator<Device> CREATOR = new Parcelable.Creator<Device>() {
         public Device createFromParcel(Parcel in) {
@@ -210,22 +215,13 @@ public class Device implements Parcelable {
         return mConnections;
     }
 
-/*    *//**
-     * Returns an ArrayList of all BT mConnections that are associated with the
-     * given device.
-     * //FIXME will cause problems when multiple bluetooth connections are assigned to one device
-     * @return
-     *//*
-    public BluetoothConnection getBluetoothConnection() {
-        if(mConnections != null) {
-            for (Connection c : mConnections) {
-                if (c instanceof BluetoothConnection) {
-                    return (BluetoothConnection) c;
-                }
-            }
-        }
-        return null;
-    }*/
+    /**
+     * Adds a new connection to the existing list for this Device.
+     * @param connection The new connection.
+     */
+    public void addConnection(Connection connection) {
+        mConnections.add(Preconditions.checkNotNull(connection));
+    }
 
     /**
      * Returns a hash of this object.  Two device objects containing the same member data
@@ -320,5 +316,12 @@ public class Device implements Parcelable {
 
         //Show the dialog
         dialog.show();
+    }
+
+    @Override
+    public void notifyObservers(Object data) {
+        setChanged();
+        super.notifyObservers(data);
+        clearChanged();
     }
 }

@@ -22,6 +22,6 @@ public class BluetoothSendIntent extends Intent implements TECIntent {
 
         setAction(ACTION_BLUETOOTH_SEND_DATA);
         putExtra(BLUETOOTH_CONNECTION_DATA, connection);
-        putExtra(BLUETOOTH_SEND_DATA, data);
+        putExtra(BLUETOOTH_TO_SEND_DATA, data);
     }
 }

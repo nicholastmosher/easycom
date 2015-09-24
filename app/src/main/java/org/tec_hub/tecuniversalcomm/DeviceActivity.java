@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -43,9 +44,18 @@ import java.util.Observer;
  */
 public class DeviceActivity extends AppCompatActivity {
 
+    public static final int REQUEST_DISCOVERY = 2;
+
+    private static Device lastDevice;
+
     private ListView mListView;
     private ConnectionListAdapter mConnectionAdapter;
     private Device mDevice;
+    private boolean mActionsVisible;
+
+    FloatingActionButton addButton;
+    FloatingActionButton addBtButton;
+    FloatingActionButton addTcpButton;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,13 +65,46 @@ public class DeviceActivity extends AppCompatActivity {
         Intent launchIntent = getIntent();
         Preconditions.checkNotNull(launchIntent);
 
-        //Parse the device sent to us on the launching intent
-        mDevice = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA);
+        Device device;
+        if((device = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA)) != null) {
+            //Parse the device sent to us on the launching intent
+            mDevice = device;
+            lastDevice = device;
+        } else {
+            mDevice = lastDevice;
+        }
 
         //Set the title of the activity to the device name
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(mDevice.getName() + " | Connections");
+        toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
         setSupportActionBar(toolbar);
+
+        addButton = (FloatingActionButton) findViewById(R.id.action_add);
+        addBtButton = (FloatingActionButton) findViewById(R.id.action_add_bluetooth);
+        addTcpButton = (FloatingActionButton) findViewById(R.id.action_add_tcp);
+
+        addButton.setImageResource(R.drawable.ic_add_white_48dp);
+        addBtButton.setImageResource(R.drawable.ic_bluetooth_white_48dp);
+        addTcpButton.setImageResource(R.drawable.ic_signal_wifi_4_bar_white_48dp);
+
+        addBtButton.setVisibility(View.GONE);
+        addTcpButton.setVisibility(View.GONE);
+
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mActionsVisible = !mActionsVisible;
+                updateActionButtonVisibility();
+            }
+        });
+
+        addBtButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(new Intent(DeviceActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
+            }
+        });
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);
@@ -69,6 +112,53 @@ public class DeviceActivity extends AppCompatActivity {
         mListView.setAdapter(mConnectionAdapter);
 
         BluetoothConnectionService.launch(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mActionsVisible = false;
+        updateActionButtonVisibility();
+    }
+
+    /**
+     * System callback that executes when some activity called with startActivityForResult() returns
+     * with a response.  The requestCode is the code we gave when launching the activity for result,
+     * the resultCode is a code given by the launched activity that indicates the status of the
+     * result given.
+     * @param requestCode The code given during startActivityForResult().
+     * @param resultCode  A code indicating the status of the return (e.g. RESULT_OK).
+     * @param data        An intent with data relevant to the activity that was launched.
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(data == null) return;
+        switch (requestCode) {
+            case REQUEST_DISCOVERY:
+                if (resultCode == RESULT_OK) {
+
+                    System.out.println("onActivityResult");
+                    Connection connection = null;
+
+                    switch(data.getStringExtra(TECIntent.CONNECTION_TYPE)) {
+                        case TECIntent.CONNECTION_TYPE_BLUETOOTH:
+                            connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                            break;
+                        case TECIntent.CONNECTION_TYPE_TCPIP:
+                            connection = data.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                            break;
+                        default:
+                    }
+
+                    if(connection != null) {
+                        mDevice.addConnection(connection);
+                        mDevice.notifyObservers(Device.ObserverCues.ConnectionsUpdated);
+                    }
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -98,12 +188,37 @@ public class DeviceActivity extends AppCompatActivity {
         }
     }
 
-    private class ConnectionListAdapter extends BaseAdapter {
+    private void updateActionButtonVisibility() {
+        if (mActionsVisible) {
+            addButton.setImageResource(R.drawable.ic_clear_white_48dp);
+            addBtButton.setVisibility(View.VISIBLE);
+            addTcpButton.setVisibility(View.VISIBLE);
+        } else {
+            addButton.setImageResource(R.drawable.ic_add_white_48dp);
+            addBtButton.setVisibility(View.GONE);
+            addTcpButton.setVisibility(View.GONE);
+        }
+    }
+
+    private class ConnectionListAdapter extends BaseAdapter implements Observer {
 
         private List<Connection> mConnections;
 
         public ConnectionListAdapter(List<Connection> connections) {
             mConnections = Preconditions.checkNotNull(connections);
+            mDevice.addObserver(this);
+        }
+
+        @Override
+        public void update(Observable observable, Object data) {
+            if(observable instanceof Device && data instanceof Device.ObserverCues) {
+                Device device = (Device) observable;
+                Device.ObserverCues cue = (Device.ObserverCues) data;
+
+                if(cue == Device.ObserverCues.ConnectionsUpdated) {
+                    mConnections = device.getConnections();
+                }
+            }
         }
 
         @Override
@@ -157,8 +272,8 @@ public class DeviceActivity extends AppCompatActivity {
 
                 //Set button icon based on sdk version
                 int bluetoothIconId = bluetoothConnection.isConnected() ?
-                        R.drawable.ic_bluetooth_connected_black_36dp :
-                        R.drawable.ic_bluetooth_disabled_black_36dp;
+                        R.drawable.ic_bluetooth_connected_black_48dp :
+                        R.drawable.ic_bluetooth_disabled_black_48dp;
                 setImageButtonDrawable(iconButton, bluetoothIconId);
                 iconButton.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.colorAccent));
 
@@ -170,15 +285,15 @@ public class DeviceActivity extends AppCompatActivity {
                             Connection.ObserverCues cue = (Connection.ObserverCues) data;
                             switch (cue) {
                                 case Connected:
-                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_connected_black_36dp);
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_connected_black_48dp);
                                     progressIndicator.setVisibility(View.GONE);
                                     break;
                                 case Disconnected:
-                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_36dp);
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_48dp);
                                     progressIndicator.setVisibility(View.GONE);
                                     break;
                                 case ConnectFailed:
-                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_36dp);
+                                    setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_disabled_black_48dp);
                                     progressIndicator.setVisibility(View.GONE);
                                     break;
                                 default:
@@ -209,6 +324,7 @@ public class DeviceActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
                         terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                        terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
                         startActivity(terminalIntent);
                     }
                 });
@@ -254,9 +370,11 @@ public class DeviceActivity extends AppCompatActivity {
             } else if(connection instanceof TcpIpConnection) {
                 final TcpIpConnection tcpIpConnection = (TcpIpConnection) connection;
 
+                detailsView.setText(tcpIpConnection.getServerIp() + ":" + tcpIpConnection.getServerPort());
+
                 int wifiIconId = tcpIpConnection.isConnected() ?
-                        R.drawable.ic_signal_wifi_4_bar_black_36dp :
-                        R.drawable.ic_signal_wifi_off_black_36dp;
+                        R.drawable.ic_signal_wifi_4_bar_black_48dp :
+                        R.drawable.ic_signal_wifi_off_black_48dp;
                 setImageButtonDrawable(iconButton, wifiIconId);
 
                 tcpIpConnection.addObserver(new Observer() {
@@ -300,8 +418,9 @@ public class DeviceActivity extends AppCompatActivity {
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent terminalIntent = new Intent(DeviceActivity.this, TerminalTCPIPActivity.class);
+                        Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
                         terminalIntent.putExtra(TECIntent.TCPIP_CONNECTION_DATA, tcpIpConnection);
+                        terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_TCPIP);
                         startActivity(terminalIntent);
                     }
                 });

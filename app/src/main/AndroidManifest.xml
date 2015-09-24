@@ -24,10 +24,10 @@
         <activity
             android:name=".DiscoveryActivity"
             android:label="Discover New Devices"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".DeviceActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.tec_hub.tecuniversalcomm.MainActivity"/>
+                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
         </activity>
 
         <activity
@@ -38,6 +38,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
         </activity>
+
+        <!--Temporary only-->
+        <!--Temporary only-->
 
         <activity
             android:name=".DeviceActivity"
