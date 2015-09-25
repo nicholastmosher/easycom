@@ -89,7 +89,7 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     /**
-     * Send connect request to BluetoothConnectionService to open a BluetoothConnection
+     * Send connect request to ConnectionService to open a BluetoothConnection
      * using this object's data.
      * @param context The context to send the intent to launch the Service.
      */
@@ -105,7 +105,7 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     /**
-     * Send disconnect request to BluetoothConnectionService to close a BluetoothConnection
+     * Send disconnect request to ConnectionService to close a BluetoothConnection
      * using this object's data.
      * @param context The context to send the intent to launch the Service.
      */

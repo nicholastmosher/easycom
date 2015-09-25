@@ -18,11 +18,12 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnectionService;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -52,11 +53,11 @@ public class TerminalActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
 
+        ConnectionService.launch(this);
         Intent intent = getIntent();
         switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
             case TECIntent.CONNECTION_TYPE_BLUETOOTH:
 
-                BluetoothConnectionService.launch(this);
                 mConnection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
                 toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
                 mConnectedIcon = R.drawable.ic_bluetooth_connected_black_48dp;
@@ -64,7 +65,6 @@ public class TerminalActivity extends AppCompatActivity {
                 break;
             case TECIntent.CONNECTION_TYPE_TCPIP:
 
-                TcpIpConnectionService.launch(this);
                 mConnection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
                 toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
                 mConnectedIcon = R.drawable.ic_signal_wifi_4_bar_black_48dp;
@@ -80,6 +80,8 @@ public class TerminalActivity extends AppCompatActivity {
         mTerminalWindow = (TextView) findViewById(R.id.terminal_window);
         mTerminalInput = (EditText) findViewById(R.id.terminal_input_text);
         mTerminalSend = (Button) findViewById(R.id.terminal_input_button);
+
+        mTerminalWindow.setTextColor(ContextCompat.getColor(this, R.color.material_grey_900));
 
         mTerminalInput.setHint("Type data to send:");
         mTerminalSend.setText("Send");
@@ -127,14 +129,14 @@ public class TerminalActivity extends AppCompatActivity {
         mConnection.connect(this);
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT);
+        intentFilter.addAction(TECIntent.ACTION_RECEIVED_DATA);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 switch(intent.getAction()) {
-                    case TECIntent.ACTION_BLUETOOTH_UPDATE_INPUT:
-                        receivedData(intent.getStringExtra(TECIntent.BLUETOOTH_RECEIVED_DATA));
+                    case TECIntent.ACTION_RECEIVED_DATA:
+                        receivedData(intent.getStringExtra(TECIntent.RECEIVED_DATA));
                         break;
                     default:
                 }
@@ -208,30 +210,44 @@ public class TerminalActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Refreshes the connection indicator at the top of the screen when the status changes.
+     */
     private void updateIndicator() {
-        if(mConnection.isConnected()) {
-            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mConnectedIcon));
-        } else {
-            mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
-        }
+        mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this,
+                (mConnection.isConnected() ? mConnectedIcon : mDisconnectedIcon)));
     }
 
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
 
-        Intent sendDataIntent = new Intent(this, BluetoothConnectionService.class);
-        sendDataIntent.setAction(TECIntent.ACTION_BLUETOOTH_SEND_DATA);
-        sendDataIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
-        sendDataIntent.putExtra(TECIntent.BLUETOOTH_TO_SEND_DATA, data);
+        Intent sendIntent = null;
+        if(mConnection instanceof BluetoothConnection) {
+            sendIntent = new BluetoothSendIntent(this, (BluetoothConnection) mConnection, data);
 
-        LocalBroadcastManager.getInstance(this).sendBroadcast(sendDataIntent);
+        } else if(mConnection instanceof TcpIpConnection) {
+            sendIntent = new TcpIpSendIntent(this, (TcpIpConnection) mConnection, data);
+
+        }
+
+        if(sendIntent != null) {
+            LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent);
+        }
         return false;
     }
 
+    /**
+     * Invoked whenever we receive valid data from a connection.
+     * @param data The data we received from the connection.
+     */
     private void receivedData(String data) {
         appendTerminal(mConnection.getName() + ": " + data);
     }
 
+    /**
+     * Adds text to the TextView display on the screen.
+     * @param data The text to append.
+     */
     private void appendTerminal(String data) {
         System.out.println("appendTerminal(" + data + ")");
         if(data != null) {

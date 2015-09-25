@@ -29,7 +29,7 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
@@ -127,6 +127,7 @@ public class DeviceActivity extends AppCompatActivity {
                 if(intent.getStringExtra(TECIntent.CONNECTION_TYPE).equals(TECIntent.CONNECTION_TYPE_TCPIP)) {
                     TcpIpConnection connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
                     mDevice.addConnection(connection);
+                    System.out.println("Received new TcpIpConnection from AlertDialog!");
                 }
             }
         }, filter);
@@ -136,7 +137,7 @@ public class DeviceActivity extends AppCompatActivity {
         mConnectionAdapter = new ConnectionListAdapter(mDevice.getConnections());
         mListView.setAdapter(mConnectionAdapter);
 
-        BluetoothConnectionService.launch(this);
+        ConnectionService.launch(this);
     }
 
     @Override
@@ -226,6 +227,10 @@ public class DeviceActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Manages taking Connection data for the current device and translating
+     * that data into View representations for placement on the ListView.
+     */
     private class ConnectionListAdapter extends BaseAdapter implements Observer {
 
         private ConnectionList mConnections;
@@ -235,6 +240,13 @@ public class DeviceActivity extends AppCompatActivity {
             mDevice.addObserver(this);
         }
 
+        /**
+         * Since this adapter observes the current device, we need a callback
+         * to indicate whenever the data in the device has been changed.
+         * @param observable The object we're watching for a change,  In this case, the Device.
+         * @param data An arbitrary piece of data the Observable (i.e. Device)
+         *             uses to tell us something about this update.  (See Device.Cues).
+         */
         @Override
         public void update(Observable observable, Object data) {
             if(observable instanceof Device && data instanceof Device.Cues) {
@@ -242,7 +254,9 @@ public class DeviceActivity extends AppCompatActivity {
                 Device.Cues cue = (Device.Cues) data;
 
                 if(cue == Device.Cues.ConnectionsUpdated) {
+                    System.out.println("ConnectionListAdapter Observer Device updated");
                     mConnections = device.getConnections();
+                    notifyDataSetChanged();
                 }
             }
         }
@@ -262,6 +276,13 @@ public class DeviceActivity extends AppCompatActivity {
             return position;
         }
 
+        /**
+         * Generates views to insert into the list based on the active Device's data.
+         * @param position The index in the Device's ConnectionList to read data from.
+         * @param convertView A previous version of the View for the current element.
+         * @param parent
+         * @return A View representing the Device's Connection data at this index.
+         */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             RelativeLayout root;
@@ -410,13 +431,13 @@ public class DeviceActivity extends AppCompatActivity {
                             Connection.Cues cue = (Connection.Cues) data;
                             switch (cue) {
                                 case Connected:
-
+                                    progressIndicator.setVisibility(View.GONE);
                                     break;
                                 case Disconnected:
-
+                                    progressIndicator.setVisibility(View.GONE);
                                     break;
                                 case ConnectFailed:
-
+                                    progressIndicator.setVisibility(View.GONE);
                                     break;
                                 default:
                             }

@@ -10,40 +10,31 @@ public interface TECIntent {
 
     //Actions///////////////////////////////////////////////////////////////////////////////////////
     /**
-     * Sent to the BluetoothConnectionService by any context that wants
+     * Sent to the ConnectionService by any context that wants
      * to initiate a BluetoothConnection.  The intent sent to the
-     * BluetoothConnectionService must have the BluetoothConnection in
+     * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
      * TECIntent.BLUETOOTH_CONNECTION_DATA.
      */
     public static final String ACTION_BLUETOOTH_CONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_CONNECT";
 
     /**
-     * Sent to the BluetoothConnectionService by any context that wants
+     * Sent to the ConnectionService by any context that wants
      * to disconnect a BluetoothConnection.  The intent sent to the
-     * BluetoothConnectionService must have the BluetoothConnection in
+     * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
      * TECIntent.BLUETOOTH_CONNECTION_DATA.
      */
     public static final String ACTION_BLUETOOTH_DISCONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCONNECT";
 
     /**
-     * Sent to the BluetoothConnectionService by any context that wants to
+     * Sent to the ConnectionService by any context that wants to
      * send data over a BluetoothConnection.  The intent sent to the
-     * BluetoothConnectionService must have the BluetoothConnection in
+     * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
      * TECIntent.BLUETOOTH_CONNECTION_DATA.
      */
     public static final String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_TO_SEND_DATA";
-
-    /**
-     * Used by the BluetoothConnectionService to broadcast updates to the
-     * app that it has received data from a BluetoothConnection.  To indicate
-     * which BluetoothConnection the data originated from, the broadcasted
-     * intent contains a Parcelable Extra of the BluetoothConnection under
-     * the key TECIntent.BLUETOOTH_CONNECTION_DATA.
-     */
-    public static final String ACTION_BLUETOOTH_UPDATE_INPUT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_UPDATE_INPUT";
 
     /**
      * Used to indicate that a BluetoothConnection has been discovered and report it back to some
@@ -76,17 +67,19 @@ public interface TECIntent {
     public static final String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_TO_SEND_DATA";
 
     /**
-     * Broadcasted by the TcpIpConnectionService anytime there has been data received over a
-     * TcpIpConnection.  The received data is packaged as a Parcelable Extra under the key
-     * TECIntent.TCPIP_RECEIVED_DATA.
-     */
-    public static final String ACTION_TCPIP_UPDATE_INPUT = "org.tec_hub.tecuniveralcomm.TCPIP_UPDATE_INPUT";
-
-    /**
      * Broadcasted by any Service or Activity that has discovered a new connection and is returning
      * it to a waiting Activity or Service.
      */
     public static final String ACTION_TCPIP_DISOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
+
+    /**
+     * Used by the ConnectionService to broadcast updates to the
+     * app that it has received data from a Connection.  To indicate
+     * which Connection the data originated from, the broadcasted
+     * intent contains a Parcelable Extra of the Connection of the
+     * type specified at Extra TECIntent.CONNECTION_TYPE.
+     */
+    public static final String ACTION_RECEIVED_DATA = "org.tec_hub.tecuniversalcomm.RECEIVED_DATA";
 
 
 
@@ -105,12 +98,6 @@ public interface TECIntent {
     public static final String BLUETOOTH_TO_SEND_DATA = "bluetooth_to_send_data";
 
     /**
-     * Used by the BluetoothConnectionService to indicate data has been received
-     * by an active BluetoothConnection.
-     */
-    public static final String BLUETOOTH_RECEIVED_DATA = "bluetooth_input_data";
-
-    /**
      * Used by any intent carrying a TcpIpConnection as a Parcelable Extra.
      */
     public static final String TCPIP_CONNECTION_DATA = "tcpip_connection_data";
@@ -122,15 +109,15 @@ public interface TECIntent {
     public static final String TCPIP_TO_SEND_DATA = "tcpip_to_send_data";
 
     /**
-     * Used as the Extra key for any intent carrying data that has been received from a
-     * TcpIpConnection.
-     */
-    public static final String TCPIP_RECEIVED_DATA = "tcpip_input_data";
-
-    /**
      * Used as an Extra key for any intent carrying a Device as a Parcelable.
      */
     public static final String DEVICE_DATA = "device_data";
+
+    /**
+     * Used by the ConnectionService to indicate data has been received
+     * by an active Connection.
+     */
+    public static final String RECEIVED_DATA = "received_data";
 
     /**
      * Key for placing "Connection Type" extras into intents.
