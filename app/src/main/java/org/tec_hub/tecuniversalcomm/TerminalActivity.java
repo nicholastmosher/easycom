@@ -101,8 +101,8 @@ public class TerminalActivity extends AppCompatActivity {
         mConnection.addObserver(new Observer() {
             @Override
             public void update(Observable observable, Object data) {
-                if(data instanceof Connection.ObserverCues) {
-                    Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                if(data instanceof Connection.Cues) {
+                    Connection.Cues cue = (Connection.Cues) data;
                     switch(cue) {
                         case Connected:
                             if (mConnectedIndicator != null) {

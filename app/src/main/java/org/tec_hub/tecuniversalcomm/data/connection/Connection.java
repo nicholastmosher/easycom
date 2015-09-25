@@ -8,10 +8,7 @@ import com.google.common.base.Preconditions;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Observable;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -19,7 +16,7 @@ import java.util.UUID;
  */
 public abstract class Connection extends Observable implements Parcelable {
 
-    public enum ObserverCues {
+    public enum Cues {
         Connected,
         Disconnected,
         ConnectFailed
@@ -63,6 +60,14 @@ public abstract class Connection extends Observable implements Parcelable {
      */
     public String getName() {
         return this.mConnectionName;
+    }
+
+    /**
+     * Returns the unique identifier of this Connection.
+     * @return The unique identifier of this Connection.
+     */
+    public UUID getUUID() {
+        return mUUID;
     }
 
     /**
@@ -112,5 +117,19 @@ public abstract class Connection extends Observable implements Parcelable {
         setChanged();
         super.notifyObservers(data);
         clearChanged();
+    }
+
+    /**
+     * Hashing a connection object will tell if the two objects contain
+     * the exact content data, but the same connection - if any
+     * member values are changed - will hash differently.  This method
+     * is here to compare two connection and determine whether they represent
+     * the same connection regardless of the status of the member data.
+     * This is determined by comparing the UUIDs of each connection.
+     * @param c The connection to compare to this object.
+     * @return True if connections are the same, False otherwise.
+     */
+    public boolean isVersionOf(Connection c) {
+        return c.getUUID().equals(this.getUUID());
     }
 }

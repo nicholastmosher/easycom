@@ -24,10 +24,12 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
@@ -35,7 +37,6 @@ import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpDisconnectIntent;
 
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -152,7 +153,8 @@ public class DeviceActivity extends AppCompatActivity {
 
                     if(connection != null) {
                         mDevice.addConnection(connection);
-                        mDevice.notifyObservers(Device.ObserverCues.ConnectionsUpdated);
+                        mDevice.notifyObservers(Device.Cues.ConnectionsUpdated);
+                        mConnectionAdapter.notifyDataSetChanged();
                     }
                 }
                 break;
@@ -171,7 +173,7 @@ public class DeviceActivity extends AppCompatActivity {
         switch(item.getItemId()) {
 
             case R.id.action_rename_device:
-                Device.promptRename(mDevice, DeviceActivity.this);
+                //TODO implement renaming
                 return true;
 
             case R.id.action_delete_device:
@@ -202,20 +204,20 @@ public class DeviceActivity extends AppCompatActivity {
 
     private class ConnectionListAdapter extends BaseAdapter implements Observer {
 
-        private List<Connection> mConnections;
+        private ConnectionList mConnections;
 
-        public ConnectionListAdapter(List<Connection> connections) {
+        public ConnectionListAdapter(ConnectionList connections) {
             mConnections = Preconditions.checkNotNull(connections);
             mDevice.addObserver(this);
         }
 
         @Override
         public void update(Observable observable, Object data) {
-            if(observable instanceof Device && data instanceof Device.ObserverCues) {
+            if(observable instanceof Device && data instanceof Device.Cues) {
                 Device device = (Device) observable;
-                Device.ObserverCues cue = (Device.ObserverCues) data;
+                Device.Cues cue = (Device.Cues) data;
 
-                if(cue == Device.ObserverCues.ConnectionsUpdated) {
+                if(cue == Device.Cues.ConnectionsUpdated) {
                     mConnections = device.getConnections();
                 }
             }
@@ -281,8 +283,8 @@ public class DeviceActivity extends AppCompatActivity {
                 bluetoothConnection.addObserver(new Observer() {
                     @Override
                     public void update(Observable observable, Object data) {
-                        if (data instanceof Connection.ObserverCues) {
-                            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                        if (data instanceof Connection.Cues) {
+                            Connection.Cues cue = (Connection.Cues) data;
                             switch (cue) {
                                 case Connected:
                                     setImageButtonDrawable(iconButton, R.drawable.ic_bluetooth_connected_black_48dp);
@@ -380,8 +382,8 @@ public class DeviceActivity extends AppCompatActivity {
                 tcpIpConnection.addObserver(new Observer() {
                     @Override
                     public void update(Observable observable, Object data) {
-                        if (data instanceof Connection.ObserverCues) {
-                            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+                        if (data instanceof Connection.Cues) {
+                            Connection.Cues cue = (Connection.Cues) data;
                             switch (cue) {
                                 case Connected:
 
@@ -468,6 +470,12 @@ public class DeviceActivity extends AppCompatActivity {
                 button.setImageDrawable(ContextCompat.getDrawable(DeviceActivity.this, resourceId));
             }
             button.setColorFilter(0xFFFF0000);
+        }
+
+        @Override
+        public void notifyDataSetChanged() {
+            super.notifyDataSetChanged();
+            StorageAdapter.putDevice(mDevice);
         }
     }
 }

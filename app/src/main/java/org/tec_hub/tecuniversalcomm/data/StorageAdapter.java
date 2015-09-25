@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonWriter;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 
 import java.io.BufferedReader;
@@ -25,8 +26,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -58,8 +57,8 @@ public class StorageAdapter {
         mHandler = new Handler(mHandlerThread.getLooper());
 
         mGsonBuilder = new GsonBuilder();
-        mDeviceListType = new TypeToken<List<Device>>(){}.getType();
-        mConnectionListType = new TypeToken<List<Connection>>(){}.getType();
+        mDeviceListType = new TypeToken<DeviceList>(){}.getType();
+        mConnectionListType = new TypeToken<ConnectionList>(){}.getType();
 
         mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());
         mGson = mGsonBuilder.create();
@@ -73,6 +72,7 @@ public class StorageAdapter {
     public static void init(Context context) {
         mDevicesFolder = context.getFilesDir();
         mDevicesFile = new File(mDevicesFolder, FILE_DEVICES);
+        wipeDevicesFile();
         try {
             //If the file to store device data in doesn't exist, create it.
             mDevicesFile.createNewFile();
@@ -101,11 +101,11 @@ public class StorageAdapter {
      * Puts the specified list of devices as the sole object in persistent storage.
      * @param devices The list of devices to write to disk.
      */
-    public static void setDevices(List<Device> devices) {
-        mHandler.post(new SetDevicesTask(devices));
+    public static void setDevices(DeviceList devices) {
+        mHandler.post(new WriteDevicesTask(devices));
     }
 
-    public static List<Device> getDevices() {
+    public static DeviceList getDevices() {
         return readDevicesFromFile();
     }
 
@@ -114,7 +114,7 @@ public class StorageAdapter {
      * This overwrites the existing storage.
      * @param devices The List of devices being stored.
      */
-    private static void writeDevicesToFile(List<Device> devices) {
+    private static void writeDevicesToFile(DeviceList devices) {
         Preconditions.checkNotNull(devices);
         wipeDevicesFile();
         if(mDevicesFile.exists()) {
@@ -134,8 +134,8 @@ public class StorageAdapter {
      * Returns a List of devices retrieved from the persistent data file.
      * @return a List of devices retrieved from the persistent data file.
      */
-    private static List<Device> readDevicesFromFile() {
-        List<Device> devices = new ArrayList<>();
+    private static DeviceList readDevicesFromFile() {
+        DeviceList devices = new DeviceList();
         try {
             //Reads a file line-by-line
             BufferedReader bufferedReader = new BufferedReader(
@@ -156,7 +156,7 @@ public class StorageAdapter {
                 return devices;
             }
 
-            List<Device> temp = mGson.fromJson(jsonFile, mDeviceListType);
+            DeviceList temp = mGson.fromJson(jsonFile, mDeviceListType);
             Preconditions.checkNotNull(temp);
             devices = temp;
         } catch(IOException | IllegalStateException ioe) {
@@ -202,39 +202,8 @@ public class StorageAdapter {
          */
         @Override
         public void run() {
-            List<Device> fileDevices = readDevicesFromFile();
-            boolean flagNewDevice = true;
-            for (Device fileDevice : fileDevices) {
-                /*
-                 * If the device from the parameter is a version of the existing
-                 * file device AND the new device has different member data,
-                 * write the new device over the old device in persistent storage.
-                 */
-                if (mDevice.isVersionOf(fileDevice)) {
-                    /*
-                     * If the data in the two devices does not match, update the
-                     * file version of the device to match the new device.
-                     */
-                    if(!mDevice.equals(fileDevice)) {
-                        int index = fileDevices.indexOf(fileDevice);
-                        if (index != -1) {
-                            fileDevices.set(index, mDevice);
-                            break;
-                        } else {
-                            throw new IllegalStateException("[StorageAdapter.AddDeviceTask.run] Cannot find device index!");
-                        }
-                    }
-                    //This device already exists, we don't need a new device entry for it.
-                    flagNewDevice = false;
-                }
-            }
-            /*
-             * If this device is brand new, and NOT just an updated version of
-             * an existing device, just add the new device to the device list.
-             */
-            if (flagNewDevice) {
-                fileDevices.add(mDevice);
-            }
+            DeviceList fileDevices = readDevicesFromFile();
+            fileDevices.add(mDevice);
             writeDevicesToFile(fileDevices);
         }
     }
@@ -244,9 +213,9 @@ public class StorageAdapter {
      * At construction, this class takes a List of Devices and writes it into
      * the persistent storage, erasing all previous data.
      */
-    private static class SetDevicesTask implements Runnable {
-        private List<Device> mDevices;
-        public SetDevicesTask(List<Device> devices) {
+    private static class WriteDevicesTask implements Runnable {
+        private DeviceList mDevices;
+        public WriteDevicesTask(DeviceList devices) {
             mDevices = devices;
         }
 
@@ -268,18 +237,11 @@ public class StorageAdapter {
         }
 
         @Override
-        public void run() {
-            List<Device> fileDevices = Collections.synchronizedList(readDevicesFromFile());
+        public synchronized void run() {
+            DeviceList fileDevices = readDevicesFromFile();
             Preconditions.checkNotNull(fileDevices);
-            synchronized (fileDevices) {
-                Iterator iterator = fileDevices.iterator();
-                while(iterator.hasNext()) {
-                    if(mDevice.isVersionOf((Device) iterator.next())) {
-                        iterator.remove();
-                    }
-                }
-                writeDevicesToFile(fileDevices);
-            }
+            fileDevices.remove(mDevice);
+            writeDevicesToFile(fileDevices);
         }
     }
 

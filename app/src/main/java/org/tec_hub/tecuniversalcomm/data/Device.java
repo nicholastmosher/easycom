@@ -1,20 +1,14 @@
 package org.tec_hub.tecuniversalcomm.data;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 
 import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.UUID;
@@ -30,7 +24,7 @@ import java.util.UUID;
  */
 public class Device extends Observable implements Parcelable {
 
-    public enum ObserverCues {
+    public enum Cues {
         ConnectionsUpdated
     }
 
@@ -44,11 +38,11 @@ public class Device extends Observable implements Parcelable {
         }
     };
 
-    private static Map<UUID, List<Connection>> connectionListsMap = new HashMap<>();
+    private static Map<UUID, ConnectionList> connectionListsMap = new HashMap<>();
 
     private String mName;
     private final UUID mUUID;
-    private List<Connection> mConnections;
+    private ConnectionList mConnections;
 
     /**
      * Constructs a device.  This constructor is accessible via the build methods
@@ -59,7 +53,7 @@ public class Device extends Observable implements Parcelable {
      * @param uuid A unique identifier used for keeping track of this device's
      *             profile identity even when member data (and thus hashes) vary.
      */
-    private Device(String name, List<Connection> connections, UUID uuid) {
+    private Device(String name, ConnectionList connections, UUID uuid) {
         mName = Preconditions.checkNotNull(name);
         mConnections = Preconditions.checkNotNull(connections);
         mUUID = Preconditions.checkNotNull(uuid);
@@ -74,7 +68,7 @@ public class Device extends Observable implements Parcelable {
     protected Device() {
         mName = null;
         mUUID = UUID.randomUUID();
-        mConnections = new ArrayList<>();
+        mConnections = new ConnectionList();
     }
 
     /**
@@ -85,7 +79,7 @@ public class Device extends Observable implements Parcelable {
      *             regardless of hash data (see method isVersionOf()).
      * @return A newly constructed Device with data initialized from these parameters.
      */
-    public static Device build(String name, List<Connection> connections, UUID uuid) {
+    public static Device build(String name, ConnectionList connections, UUID uuid) {
         return new Device(name, connections, uuid);
     }
 
@@ -97,7 +91,7 @@ public class Device extends Observable implements Parcelable {
      *             regardless of hash data (see method isVersionOf()).
      * @return A newly constructed Device with data initialized from these parameters.
      */
-    public static Device build(String name, List<Connection> connections, String uuid) {
+    public static Device build(String name, ConnectionList connections, String uuid) {
         Preconditions.checkNotNull(uuid);
         return new Device(name, connections, UUID.fromString(uuid));
     }
@@ -112,7 +106,7 @@ public class Device extends Observable implements Parcelable {
      */
     public static Device build(String name, Connection connection, UUID uuid) {
         Preconditions.checkNotNull(connection);
-        List<Connection> connections = new ArrayList<>();
+        ConnectionList connections = new ConnectionList();
         connections.add(connection);
         return new Device(name, connections, uuid);
     }
@@ -137,7 +131,7 @@ public class Device extends Observable implements Parcelable {
      * @param connections An existing List of Connections for this device to own.
      * @return A newly constructed device with data initialized from these parameters.
      */
-    public static Device build(String name, List<Connection> connections) {
+    public static Device build(String name, ConnectionList connections) {
         return new Device(name, connections, UUID.randomUUID());
     }
 
@@ -151,7 +145,7 @@ public class Device extends Observable implements Parcelable {
     public static Device build(String name, Connection connection) {
         System.out.println("Build device: " + name);
         Preconditions.checkNotNull(connection);
-        List<Connection> connections = new ArrayList<>();
+        ConnectionList connections = new ConnectionList();
         connections.add(connection);
         return build(name, connections);
     }
@@ -163,7 +157,7 @@ public class Device extends Observable implements Parcelable {
      * @return A newly constructed device with data initialized from these parameters.1
      */
     public static Device build(String name) {
-        return build(name, new ArrayList<Connection>());
+        return build(name, new ConnectionList());
     }
 
     /**
@@ -211,7 +205,7 @@ public class Device extends Observable implements Parcelable {
      * Returns a List of all Connections belonging to this device.
      * @return A List of all Connections belonging to this device.
      */
-    public List<Connection> getConnections() {
+    public ConnectionList getConnections() {
         return mConnections;
     }
 
@@ -220,7 +214,17 @@ public class Device extends Observable implements Parcelable {
      * @param connection The new connection.
      */
     public void addConnection(Connection connection) {
-        mConnections.add(Preconditions.checkNotNull(connection));
+        mConnections.add(connection);
+        notifyObservers(Cues.ConnectionsUpdated);
+    }
+
+    /**
+     * Removes a connection from the existing list for this Device.
+     * @param connection The connection to remove.
+     */
+    public void removeConnection(Connection connection) {
+        mConnections.remove(connection);
+        notifyObservers(Cues.ConnectionsUpdated);
     }
 
     /**
@@ -253,10 +257,7 @@ public class Device extends Observable implements Parcelable {
             return false;
         }
 
-        if(hashCode() == o.hashCode()) {
-            return true;
-        }
-        return false;
+        return hashCode() == o.hashCode();
     }
 
     /**
@@ -275,47 +276,6 @@ public class Device extends Observable implements Parcelable {
 
     public int describeContents() {
         return 0;
-    }
-
-    //TODO fix persistent data editing after prompt
-    public static void promptRename(final Device device, final Context context) {
-        //Create an EditText view to get user input
-        final EditText input = new EditText(context);
-        input.setText(device.getName());
-        input.selectAll();
-
-        //Use a Dialog Builder to set Positive and Negative action buttons
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
-        dialogBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                String value = input.getText().toString();
-                if(value != null && !value.equals("")) {
-                    device.setName(value);
-                }
-            }
-        });
-        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // Canceled.
-            }
-        });
-
-        //Create AlertDialog from builder
-        AlertDialog dialog = dialogBuilder.create();
-        dialog.setTitle("Rename Device");
-        dialog.setView(input);
-
-        //Set action to happen when dialog shows
-        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                ((InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE))
-                        .toggleSoftInputFromWindow(input.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
-            }
-        });
-
-        //Show the dialog
-        dialog.show();
     }
 
     @Override

@@ -113,9 +113,9 @@ public class BluetoothConnectionService extends Service implements Observer {
             throw new IllegalStateException("Update did not originate at a BluetoothConnection!");
         }
 
-        if(data instanceof Connection.ObserverCues) {
+        if(data instanceof Connection.Cues) {
             BluetoothConnection connection = (BluetoothConnection) observable;
-            Connection.ObserverCues cue = (Connection.ObserverCues) data;
+            Connection.Cues cue = (Connection.Cues) data;
             switch(cue) {
                 case Connected:
                     if (receiveInputThread != null) {
@@ -235,12 +235,12 @@ public class BluetoothConnectionService extends Service implements Observer {
             super.onPostExecute(success);
             if(success) {
                 System.out.println("Connected success");
-                mConnection.notifyObservers(Connection.ObserverCues.Connected);
+                mConnection.notifyObservers(Connection.Cues.Connected);
             } else {
                 System.out.println("Connected failed");
                 if(mBluetoothSocket.isConnected()) {
                     System.out.println("WARNING: ConnectTask reported error, but is connected.");
-                    mConnection.notifyObservers(Connection.ObserverCues.Connected);
+                    mConnection.notifyObservers(Connection.Cues.Connected);
                 } else {
                     if(retryCount < 3) {
                         retryCount++;
@@ -252,7 +252,7 @@ public class BluetoothConnectionService extends Service implements Observer {
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
-                        mConnection.notifyObservers(Connection.ObserverCues.ConnectFailed);
+                        mConnection.notifyObservers(Connection.Cues.ConnectFailed);
                     }
                 }
             }
@@ -284,7 +284,7 @@ public class BluetoothConnectionService extends Service implements Observer {
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
             if(!mConnection.isConnected()) {
-                mConnection.notifyObservers(Connection.ObserverCues.Disconnected);
+                mConnection.notifyObservers(Connection.Cues.Disconnected);
             }
         }
     }

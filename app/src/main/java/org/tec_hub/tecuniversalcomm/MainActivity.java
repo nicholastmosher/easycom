@@ -23,15 +23,11 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.DeviceList;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnectionService;
-import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         mDeviceListView.setAdapter(mDeviceAdapter);
         mDeviceListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
-        BluetoothConnectionService.launch(this);
+        BluetoothConnectionService.launch(this); //FIXME does this need to launch here?
     }
 
     @Override
@@ -112,11 +108,10 @@ public class MainActivity extends AppCompatActivity {
          * This is held in memory and is readily accessible so that system calls
          * requesting View updates can be satisfied quickly.
          */
-        private List<Device> mDeviceEntries;
+        private DeviceList mDevices;
 
         public DeviceListAdapter() {
-            this.mDeviceEntries = new ArrayList<>();
-            populateFromStorage();
+            mDevices = StorageAdapter.getDevices();
         }
 
         /**
@@ -125,23 +120,7 @@ public class MainActivity extends AppCompatActivity {
          */
         public void put(Device newDevice) {
             Preconditions.checkNotNull(newDevice);
-            boolean flagUpdatedExisting = false;
-            for (Device device : mDeviceEntries) {
-                if (newDevice.isVersionOf(device)) {
-                    int index = mDeviceEntries.indexOf(device);
-                    if(index != -1) {
-                        mDeviceEntries.set(index, newDevice);
-                        flagUpdatedExisting = true;
-                        break;
-                    } else {
-                        throw new IllegalStateException("Cannot find device index!");
-                    }
-                }
-            }
-            //If an existing device was not updated, then this is a new device, add it to the list
-            if (!flagUpdatedExisting) {
-                mDeviceEntries.add(newDevice);
-            }
+            mDevices.add(newDevice);
             notifyDataSetChanged();
         }
 
@@ -150,42 +129,24 @@ public class MainActivity extends AppCompatActivity {
          * @param device
          */
         public void delete(Device device) {
-            Preconditions.checkNotNull(device);
-            //Remove device from mDeviceEntries
-            Iterator iterator = mDeviceEntries.iterator();
-            while(iterator.hasNext()) {
-                Device d = (Device) iterator.next();
-                if(device.isVersionOf(d)) {
-                    iterator.remove();
-                }
-            }
-            notifyDataSetChanged();
-        }
-
-        /**
-         * Retrieves Device entries from persistent storage and loads them into the dynamic
-         * array responsible for displaying the entries in the listView.
-         */
-        public void populateFromStorage() {
-            List<Device> temp = Preconditions.checkNotNull(StorageAdapter.getDevices());
-            mDeviceEntries = temp;
+            mDevices.remove(device);
         }
 
         @Override
         public void notifyDataSetChanged() {
-            StorageAdapter.setDevices(mDeviceEntries);
+            StorageAdapter.setDevices(mDevices);
             super.notifyDataSetChanged();
         }
 
         public int getCount() {
-            if (mDeviceEntries != null) {
-                return mDeviceEntries.size();
+            if (mDevices != null) {
+                return mDevices.size();
             }
             return 0;
         }
 
         public Object getItem(int position) {
-            return mDeviceEntries.get(position);
+            return mDevices.get(position);
         }
 
         public long getItemId(int position) {
@@ -253,8 +214,7 @@ public class MainActivity extends AppCompatActivity {
                     //Switch action based on clicked item
                     switch(item.getItemId()) {
                         case R.id.action_rename_device:
-                            Device.promptRename(device, MainActivity.this); //FIXME does not change persistently
-                            notifyDataSetChanged();
+                            //TODO implement renaming
                             return true;
                         case R.id.action_delete_device:
                             delete(device);
