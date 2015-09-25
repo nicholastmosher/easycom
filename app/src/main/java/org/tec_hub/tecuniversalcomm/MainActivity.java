@@ -1,11 +1,16 @@
 package org.tec_hub.tecuniversalcomm;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -14,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -41,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private DeviceListAdapter mDeviceAdapter;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,12 +56,37 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("TEC COMM | Devices");
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
+
+        //Creates a dialog to make a new Device.
+        final EditText deviceName = new EditText(this);
+        deviceName.setHint("Enter Device Name:");
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle("Create New Device");
+        dialogBuilder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(!deviceName.getText().toString().equals("")) {
+                    Device newDevice = Device.build(deviceName.getText().toString());
+                    mDeviceAdapter.put(newDevice);
+                }
+            }
+        });
+        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        dialogBuilder.setView(deviceName);
+        final AlertDialog newDeviceDialog = dialogBuilder.create();
+
         FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
         actionButton.setImageResource(R.drawable.ic_add_white_48dp);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                deviceName.setText("");
+                newDeviceDialog.show();
             }
         });
         setSupportActionBar(toolbar);
@@ -130,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
          */
         public void delete(Device device) {
             mDevices.remove(device);
+            notifyDataSetChanged();
         }
 
         @Override

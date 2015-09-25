@@ -1,12 +1,15 @@
 package org.tec_hub.tecuniversalcomm;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -31,6 +34,7 @@ import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.Device;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.dialogs.DialogNewTcpIp;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
@@ -106,6 +110,26 @@ public class DeviceActivity extends AppCompatActivity {
                 startActivityForResult(new Intent(DeviceActivity.this, DiscoveryActivity.class), REQUEST_DISCOVERY);
             }
         });
+
+        final AlertDialog newTcpDialog = DialogNewTcpIp.build(this, DeviceActivity.class);
+        addTcpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newTcpDialog.show();
+            }
+        });
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(TECIntent.ACTION_TCPIP_DISOVERED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getStringExtra(TECIntent.CONNECTION_TYPE).equals(TECIntent.CONNECTION_TYPE_TCPIP)) {
+                    TcpIpConnection connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                    mDevice.addConnection(connection);
+                }
+            }
+        }, filter);
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);

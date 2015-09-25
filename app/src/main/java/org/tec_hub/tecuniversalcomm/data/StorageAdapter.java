@@ -72,7 +72,6 @@ public class StorageAdapter {
     public static void init(Context context) {
         mDevicesFolder = context.getFilesDir();
         mDevicesFile = new File(mDevicesFolder, FILE_DEVICES);
-        wipeDevicesFile();
         try {
             //If the file to store device data in doesn't exist, create it.
             mDevicesFile.createNewFile();
@@ -249,7 +248,7 @@ public class StorageAdapter {
      * Special class implementing GSON's TypeAdapter.  This is used to tell
      * GSON exactly how to serialize and deserialize Connection Lists.
      */
-    private static final class ConnectionListTypeAdapter extends TypeAdapter<List<Connection>> {
+    private static final class ConnectionListTypeAdapter extends TypeAdapter<ConnectionList> {
 
         /**
          * Name key of all Connections.
@@ -296,7 +295,7 @@ public class StorageAdapter {
          * @throws IOException
          */
         @Override
-        public void write(JsonWriter writer, List<Connection> connections) throws IOException {
+        public void write(JsonWriter writer, ConnectionList connections) throws IOException {
             //Begin array of Connections
             writer.beginArray();
             for(Connection connection : connections) {
@@ -334,8 +333,8 @@ public class StorageAdapter {
          * @throws IOException
          */
         @Override
-        public List<Connection> read(JsonReader reader) throws IOException {
-            List<Connection> connections = new ArrayList<>();
+        public ConnectionList read(JsonReader reader) throws IOException {
+            ConnectionList connections = new ConnectionList();
 
             //Begin array of Connections
             reader.beginArray();
