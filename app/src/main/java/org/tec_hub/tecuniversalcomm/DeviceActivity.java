@@ -321,9 +321,9 @@ public class DeviceActivity extends AppCompatActivity {
 
                 //Define icons that could be used for this list item depending on connection status.
                 final Drawable iconConnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_bluetooth_connected_black_48dp);
-                iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+                iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.connected), PorterDuff.Mode.SRC_ATOP);
                 final Drawable iconDisconnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_bluetooth_disabled_black_48dp);
-
+                iconDisconnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
                 //Apply the appropriate initial icon based on current connection status.
                 setImageButtonDrawable(iconButton, connection.isConnected() ? iconConnected : iconDisconnected);
 
@@ -420,9 +420,10 @@ public class DeviceActivity extends AppCompatActivity {
                 detailsView.setText(tcpIpConnection.getServerIp() + ":" + tcpIpConnection.getServerPort());
 
                 //Define icons that can be used for this list item based on the connection's status.
-                final Drawable iconConnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_bluetooth_connected_black_48dp);
-                iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
-                final Drawable iconDisconnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_bluetooth_disabled_black_48dp);
+                final Drawable iconConnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_signal_wifi_4_bar_black_48dp);
+                iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.connected), PorterDuff.Mode.SRC_ATOP);
+                final Drawable iconDisconnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_signal_wifi_off_black_48dp);
+                iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
 
                 //Apply initial icon based on the connection's current status.
                 setImageButtonDrawable(iconButton, connection.isConnected() ? iconConnected : iconDisconnected);
@@ -512,6 +513,11 @@ public class DeviceActivity extends AppCompatActivity {
             return root;
         }
 
+        /**
+         * Uses a different method to set button icons depending on Android version.
+         * @param button The button whose icon to change.
+         * @param icon The icon to apply to the button.
+         */
         private void setImageButtonDrawable(final ImageButton button, Drawable icon) {
             if(Build.VERSION.SDK_INT >= 16) {
                 button.setBackground(icon);

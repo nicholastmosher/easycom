@@ -81,8 +81,9 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
                 //Initialize icons for bluetooth.
                 mConnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_bluetooth_connected_black_48dp);
-                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.connected), PorterDuff.Mode.SRC_ATOP);
                 mDisconnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_bluetooth_disabled_black_48dp);
+                mDisconnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
                 break;
 
             //If the connection passed in the intent is a TcpIpConnection.
@@ -92,8 +93,9 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
                 //Initialize icons for tcpip.
                 mConnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_signal_wifi_4_bar_black_48dp);
-                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.connected), PorterDuff.Mode.SRC_ATOP);
                 mDisconnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_signal_wifi_off_black_48dp);
+                mDisconnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
                 break;
 
             default:
