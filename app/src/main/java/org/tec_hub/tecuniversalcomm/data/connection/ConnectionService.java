@@ -55,6 +55,11 @@ public class ConnectionService extends Service implements ConnectionObserver {
             @Override
             public void onReceive(Context context, Intent intent) {
 
+                if(intent == null) {
+                    System.out.println("Received intent is null!");
+                    return;
+                }
+
                 Connection connection = null;
                 switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
                     case TECIntent.CONNECTION_TYPE_BLUETOOTH:
@@ -111,6 +116,8 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     //Received action to disconnect tcpip connection.
                     case TECIntent.ACTION_TCPIP_DISCONNECT:
 
+                        //Disconnect.
+                        new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to send data over tcpip.
