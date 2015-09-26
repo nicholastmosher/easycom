@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.data;
+package org.tec_hub.tecuniversalcomm.data.device;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -8,9 +8,10 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.UUID;
 
 /**
@@ -22,8 +23,16 @@ import java.util.UUID;
  * Each interface is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device extends Observable implements Parcelable {
+public class Device implements Parcelable {
 
+    /**
+     * Holds references to observers.  Transient to avoid being parsed to Json.
+     */
+    private transient List<DeviceObserver> observers = new ArrayList<>();
+
+    /**
+     * Cues to specify to observers what kind of update is happening.
+     */
     public enum Cues {
         ConnectionsUpdated
     }
@@ -215,7 +224,7 @@ public class Device extends Observable implements Parcelable {
      */
     public void addConnection(Connection connection) {
         mConnections.add(connection);
-        notifyObservers(Cues.ConnectionsUpdated);
+        notifyObservers(Device.Cues.ConnectionsUpdated);
     }
 
     /**
@@ -224,7 +233,7 @@ public class Device extends Observable implements Parcelable {
      */
     public void removeConnection(Connection connection) {
         mConnections.remove(connection);
-        notifyObservers(Cues.ConnectionsUpdated);
+        notifyObservers(Device.Cues.ConnectionsUpdated);
     }
 
     /**
@@ -278,10 +287,29 @@ public class Device extends Observable implements Parcelable {
         return 0;
     }
 
-    @Override
-    public void notifyObservers(Object data) {
-        setChanged();
-        super.notifyObservers(data);
-        clearChanged();
+    /**
+     * Adds an observer to watch this Device.  Observers are notified of
+     * important changes.
+     * @param observer The observer to add.
+     */
+    public void addObserver(DeviceObserver observer) {
+        if(observer == null) {
+            throw new NullPointerException("DeviceObserver is null!");
+        }
+        synchronized (this) {
+            if(!observers.contains(observer)) {
+                observers.add(observer);
+            }
+        }
+    }
+
+    /**
+     * Notifies all observers of important changes.
+     * @param cue A cue to tell observers what kind of change is happening.
+     */
+    public void notifyObservers(Cues cue) {
+        for(DeviceObserver observer : observers) {
+            observer.onUpdate(this, cue);
+        }
     }
 }

@@ -6,11 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.ColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -18,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -26,9 +21,7 @@ import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -174,7 +167,7 @@ public class DiscoveryActivity extends AppCompatActivity {
             if (convertView == null) {
                 view = new LinearLayout(DiscoveryActivity.this);
                 LayoutInflater inflater = (LayoutInflater) DiscoveryActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.list_item_discovered_connection, view, true);
+                inflater.inflate(R.layout.list_item_discovered, view, true);
             } else {
                 view = (LinearLayout) convertView;
             }

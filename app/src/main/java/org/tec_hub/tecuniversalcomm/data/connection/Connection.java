@@ -8,18 +8,28 @@ import com.google.common.base.Preconditions;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Observable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public abstract class Connection extends Observable implements Parcelable {
+public abstract class Connection implements Parcelable {
 
+    /**
+     * Holds references to observers.  Transient to avoid being parsed to Json.
+     */
+    private transient List<ConnectionObserver> observers = new ArrayList<ConnectionObserver>();
+
+    /**
+     * Cues to specify to observers what kind of update is occurring.
+     */
     public enum Cues {
         Connected,
         Disconnected,
-        ConnectFailed
+        ConnectFailed,
+        ConnectCanceled
     }
 
     /**
@@ -112,13 +122,6 @@ public abstract class Connection extends Observable implements Parcelable {
      */
     public abstract OutputStream getOutputStream() throws IllegalStateException;
 
-    @Override
-    public void notifyObservers(Object data) {
-        setChanged();
-        super.notifyObservers(data);
-        clearChanged();
-    }
-
     /**
      * Hashing a connection object will tell if the two objects contain
      * the exact content data, but the same connection - if any
@@ -131,5 +134,26 @@ public abstract class Connection extends Observable implements Parcelable {
      */
     public boolean isVersionOf(Connection c) {
         return c.getUUID().equals(this.getUUID());
+    }
+
+    /**
+     * Adds an observer object to our list.  All observers are notified of relevant updates.
+     * @param observer The new observer to keep track of.
+     */
+    public void addObserver(ConnectionObserver observer) {
+        if(observer == null) {
+            throw new NullPointerException("Observer is null!");
+        }
+        synchronized (this) {
+            if(!observers.contains(observer)) {
+                observers.add(observer);
+            }
+        }
+    }
+
+    public void notifyObservers(Cues cue) {
+        for(ConnectionObserver observer : observers) {
+            observer.onUpdate(this, cue);
+        }
     }
 }

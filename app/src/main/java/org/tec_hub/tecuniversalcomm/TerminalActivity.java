@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -18,6 +20,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionObserver;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
@@ -25,64 +28,88 @@ import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
 
-import java.util.Observable;
-import java.util.Observer;
-
 /**
  * Created by Nick Mosher on 4/13/15.
  * Opens a terminal-like interface for sending data over an established connection.
  */
-public class TerminalActivity extends AppCompatActivity {
+public class TerminalActivity extends AppCompatActivity implements ConnectionObserver {
 
     private Connection mConnection;
-    private int mConnectedIcon;
-    private int mDisconnectedIcon;
+    private Drawable mConnectedIcon;
+    private Drawable mDisconnectedIcon;
 
     //View objects
     private ScrollView mTerminalScroll;
     private TextView mTerminalWindow;
     private EditText mTerminalInput;
     private Button mTerminalSend;
-    private MenuItem mConnectedIndicator;
+    private MenuItem mConnectionIndicator;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_terminal);
 
+        //Set up activity toolbar with back icon.
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setNavigationIcon(R.drawable.abc_ic_ab_back_mtrl_am_alpha);
 
+        //If the ConnectionService isn't currently running, launch it now.
         ConnectionService.launch(this);
-        Intent intent = getIntent();
-        switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
-            case TECIntent.CONNECTION_TYPE_BLUETOOTH:
 
+        //Ensure that the incoming intent isn't null.
+        Intent intent = getIntent();
+        if(intent == null) {
+            finish();
+            return;
+        }
+
+        //If the string key for connection type is null, we won't know what to do.
+        String connectionType = intent.getStringExtra(TECIntent.CONNECTION_TYPE);
+        if(connectionType == null) {
+            finish();
+            return;
+        }
+
+        //Initialize Terminal differently based on the type of connection we're handling.
+        switch(connectionType) {
+
+            //If the connection passed in the intent is a BluetoothConnection.
+            case TECIntent.CONNECTION_TYPE_BLUETOOTH:
                 mConnection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
                 toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
-                mConnectedIcon = R.drawable.ic_bluetooth_connected_black_48dp;
-                mDisconnectedIcon = R.drawable.ic_bluetooth_disabled_black_48dp;
-                break;
-            case TECIntent.CONNECTION_TYPE_TCPIP:
 
+                //Initialize icons for bluetooth.
+                mConnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_bluetooth_connected_black_48dp);
+                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+                mDisconnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_bluetooth_disabled_black_48dp);
+                break;
+
+            //If the connection passed in the intent is a TcpIpConnection.
+            case TECIntent.CONNECTION_TYPE_TCPIP:
                 mConnection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
                 toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
-                mConnectedIcon = R.drawable.ic_signal_wifi_4_bar_black_48dp;
-                mDisconnectedIcon = R.drawable.ic_signal_wifi_off_black_48dp;
+
+                //Initialize icons for tcpip.
+                mConnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_signal_wifi_4_bar_black_48dp);
+                mConnectedIcon.setColorFilter(ContextCompat.getColor(this, R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+                mDisconnectedIcon = ContextCompat.getDrawable(this, R.drawable.ic_signal_wifi_off_black_48dp);
                 break;
+
             default:
         }
 
+        //Set the title of the toolbar.
         toolbar.setTitle(mConnection.getName());
         setSupportActionBar(toolbar);
 
+        //Initialize view items.
         mTerminalScroll = (ScrollView) findViewById(R.id.terminal_scrollview);
         mTerminalWindow = (TextView) findViewById(R.id.terminal_window);
         mTerminalInput = (EditText) findViewById(R.id.terminal_input_text);
         mTerminalSend = (Button) findViewById(R.id.terminal_input_button);
 
         mTerminalWindow.setTextColor(ContextCompat.getColor(this, R.color.material_grey_900));
-
         mTerminalInput.setHint("Type data to send:");
         mTerminalSend.setText("Send");
         mTerminalSend.setOnClickListener(new View.OnClickListener() {
@@ -96,41 +123,14 @@ public class TerminalActivity extends AppCompatActivity {
                 }
             }
         });
-
         mTerminalSend.setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
 
         //Set a listener to accordingly change the status of the connection indicator
-        mConnection.addObserver(new Observer() {
-            @Override
-            public void update(Observable observable, Object data) {
-                if(data instanceof Connection.Cues) {
-                    Connection.Cues cue = (Connection.Cues) data;
-                    switch(cue) {
-                        case Connected:
-                            if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mConnectedIcon));
-                            }
-                            break;
-                        case Disconnected:
-                            if (mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
-                            }
-                            break;
-                        case ConnectFailed:
-                            if(mConnectedIndicator != null) {
-                                mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this, mDisconnectedIcon));
-                            }
-                            break;
-                        default:
-                    }
-                }
-            }
-        });
-        mConnection.connect(this);
+        mConnection.addObserver(this);
 
+        //Set up an intent filter to alert us if there's new data incoming from the connection.
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(TECIntent.ACTION_RECEIVED_DATA);
-
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -169,8 +169,8 @@ public class TerminalActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_connection_terminal, menu);
 
         //Isolate the connected indicator and set it to a member variable for dynamic icon
-        mConnectedIndicator = menu.findItem(R.id.connected_indicator);
-        updateIndicator();
+        mConnectionIndicator = menu.findItem(R.id.connected_indicator);
+        mConnectionIndicator.setIcon(mConnection.isConnected() ? mConnectedIcon : mDisconnectedIcon);
         return true;
     }
 
@@ -195,7 +195,7 @@ public class TerminalActivity extends AppCompatActivity {
 
             //Pressed Kudos button
             case R.id.Kudos:
-                Intent kudosIntent = new Intent(this, DriveKudosActivity.class);
+                Intent kudosIntent = new Intent(this, KudosActivity.class);
                 kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
                 startActivity(kudosIntent);
                 return true;
@@ -211,11 +211,30 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     /**
-     * Refreshes the connection indicator at the top of the screen when the status changes.
+     * Callback method lets us update the Activity based on changing Connection
+     * statuses.
+     * @param observable The Connection that we're observing.
+     * @param cue The flag that tells what update is occurring.
      */
-    private void updateIndicator() {
-        mConnectedIndicator.setIcon(ContextCompat.getDrawable(TerminalActivity.this,
-                (mConnection.isConnected() ? mConnectedIcon : mDisconnectedIcon)));
+    public void onUpdate(Connection observable, Connection.Cues cue) {
+        switch(cue) {
+            case Connected:
+                if (mConnectionIndicator != null) {
+                    mConnectionIndicator.setIcon(mConnectedIcon);
+                }
+                break;
+            case Disconnected:
+                if (mConnectionIndicator != null) {
+                    mConnectionIndicator.setIcon(mDisconnectedIcon);
+                }
+                break;
+            case ConnectFailed:
+                if(mConnectionIndicator != null) {
+                    mConnectionIndicator.setIcon(mDisconnectedIcon);
+                }
+                break;
+            default:
+        }
     }
 
     private boolean sendData(String data) {

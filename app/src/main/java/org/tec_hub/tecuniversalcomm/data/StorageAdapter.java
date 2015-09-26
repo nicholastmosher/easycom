@@ -16,6 +16,8 @@ import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.data.device.Device;
+import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,8 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Nick Mosher on 3/2/2015.

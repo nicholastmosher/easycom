@@ -23,13 +23,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Observable;
-import java.util.Observer;
 
 /**
  * Created by Nick Mosher on 4/23/15.
  */
-public class ConnectionService extends Service implements Observer {
+public class ConnectionService extends Service implements ConnectionObserver {
 
     private static boolean launched = false;
 
@@ -152,60 +150,55 @@ public class ConnectionService extends Service implements Observer {
     }
 
     @Override
-    public void update(Observable observable, Object data) {
+    public void onUpdate(Connection observable, Connection.Cues cue) {
 
-        //If the data we received is a Connection Cue
-        if(data instanceof Connection.Cues) {
-            Connection.Cues cue = (Connection.Cues) data;
+        //If the update came from a BluetoothConnection, handle it accordingly.
+        if (observable instanceof BluetoothConnection) {
+            BluetoothConnection connection = (BluetoothConnection) observable;
+            switch (cue) {
+                case Connected:
+                    if (receiveBtThread != null) {
+                        receiveBtThread.interrupt();
+                    }
+                    receiveBtThread = new ReceiveDataThread(connection);
+                    receiveBtThread.start();
+                    break;
+                case Disconnected:
+                    if (receiveBtThread != null) {
+                        receiveBtThread.interrupt();
+                    }
+                    receiveBtThread = null;
 
-            //If the update came from a BluetoothConnection, handle it accordingly.
-            if (observable instanceof BluetoothConnection) {
-                BluetoothConnection connection = (BluetoothConnection) observable;
-                switch (cue) {
-                    case Connected:
-                        if (receiveBtThread != null) {
-                            receiveBtThread.interrupt();
-                        }
-                        receiveBtThread = new ReceiveDataThread(connection);
-                        receiveBtThread.start();
-                        break;
-                    case Disconnected:
-                        if (receiveBtThread != null) {
-                            receiveBtThread.interrupt();
-                        }
-                        receiveBtThread = null;
+                    //Since we're disconnected, we no longer need to watch that connection.
+                    //observable.deleteObserver(this); TODO Check if this is necessary
+                    break;
+                case ConnectFailed:
+                    break;
+                default:
+            }
 
-                        //Since we're disconnected, we no longer need to watch that connection.
-                        //observable.deleteObserver(this); TODO Check if this is necessary
-                        break;
-                    case ConnectFailed:
-                        break;
-                    default:
-                }
-
-            } else if (observable instanceof TcpIpConnection) {
-                TcpIpConnection connection = (TcpIpConnection) observable;
-                switch (cue) {
-                    case Connected:
-                        System.out.println("TCP successfully connected!");
-                        if(receiveTcpIpThread != null) {
-                            receiveTcpIpThread.interrupt();
-                        }
-                        receiveTcpIpThread = new ReceiveDataThread(connection);
-                        receiveTcpIpThread.start();
-                        break;
-                    case Disconnected:
-                        System.out.println("TCP successfully disconnected!");
-                        if(receiveTcpIpThread != null) {
-                            receiveTcpIpThread.interrupt();
-                        }
-                        receiveTcpIpThread = null;
-                        break;
-                    case ConnectFailed:
-                        System.out.println("TCP connecting failed!");
-                        break;
-                    default:
-                }
+        } else if (observable instanceof TcpIpConnection) {
+            TcpIpConnection connection = (TcpIpConnection) observable;
+            switch (cue) {
+                case Connected:
+                    System.out.println("TCP successfully connected!");
+                    if(receiveTcpIpThread != null) {
+                        receiveTcpIpThread.interrupt();
+                    }
+                    receiveTcpIpThread = new ReceiveDataThread(connection);
+                    receiveTcpIpThread.start();
+                    break;
+                case Disconnected:
+                    System.out.println("TCP successfully disconnected!");
+                    if(receiveTcpIpThread != null) {
+                        receiveTcpIpThread.interrupt();
+                    }
+                    receiveTcpIpThread = null;
+                    break;
+                case ConnectFailed:
+                    System.out.println("TCP connecting failed!");
+                    break;
+                default:
             }
         }
     }

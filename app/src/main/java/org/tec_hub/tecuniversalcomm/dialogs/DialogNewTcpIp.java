@@ -61,7 +61,7 @@ public class DialogNewTcpIp {
             }
         });
 
-        ip.getBackground().setColorFilter(ContextCompat.getColor(context, R.color.red), PorterDuff.Mode.DST_ATOP);
+        ip.getBackground().setColorFilter(ContextCompat.getColor(context, R.color.disabled), PorterDuff.Mode.DST_ATOP);
 
         return builder.create();
     }

@@ -53,18 +53,8 @@
         </activity>
 
         <activity
-            android:name=".DriveKudosActivity"
+            android:name=".KudosActivity"
             android:label="Launch Kudos Controls"
-            android:screenOrientation="landscape"
-            android:parentActivityName=".DeviceActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
-        </activity>
-
-        <activity
-            android:name=".ControllerActivity"
-            android:label="Control Devices"
             android:screenOrientation="landscape"
             android:parentActivityName=".DeviceActivity">
             <meta-data

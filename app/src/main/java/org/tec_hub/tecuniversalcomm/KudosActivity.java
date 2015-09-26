@@ -29,7 +29,7 @@ import org.tec_hub.tecuniversalcomm.intents.TECIntent;
  * Senses Accelerometer readings and sends Json data of drive commands
  * in a UDP-style packet spamming with no verification.
  */
-public class DriveKudosActivity extends AppCompatActivity {
+public class KudosActivity extends AppCompatActivity {
 
     private BluetoothConnection mConnection;
     private BigPanel mPanel;
@@ -100,18 +100,18 @@ public class DriveKudosActivity extends AppCompatActivity {
 
         public BigPanel(Context context) {
             super(context);
-            setBackgroundColor(ContextCompat.getColor(DriveKudosActivity.this, R.color.background_screen));
+            setBackgroundColor(ContextCompat.getColor(KudosActivity.this, R.color.neutral));
         }
 
         public boolean onTouchEvent(MotionEvent motionEvent) {
             switch(motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     panelHeldDown = true;
-                    setBackgroundColor(getResources().getColor(R.color.green));
+                    setBackgroundColor(ContextCompat.getColor(KudosActivity.this, R.color.enabled));
                     break;
                 case MotionEvent.ACTION_UP:
                     panelHeldDown = false;
-                    setBackgroundColor(getResources().getColor(R.color.red));
+                    setBackgroundColor(ContextCompat.getColor(KudosActivity.this, R.color.disabled));
                     break;
                 default:
             }
@@ -170,8 +170,8 @@ public class DriveKudosActivity extends AppCompatActivity {
                     if(thinner % 5 == 0) {
                         sendData = Packet.asBoolean("KudosEnable", true).toJson();
                         System.out.println("Data to send: " + sendData);
-                        BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
-                        LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(enableKudosIntent);
+                        BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                        LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(enableKudosIntent);
                     }
 
                     double x = mX;
@@ -201,13 +201,13 @@ public class DriveKudosActivity extends AppCompatActivity {
 
                     sendData = Packet.asDoubleArray("KudosDrive", new double[]{x, y}).toJson();
                     System.out.println("Data to send: " + sendData);
-                    BluetoothSendIntent driveKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
-                    LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(driveKudosIntent);
+                    BluetoothSendIntent driveKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                    LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(driveKudosIntent);
                 } else {
                     sendData = Packet.asBoolean("KudosEnable", false).toJson();
                     System.out.println("Data to send: " + sendData);
-                    BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(DriveKudosActivity.this, mConnection, sendData);
-                    LocalBroadcastManager.getInstance(DriveKudosActivity.this).sendBroadcast(enableKudosIntent);
+                    BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                    LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(enableKudosIntent);
                 }
 
                 try {

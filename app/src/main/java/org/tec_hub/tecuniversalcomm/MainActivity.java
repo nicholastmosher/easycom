@@ -26,9 +26,9 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.DeviceList;
+import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
-import org.tec_hub.tecuniversalcomm.data.Device;
+import org.tec_hub.tecuniversalcomm.data.device.Device;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 

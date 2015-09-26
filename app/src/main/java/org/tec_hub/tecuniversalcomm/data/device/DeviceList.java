@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.data;
+package org.tec_hub.tecuniversalcomm.data.device;
 
 import java.util.ArrayList;
 
