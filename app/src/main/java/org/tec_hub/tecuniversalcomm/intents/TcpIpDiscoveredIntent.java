@@ -5,19 +5,35 @@ import android.content.Intent;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 9/22/15.
  */
 public class TcpIpDiscoveredIntent extends Intent implements TECIntent { //TODO this may not be a permanent thing.
 
-    public TcpIpDiscoveredIntent(Context context, Class<?> cls, TcpIpConnection connection) {
-        super(context, cls);
-        Preconditions.checkNotNull(connection);
+    /**
+     * Creates an intent with the UUID of the Connection we've discovered.
+     * @param context The context to launch the intent from.
+     * @param cls The class to send the intent to.
+     * @param uuid The UUID of the Connection we've discovered.
+     */
+    public TcpIpDiscoveredIntent(Context context, Class<?> cls, UUID uuid) {
+        this(context, cls, uuid.toString());
+    }
 
-        setAction(ACTION_TCPIP_DISOVERED);
+    /**
+     * Creates an intent with the String UUID of the Connection we've discovered.
+     * @param context The context to launch the intent from.
+     * @param cls The class to send the intent to.
+     * @param uuid The String UUID of the Connection we've discovered.
+     */
+    public TcpIpDiscoveredIntent(Context context, Class<?> cls, String uuid) {
+        super(context, cls);
+        Preconditions.checkNotNull(uuid);
+
+        setAction(ACTION_TCPIP_DISCOVERED);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
-        putExtra(TCPIP_CONNECTION_DATA, connection);
+        putExtra(TCPIP_CONNECTION_UUID, uuid);
     }
 }

@@ -45,7 +45,7 @@ public class DialogNewTcpIp {
                     try {
                         int portNum = Integer.parseInt(port.getText().toString());
                         TcpIpConnection connection = new TcpIpConnection(name.getText().toString(), ip.getText().toString(), portNum);
-                        TcpIpDiscoveredIntent intent = new TcpIpDiscoveredIntent(context, cls, connection);
+                        TcpIpDiscoveredIntent intent = new TcpIpDiscoveredIntent(context, cls, connection.getUUID());
                         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
                     } catch(NumberFormatException e) {
                         e.printStackTrace();

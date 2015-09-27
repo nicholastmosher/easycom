@@ -1,8 +1,5 @@
 package org.tec_hub.tecuniversalcomm.data.device;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
@@ -23,7 +20,14 @@ import java.util.UUID;
  * Each interface is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device implements Parcelable {
+public class Device {
+
+    /**
+     * Static maps stores all constructed devices.  This way we
+     * can reference them from different activities without needing
+     * to pass through the Parcelable framework.
+     */
+    protected static transient Map<UUID, Device> devices = new HashMap<>();
 
     /**
      * Holds references to observers.  Transient to avoid being parsed to Json.
@@ -31,23 +35,11 @@ public class Device implements Parcelable {
     private transient List<DeviceObserver> observers = new ArrayList<>();
 
     /**
-     * Cues to specify to observers what kind of update is happening.
+     * Status to specify to observers what kind of update is happening.
      */
-    public enum Cues {
+    public enum Status {
         ConnectionsUpdated
     }
-
-    public static final Parcelable.Creator<Device> CREATOR = new Parcelable.Creator<Device>() {
-        public Device createFromParcel(Parcel in) {
-            return new Device(in);
-        }
-
-        public Device[] newArray(int size) {
-            return new Device[size];
-        }
-    };
-
-    private static Map<UUID, ConnectionList> connectionListsMap = new HashMap<>();
 
     private String mName;
     private final UUID mUUID;
@@ -66,8 +58,7 @@ public class Device implements Parcelable {
         mName = Preconditions.checkNotNull(name);
         mConnections = Preconditions.checkNotNull(connections);
         mUUID = Preconditions.checkNotNull(uuid);
-
-        connectionListsMap.put(mUUID, mConnections);
+        devices.put(mUUID, this);
     }
 
     /**
@@ -78,6 +69,7 @@ public class Device implements Parcelable {
         mName = null;
         mUUID = UUID.randomUUID();
         mConnections = new ConnectionList();
+        devices.put(mUUID, this);
     }
 
     /**
@@ -169,21 +161,8 @@ public class Device implements Parcelable {
         return build(name, new ConnectionList());
     }
 
-    /**
-     * Constructs this device from it's parcelable representation.
-     * @param in The parcelable representation of this object.
-     */
-    public Device(Parcel in) {
-        mName = Preconditions.checkNotNull(in.readString());
-        String uuidString = Preconditions.checkNotNull(in.readString());
-        mUUID = UUID.fromString(uuidString);
-        mConnections = Preconditions.checkNotNull(connectionListsMap.get(mUUID));
-    }
-
-    public void writeToParcel(Parcel out, int flags) {
-        out.writeString(mName);
-        out.writeString(mUUID.toString());
-        connectionListsMap.put(mUUID, mConnections);
+    public void init() {
+        devices.put(mUUID, this);
     }
 
     /**
@@ -206,8 +185,26 @@ public class Device implements Parcelable {
      * Returns the UUID of this device.
      * @return The UUID of this device.
      */
-    public UUID getUUID() {
-        return mUUID;
+    public String getUUID() {
+        return mUUID.toString();
+    }
+
+    /**
+     * Returns an existing device being held in the static map.
+     * @param uuid The UUID of the device.
+     * @return The Device, or null if there is no key for the UUID.
+     */
+    public static Device getDevice(UUID uuid) {
+        return devices.get(uuid);
+    }
+
+    /**
+     * Returns an existing device being held in the static map.
+     * @param uuid The UUID of the device.
+     * @return The Device, or null if there is no key for the UUID.
+     */
+    public static Device getDevice(String uuid) {
+        return getDevice(UUID.fromString(uuid));
     }
 
     /**
@@ -224,7 +221,7 @@ public class Device implements Parcelable {
      */
     public void addConnection(Connection connection) {
         mConnections.add(connection);
-        notifyObservers(Device.Cues.ConnectionsUpdated);
+        notifyObservers(Status.ConnectionsUpdated);
     }
 
     /**
@@ -233,7 +230,7 @@ public class Device implements Parcelable {
      */
     public void removeConnection(Connection connection) {
         mConnections.remove(connection);
-        notifyObservers(Device.Cues.ConnectionsUpdated);
+        notifyObservers(Status.ConnectionsUpdated);
     }
 
     /**
@@ -283,10 +280,6 @@ public class Device implements Parcelable {
         return d.getUUID().equals(this.getUUID());
     }
 
-    public int describeContents() {
-        return 0;
-    }
-
     /**
      * Adds an observer to watch this Device.  Observers are notified of
      * important changes.
@@ -307,7 +300,7 @@ public class Device implements Parcelable {
      * Notifies all observers of important changes.
      * @param cue A cue to tell observers what kind of change is happening.
      */
-    public void notifyObservers(Cues cue) {
+    public void notifyObservers(Status cue) {
         for(DeviceObserver observer : observers) {
             observer.onUpdate(this, cue);
         }

@@ -21,31 +21,12 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 9/15/15.
  */
-public class TcpIpConnection extends Connection implements Parcelable {
-
-    /**
-     * Required for Parcelable framework.
-     */
-    public static final Parcelable.Creator<TcpIpConnection> CREATOR = new Parcelable.Creator<TcpIpConnection>() {
-        public TcpIpConnection createFromParcel(Parcel in) {
-            return new TcpIpConnection(in);
-        }
-
-        public TcpIpConnection[] newArray(int size) {
-            return new TcpIpConnection[size];
-        }
-    };
-
-    /**
-     * This static map holds references to sockets while they are passed
-     * through the parcelable system since sockets are not parcelable.
-     */
-    private static Map<UUID, Socket> sockets = new HashMap<>();
+public class TcpIpConnection extends Connection {
 
     /**
      * The socket connection to the remote.
      */
-    private Socket mSocket;
+    private transient Socket mSocket;
 
     /**
      * The IP address of the remote device.
@@ -70,40 +51,14 @@ public class TcpIpConnection extends Connection implements Parcelable {
     }
 
     /**
-     * Reconstructs a TcpIpConnection after being sent through the
-     * parcelable system.
-     * @param in The Parcel to read object data from.
-     */
-    public TcpIpConnection(Parcel in) {
-        super(Preconditions.checkNotNull(in));
-        mServerIp = Preconditions.checkNotNull(in.readString());
-        mServerPort = Preconditions.checkNotNull(in.readInt());
-        mSocket = sockets.get(mUUID);
-    }
-
-    /**
-     * Deconstructs this object into a Parcel to be sent through
-     * the parcelable system.
-     * @param out The parcel to send object data through.
-     * @param flags
-     */
-    @Override
-    public void writeToParcel(Parcel out, int flags) {
-        super.writeToParcel(out, flags);
-        out.writeString(mServerIp);
-        out.writeInt(mServerPort);
-        sockets.put(mUUID, mSocket);
-    }
-
-    /**
      * Send connect request to TcpIpConnectionService to open a TcpIpConnection
      * using this object's data.
      * @param context The context to send the intent to launch the Service.
      */
     public void connect(Context context) {
-        if(!isConnected()) {
+        if(!(getStatus().equals(Status.Connected))) {
             //Build a connect intent with connection data.
-            TcpIpConnectIntent connectIntent = new TcpIpConnectIntent(context, this);
+            TcpIpConnectIntent connectIntent = new TcpIpConnectIntent(context, mUUID);
 
             //Send connect intent with local broadcast manager.
             LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
@@ -116,9 +71,9 @@ public class TcpIpConnection extends Connection implements Parcelable {
      * @param context The context to send the intent to launch the Service.
      */
     public void disconnect(Context context) {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
             //Build a disconnect intent with connection data.
-            TcpIpDisconnectIntent disconnectIntent = new TcpIpDisconnectIntent(context, this);
+            TcpIpDisconnectIntent disconnectIntent = new TcpIpDisconnectIntent(context, mUUID);
 
             //Send disconnect intent with local broadcast manager.
             LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
@@ -129,7 +84,7 @@ public class TcpIpConnection extends Connection implements Parcelable {
      * Tells whether this TCP/IP Connection is actively connected.
      * @return True if connected, false otherwise.
      */
-    public boolean isConnected() {
+    public Status getStatus() {
         if(mSocket != null) {
             if(!mSocket.isConnected()) {
                 try {
@@ -139,9 +94,9 @@ public class TcpIpConnection extends Connection implements Parcelable {
                     ioe.printStackTrace();
                 }
             }
-            return mSocket.isConnected();
+            return mSocket.isConnected() ? Status.Connected : Status.Disconnected;
         }
-        return false;
+        return Status.Disconnected;
     }
 
     /**
@@ -151,7 +106,7 @@ public class TcpIpConnection extends Connection implements Parcelable {
      * @return The OutputStream to the remote device.
      */
     public OutputStream getOutputStream() {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
             try {
                 return mSocket.getOutputStream();
             } catch(IOException ioe) {
@@ -170,7 +125,7 @@ public class TcpIpConnection extends Connection implements Parcelable {
      * @return The InputStream from the remote device.
      */
     public InputStream getInputStream() {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
             try {
                 return mSocket.getInputStream();
             } catch(IOException ioe) {
@@ -205,7 +160,6 @@ public class TcpIpConnection extends Connection implements Parcelable {
     public void setSocket(Socket socket) {
         Preconditions.checkNotNull(socket);
         mSocket = socket;
-        sockets.put(mUUID, mSocket);
     }
 
     /**

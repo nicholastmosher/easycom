@@ -60,7 +60,7 @@ public class StorageAdapter {
         mDeviceListType = new TypeToken<DeviceList>(){}.getType();
         mConnectionListType = new TypeToken<ConnectionList>(){}.getType();
 
-        mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());
+        mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());;
         mGson = mGsonBuilder.create();
     }
 
@@ -158,6 +158,11 @@ public class StorageAdapter {
             DeviceList temp = mGson.fromJson(jsonFile, mDeviceListType);
             Preconditions.checkNotNull(temp);
             devices = temp;
+
+            //Since these devices are magically assembled by Gson, we need to manually init them.
+            for(Device d : devices) {
+                d.init();
+            }
         } catch(IOException | IllegalStateException ioe) {
             ioe.printStackTrace();
         }
@@ -259,6 +264,11 @@ public class StorageAdapter {
          * Key of Connection Implementation.
          */
         public static final String CONNECTION_IMP = "imp";
+
+        /**
+         * Key of Connection Universal Identifier.
+         */
+        public static final String CONNECTION_UUID = "uuid";
 
         //Implementations of Connection
         /**

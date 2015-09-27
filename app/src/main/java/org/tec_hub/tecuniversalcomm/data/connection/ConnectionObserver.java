@@ -5,5 +5,5 @@ package org.tec_hub.tecuniversalcomm.data.connection;
  */
 public interface ConnectionObserver {
 
-    void onUpdate(Connection connection, Connection.Cues cue);
+    void onUpdate(Connection connection, Connection.Status cue);
 }

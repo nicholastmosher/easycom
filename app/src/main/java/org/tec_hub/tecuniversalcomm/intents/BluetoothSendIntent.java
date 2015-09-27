@@ -5,8 +5,9 @@ import android.content.Intent;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
+
+import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 4/29/15.
@@ -15,14 +16,30 @@ import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
  */
 public class BluetoothSendIntent extends Intent implements TECIntent {
 
-    public BluetoothSendIntent(Context context, BluetoothConnection connection, String data) {
+    /**
+     * Creates an intent with a UUID of the desired Connection.
+     * @param context The context to launch the intent from.
+     * @param uuid The UUID of the Connection.
+     * @param data The data we're sending over the connection.
+     */
+    public BluetoothSendIntent(Context context, UUID uuid, String data) {
+        this(context, uuid.toString(), data);
+    }
+
+    /**
+     * Creates an intent with a String-UUID of the desired Connection.
+     * @param context The context to launch the intent from.
+     * @param uuid The String UUID of the Connection.
+     * @param data The data we're sending over the connection.
+     */
+    public BluetoothSendIntent(Context context, String uuid, String data) {
         super(context, ConnectionService.class);
-        Preconditions.checkNotNull(connection);
+        Preconditions.checkNotNull(uuid);
         Preconditions.checkNotNull(data);
 
         setAction(ACTION_BLUETOOTH_SEND_DATA);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
-        putExtra(BLUETOOTH_CONNECTION_DATA, connection);
+        putExtra(BLUETOOTH_CONNECTION_UUID, uuid);
         putExtra(BLUETOOTH_TO_SEND_DATA, data);
     }
 }

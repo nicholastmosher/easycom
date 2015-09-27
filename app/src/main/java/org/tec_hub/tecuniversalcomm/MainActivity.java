@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private DeviceListAdapter mDeviceAdapter;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
-                    intent.putExtra(TECIntent.DEVICE_DATA, (Device) mDeviceAdapter.getItem(position));
+                    intent.putExtra(TECIntent.DEVICE_UUID, ((Device) mDeviceAdapter.getItem(position)).getUUID());
                     startActivity(intent);
                 }
             });

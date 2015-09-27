@@ -1,7 +1,5 @@
 package org.tec_hub.tecuniversalcomm.intents;
 
-import android.content.Intent;
-
 /**
  * Created by Nick Mosher on 4/17/15.
  * Defines intent constants for transmitting data across this app.
@@ -14,7 +12,7 @@ public interface TECIntent {
      * to initiate a BluetoothConnection.  The intent sent to the
      * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
-     * TECIntent.BLUETOOTH_CONNECTION_DATA.
+     * TECIntent.BLUETOOTH_CONNECTION_UUID.
      */
     public static final String ACTION_BLUETOOTH_CONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_CONNECT";
 
@@ -23,7 +21,7 @@ public interface TECIntent {
      * to disconnect a BluetoothConnection.  The intent sent to the
      * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
-     * TECIntent.BLUETOOTH_CONNECTION_DATA.
+     * TECIntent.BLUETOOTH_CONNECTION_UUID.
      */
     public static final String ACTION_BLUETOOTH_DISCONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCONNECT";
 
@@ -32,7 +30,7 @@ public interface TECIntent {
      * send data over a BluetoothConnection.  The intent sent to the
      * ConnectionService must have the BluetoothConnection in
      * question added as a Parcelable Extra using the key
-     * TECIntent.BLUETOOTH_CONNECTION_DATA.
+     * TECIntent.BLUETOOTH_CONNECTION_UUID.
      */
     public static final String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_TO_SEND_DATA";
 
@@ -40,13 +38,13 @@ public interface TECIntent {
      * Used to indicate that a BluetoothConnection has been discovered and report it back to some
      * wanting Activity/Service.
      */
-    public static final String ACTION_BLUETOOTH_DISCOVREED = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCOVERED";
+    public static final String ACTION_BLUETOOTH_DISCOVERED = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCOVERED";
 
     /**
      * Sent to the TcpIpConnectionService by any context that wants
      * to connect a TcpIpConnection.  The intent sent to the
      * TcpIpConnectionService must have the TcpIpConnection in question
-     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_DATA.
+     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_UUID.
      */
     public static final String ACTION_TCPIP_CONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_CONNECT";
 
@@ -54,14 +52,14 @@ public interface TECIntent {
      * Sent to the TcpIpConnectionService by any context that wants
      * to disconnect a TcpIpConnection.  The intent sent to the
      * TcpIpConnectionService must have the TcpIpConnection in question
-     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_DATA.
+     * added as a Parcelable Extra using the key TECIntent.TCPIP_CONNECTION_UUID.
      */
     public static final String ACTION_TCPIP_DISCONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_DISCONNECT";
 
     /**
      * Sent to the TcpIpConnectionService by any context that wants to send data
      * over a TcpIpConnection.  The intent sent to the TcpIpConnectionService must
-     * have the TcpIpConnection added as a Parcelable Extra with the key TECIntent.TCPIP_CONNECTION_DATA,
+     * have the TcpIpConnection added as a Parcelable Extra with the key TECIntent.TCPIP_CONNECTION_UUID,
      * and that TcpIpConnection must already be connected.
      */
     public static final String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_TO_SEND_DATA";
@@ -70,7 +68,7 @@ public interface TECIntent {
      * Broadcasted by any Service or Activity that has discovered a new connection and is returning
      * it to a waiting Activity or Service.
      */
-    public static final String ACTION_TCPIP_DISOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
+    public static final String ACTION_TCPIP_DISCOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
 
     /**
      * Used by the ConnectionService to broadcast updates to the
@@ -89,7 +87,7 @@ public interface TECIntent {
     /**
      * Used by any intent carrying a BluetoothConnection as a Parcelable Extra.
      */
-    public static final String BLUETOOTH_CONNECTION_DATA = "bluetooth_connection_data";
+    public static final String BLUETOOTH_CONNECTION_UUID = "bluetooth_connection_uuid";
 
     /**
      * Used to bundle the data that will be sent over a BluetoothConnection into an intent.
@@ -100,7 +98,7 @@ public interface TECIntent {
     /**
      * Used by any intent carrying a TcpIpConnection as a Parcelable Extra.
      */
-    public static final String TCPIP_CONNECTION_DATA = "tcpip_connection_data";
+    public static final String TCPIP_CONNECTION_UUID = "tcpip_connection_data";
 
     /**
      * Used to bundle the data that will be sent over a TcpIpConnection into an intent.
@@ -111,7 +109,7 @@ public interface TECIntent {
     /**
      * Used as an Extra key for any intent carrying a Device as a Parcelable.
      */
-    public static final String DEVICE_DATA = "device_data";
+    public static final String DEVICE_UUID = "device_uuid";
 
     /**
      * Used by the ConnectionService to indicate data has been received

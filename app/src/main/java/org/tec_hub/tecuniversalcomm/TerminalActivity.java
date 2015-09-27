@@ -76,7 +76,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a BluetoothConnection.
             case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                mConnection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
                 toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
 
                 //Initialize icons for bluetooth.
@@ -88,7 +88,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a TcpIpConnection.
             case TECIntent.CONNECTION_TYPE_TCPIP:
-                mConnection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
                 toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
 
                 //Initialize icons for tcpip.
@@ -172,7 +172,8 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
         //Isolate the connected indicator and set it to a member variable for dynamic icon
         mConnectionIndicator = menu.findItem(R.id.connected_indicator);
-        mConnectionIndicator.setIcon(mConnection.isConnected() ? mConnectedIcon : mDisconnectedIcon);
+        mConnectionIndicator.setIcon((mConnection.getStatus().equals(Connection.Status.Connected)) ?
+                mConnectedIcon : mDisconnectedIcon);
         return true;
     }
 
@@ -188,7 +189,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             //Clicked the connection indicator
             case R.id.connected_indicator:
                 //Toggle between connected and disconnected
-                if(mConnection.isConnected()) {
+                if(mConnection.getStatus().equals(Connection.Status.Connected)) {
                     mConnection.disconnect(this);
                 } else {
                     mConnection.connect(this);
@@ -198,7 +199,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             //Pressed Kudos button
             case R.id.Kudos:
                 Intent kudosIntent = new Intent(this, KudosActivity.class);
-                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
+                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, mConnection.getUUID());
                 startActivity(kudosIntent);
                 return true;
 
@@ -218,7 +219,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
      * @param observable The Connection that we're observing.
      * @param cue The flag that tells what update is occurring.
      */
-    public void onUpdate(Connection observable, Connection.Cues cue) {
+    public void onUpdate(Connection observable, Connection.Status cue) {
         switch(cue) {
             case Connected:
                 if (mConnectionIndicator != null) {
@@ -244,10 +245,10 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
         Intent sendIntent = null;
         if(mConnection instanceof BluetoothConnection) {
-            sendIntent = new BluetoothSendIntent(this, (BluetoothConnection) mConnection, data);
+            sendIntent = new BluetoothSendIntent(this, ((BluetoothConnection) mConnection).getUUID(), data);
 
         } else if(mConnection instanceof TcpIpConnection) {
-            sendIntent = new TcpIpSendIntent(this, (TcpIpConnection) mConnection, data);
+            sendIntent = new TcpIpSendIntent(this, ((TcpIpConnection) mConnection).getUUID(), data);
 
         }
 

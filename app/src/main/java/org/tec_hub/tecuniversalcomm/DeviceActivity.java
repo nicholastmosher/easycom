@@ -71,8 +71,8 @@ public class DeviceActivity extends AppCompatActivity {
         Intent launchIntent = getIntent();
         Preconditions.checkNotNull(launchIntent);
 
-        Device device;
-        if((device = launchIntent.getParcelableExtra(TECIntent.DEVICE_DATA)) != null) {
+        Device device = Device.getDevice(launchIntent.getStringExtra(TECIntent.DEVICE_UUID));
+        if(device != null) {
             //Parse the device sent to us on the launching intent
             mDevice = device;
             lastDevice = device;
@@ -81,6 +81,7 @@ public class DeviceActivity extends AppCompatActivity {
         } else {
             //If there's no device object to read data from, we shouldn't be at this activity.
             finish();
+            return;
         }
 
         //Set the title of the activity to the device name
@@ -124,12 +125,12 @@ public class DeviceActivity extends AppCompatActivity {
         });
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(TECIntent.ACTION_TCPIP_DISOVERED);
+        filter.addAction(TECIntent.ACTION_TCPIP_DISCOVERED);
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if(intent.getStringExtra(TECIntent.CONNECTION_TYPE).equals(TECIntent.CONNECTION_TYPE_TCPIP)) {
-                    TcpIpConnection connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                    TcpIpConnection connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_UUID);
                     mDevice.addConnection(connection);
                     System.out.println("Received new TcpIpConnection from AlertDialog!");
                 }
@@ -172,17 +173,17 @@ public class DeviceActivity extends AppCompatActivity {
 
                     switch(data.getStringExtra(TECIntent.CONNECTION_TYPE)) {
                         case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                            connection = data.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                            connection = Connection.getConnection(data.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
                             break;
                         case TECIntent.CONNECTION_TYPE_TCPIP:
-                            connection = data.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                            connection = Connection.getConnection(data.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
                             break;
                         default:
                     }
 
                     if(connection != null) {
                         mDevice.addConnection(connection);
-                        mDevice.notifyObservers(Device.Cues.ConnectionsUpdated);
+                        mDevice.notifyObservers(Device.Status.ConnectionsUpdated);
                         mConnectionAdapter.notifyDataSetChanged();
                     }
                 }
@@ -250,7 +251,7 @@ public class DeviceActivity extends AppCompatActivity {
          * @param observable The object we're watching for a change,  In this case, the Device.
          * @param cue An enum value that depicts what kind of update occurred.
          */
-        public void onUpdate(Device observable, Device.Cues cue) {
+        public void onUpdate(Device observable, Device.Status cue) {
             switch(cue) {
                 case ConnectionsUpdated:
                     System.out.println("ConnectionListAdapter Observer Device updated");
@@ -325,12 +326,13 @@ public class DeviceActivity extends AppCompatActivity {
                 final Drawable iconDisconnected = ContextCompat.getDrawable(DeviceActivity.this, R.drawable.ic_bluetooth_disabled_black_48dp);
                 iconDisconnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
                 //Apply the appropriate initial icon based on current connection status.
-                setImageButtonDrawable(iconButton, connection.isConnected() ? iconConnected : iconDisconnected);
+                setImageButtonDrawable(iconButton, (connection.getStatus().equals(Connection.Status.Connected)) ?
+                        iconConnected : iconDisconnected);
 
                 //Set callback for connection status changed to change icon
                 bluetoothConnection.addObserver(new ConnectionObserver() {
                     @Override
-                    public void onUpdate(Connection observable, Connection.Cues cue) {
+                    public void onUpdate(Connection observable, Connection.Status cue) {
                         switch (cue) {
                             case Connected:
                                 setImageButtonDrawable(iconButton, iconConnected);
@@ -353,13 +355,15 @@ public class DeviceActivity extends AppCompatActivity {
                 iconButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(bluetoothConnection.isConnected()) {
+                        if(bluetoothConnection.getStatus().equals(Connection.Status.Connected)) {
                             //Send disconnect intent
-                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothDisconnectIntent(DeviceActivity.this, bluetoothConnection));
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(
+                                    new BluetoothDisconnectIntent(DeviceActivity.this, bluetoothConnection.getUUID()));
                             progressIndicator.setVisibility(View.VISIBLE);
                         } else {
                             //Send connect intent
-                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new BluetoothConnectIntent(DeviceActivity.this, bluetoothConnection));
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(
+                                    new BluetoothConnectIntent(DeviceActivity.this, bluetoothConnection.getUUID()));
                             progressIndicator.setVisibility(View.VISIBLE);
                         }
                     }
@@ -370,7 +374,7 @@ public class DeviceActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                        terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                        terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
                         startActivity(terminalIntent);
                     }
@@ -385,12 +389,12 @@ public class DeviceActivity extends AppCompatActivity {
                         switch (item.getItemId()) {
                             case R.id.action_open_terminal:
                                 Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                                terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                                terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
                                 startActivity(terminalIntent);
                                 return true;
                             case R.id.action_open_kudos:
                                 Intent kudosIntent = new Intent(DeviceActivity.this, KudosActivity.class);
-                                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, bluetoothConnection);
+                                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
                                 startActivity(kudosIntent);
                                 return true;
                             case R.id.action_open_controller:
@@ -426,12 +430,13 @@ public class DeviceActivity extends AppCompatActivity {
                 iconConnected.setColorFilter(ContextCompat.getColor(DeviceActivity.this, R.color.disconnected), PorterDuff.Mode.SRC_ATOP);
 
                 //Apply initial icon based on the connection's current status.
-                setImageButtonDrawable(iconButton, connection.isConnected() ? iconConnected : iconDisconnected);
+                setImageButtonDrawable(iconButton, (connection.getStatus().equals(Connection.Status.Connected)) ?
+                        iconConnected : iconDisconnected);
 
                 //Define callbacks for when the connection's status changes in order to update the view.
                 tcpIpConnection.addObserver(new ConnectionObserver() {
                     @Override
-                    public void onUpdate(Connection observable, Connection.Cues cue) {
+                    public void onUpdate(Connection observable, Connection.Status cue) {
                         switch (cue) {
                             case Connected:
                                 setImageButtonDrawable(iconButton, iconConnected);
@@ -454,13 +459,15 @@ public class DeviceActivity extends AppCompatActivity {
                 iconButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(tcpIpConnection.isConnected()) {
+                        if(tcpIpConnection.getStatus().equals(Connection.Status.Connected)) {
                             //Send disconnect intent
-                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new TcpIpDisconnectIntent(DeviceActivity.this, tcpIpConnection));
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(
+                                    new TcpIpDisconnectIntent(DeviceActivity.this, tcpIpConnection.getUUID()));
                             progressIndicator.setVisibility(View.VISIBLE);
                         } else {
                             //Send connect intent
-                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(new TcpIpConnectIntent(DeviceActivity.this, tcpIpConnection));
+                            LocalBroadcastManager.getInstance(DeviceActivity.this).sendBroadcast(
+                                    new TcpIpConnectIntent(DeviceActivity.this, tcpIpConnection.getUUID()));
                             progressIndicator.setVisibility(View.VISIBLE);
                         }
                     }
@@ -471,7 +478,7 @@ public class DeviceActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                        terminalIntent.putExtra(TECIntent.TCPIP_CONNECTION_DATA, tcpIpConnection);
+                        terminalIntent.putExtra(TECIntent.TCPIP_CONNECTION_UUID, tcpIpConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_TCPIP);
                         startActivity(terminalIntent);
                     }
