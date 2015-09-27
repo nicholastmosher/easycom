@@ -3,6 +3,7 @@ package org.tec_hub.tecuniversalcomm;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -10,6 +11,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,7 +47,36 @@ public class MainActivity extends AppCompatActivity {
      */
     private DeviceListAdapter mDeviceAdapter;
 
-
+    public EditText askForName(){
+        final EditText deviceName = new EditText(this);
+        deviceName.setHint("Enter Device Name:");
+        return deviceName;
+    }
+    public AlertDialog.Builder dialogBuilder(String message){
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle(message);
+        return dialogBuilder;
+    }
+    public void rename(TextView name){
+        final EditText newName = askForName();
+        final TextView nameView = name;
+        final AlertDialog.Builder newNameDialog = dialogBuilder("Rename Device");
+        newNameDialog.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(newName.getText().toString() != "");
+                nameView.setText(newName.getText());
+            }
+        });
+        newNameDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                return;
+            }
+        });
+        newNameDialog.setView(newName);
+        newNameDialog.show();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,8 +87,9 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
 
         //Creates a dialog to make a new Device.
-        final EditText deviceName = new EditText(this);
-        deviceName.setHint("Enter Device Name:");
+        /*final EditText deviceName = new EditText(this);
+        deviceName.setHint("Enter Device Name:");*/
+        final EditText deviceName = askForName();
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle("Create New Device");
         dialogBuilder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
@@ -200,11 +233,13 @@ public class MainActivity extends AppCompatActivity {
             Preconditions.checkNotNull(device);
 
             //Load views from xml
-            TextView nameView = (TextView) root.findViewById(R.id.device_name);
+            final TextView nameView = (TextView) root.findViewById(R.id.device_name);
             TextView detailsView = (TextView) root.findViewById(R.id.device_details);
             ImageButton deviceImageButton = (ImageButton) root.findViewById(R.id.device_image_button);
             RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
             ImageButton optionButton = (ImageButton) root.findViewById(R.id.device_options);
+            optionButton.setColorFilter(R.color.blue);
+
 
             //Set the title to the device name
             nameView.setText(device.getName());
@@ -245,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
                     switch(item.getItemId()) {
                         case R.id.action_rename_device:
                             //TODO implement renaming
+                            rename(nameView);
                             return true;
                         case R.id.action_delete_device:
                             delete(device);
