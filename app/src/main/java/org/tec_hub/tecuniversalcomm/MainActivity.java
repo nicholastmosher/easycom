@@ -3,7 +3,6 @@ package org.tec_hub.tecuniversalcomm;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -11,8 +10,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -64,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         newNameDialog.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(newName.getText().toString() != "");
+                if(!newName.getText().toString().equals(""));
                 nameView.setText(newName.getText());
             }
         });
@@ -87,8 +84,7 @@ public class MainActivity extends AppCompatActivity {
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
 
         //Creates a dialog to make a new Device.
-        /*final EditText deviceName = new EditText(this);
-        deviceName.setHint("Enter Device Name:");*/
+        //EditText with function for re-use
         final EditText deviceName = askForName();
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle("Create New Device");

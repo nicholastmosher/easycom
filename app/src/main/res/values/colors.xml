@@ -13,7 +13,7 @@
     <color name="enabled">@color/connected</color>
     <color name="disabled">@color/disconnected</color>
     <color name="neutral">#9E9E9E</color>
-
+    <!--Just some colors that might be used later-->
     <color name="white">#FFFFFF</color>
     <color name="yellow">#FFFF00</color>
     <color name="fuchsia">#FF00FF</color>
