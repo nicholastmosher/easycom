@@ -210,6 +210,9 @@ public class Device {
      * @return The Device, or null if there is no key for the UUID.
      */
     public static Device getDevice(String uuid) {
+        if(uuid == null) {
+            return null;
+        }
         return getDevice(UUID.fromString(uuid));
     }
 
