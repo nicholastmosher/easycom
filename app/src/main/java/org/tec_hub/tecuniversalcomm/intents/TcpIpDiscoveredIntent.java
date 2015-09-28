@@ -34,6 +34,6 @@ public class TcpIpDiscoveredIntent extends Intent implements TECIntent { //TODO 
 
         setAction(ACTION_TCPIP_DISCOVERED);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
-        putExtra(TCPIP_CONNECTION_UUID, uuid);
+        putExtra(CONNECTION_UUID, uuid);
     }
 }

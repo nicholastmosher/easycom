@@ -7,6 +7,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpDisconnectIntent;
 
@@ -81,22 +82,38 @@ public class TcpIpConnection extends Connection {
     }
 
     /**
-     * Tells whether this TCP/IP Connection is actively connected.
-     * @return True if connected, false otherwise.
+     * Returns the current status of this Connection, verifying that the
+     * status is correct.
+     * @return The connectivity status.
      */
     public Status getStatus() {
         if(mSocket != null) {
             if(!mSocket.isConnected()) {
-                try {
-                    mSocket.close();
-                } catch(IOException ioe) {
-                    System.out.println("TCP/IP Socket not connected; error closing socket!");
-                    ioe.printStackTrace();
+                if(!mSocket.isClosed()) {
+                    try {
+                        mSocket.close();
+                    } catch(IOException ioe) {
+                        System.out.println("TCP/IP Socket not connected; error closing socket!");
+                        ioe.printStackTrace();
+                    }
                 }
+                //If we still think we're connected, set status to disconnected.
+                mStatus = (mStatus.equals(Status.Connected)) ? Status.Disconnected : mStatus;
+            } else {
+                //This is the only case in which we SHOULD be connected.
+                return (mStatus = Status.Connected);
             }
-            return mSocket.isConnected() ? Status.Connected : Status.Disconnected;
         }
-        return Status.Disconnected;
+        //As long as the current status ISN'T 'connected', return current status.
+        return (mStatus != Status.Connected) ? mStatus : Status.Disconnected;
+    }
+
+    /**
+     * Convenience method for use with intent extra "CONNECTION_TYPE".
+     * @return The string "connection type" as defined by TECIntent.
+     */
+    public String getConnectionType() {
+        return TECIntent.CONNECTION_TYPE_TCPIP;
     }
 
     /**

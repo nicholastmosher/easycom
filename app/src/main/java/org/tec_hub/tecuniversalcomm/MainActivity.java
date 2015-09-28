@@ -204,8 +204,6 @@ public class MainActivity extends AppCompatActivity {
             ImageButton deviceImageButton = (ImageButton) root.findViewById(R.id.device_image_button);
             RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
             ImageButton optionButton = (ImageButton) root.findViewById(R.id.device_options);
-            optionButton.setColorFilter(R.color.blue);
-
 
             //Set the title to the device name
             nameView.setText(device.getName());

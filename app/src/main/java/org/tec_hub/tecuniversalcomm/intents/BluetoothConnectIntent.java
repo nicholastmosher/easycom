@@ -36,6 +36,6 @@ public class BluetoothConnectIntent extends Intent implements TECIntent {
 
         setAction(ACTION_BLUETOOTH_CONNECT);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
-        putExtra(BLUETOOTH_CONNECTION_UUID, uuid);
+        putExtra(CONNECTION_UUID, uuid);
     }
 }

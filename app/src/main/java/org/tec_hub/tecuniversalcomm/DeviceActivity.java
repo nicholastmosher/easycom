@@ -1,9 +1,7 @@
 package org.tec_hub.tecuniversalcomm;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -29,7 +27,6 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionObserver;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
@@ -116,26 +113,13 @@ public class DeviceActivity extends AppCompatActivity {
             }
         });
 
-        final AlertDialog newTcpDialog = DialogNewTcpIp.build(this, DeviceActivity.class);
+        final AlertDialog newTcpDialog = DialogNewTcpIp.build(this, mDevice);
         addTcpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 newTcpDialog.show();
             }
         });
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TECIntent.ACTION_TCPIP_DISCOVERED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if(intent.getStringExtra(TECIntent.CONNECTION_TYPE).equals(TECIntent.CONNECTION_TYPE_TCPIP)) {
-                    TcpIpConnection connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_UUID);
-                    mDevice.addConnection(connection);
-                    System.out.println("Received new TcpIpConnection from AlertDialog!");
-                }
-            }
-        }, filter);
 
         //Initialize the ListView and Adapter with the Connection data from the active device
         mListView = (ListView) findViewById(R.id.device_manager_list);
@@ -169,17 +153,7 @@ public class DeviceActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
 
                     System.out.println("onActivityResult");
-                    Connection connection = null;
-
-                    switch(data.getStringExtra(TECIntent.CONNECTION_TYPE)) {
-                        case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                            connection = Connection.getConnection(data.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
-                            break;
-                        case TECIntent.CONNECTION_TYPE_TCPIP:
-                            connection = Connection.getConnection(data.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
-                            break;
-                        default:
-                    }
+                    Connection connection = Connection.getConnection(data.getStringExtra(TECIntent.CONNECTION_UUID));
 
                     if(connection != null) {
                         mDevice.addConnection(connection);
@@ -372,7 +346,7 @@ public class DeviceActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                        terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
+                        terminalIntent.putExtra(TECIntent.CONNECTION_UUID, bluetoothConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
                         startActivity(terminalIntent);
                     }
@@ -387,12 +361,12 @@ public class DeviceActivity extends AppCompatActivity {
                         switch (item.getItemId()) {
                             case R.id.action_open_terminal:
                                 Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                                terminalIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
+                                terminalIntent.putExtra(TECIntent.CONNECTION_UUID, bluetoothConnection.getUUID());
                                 startActivity(terminalIntent);
                                 return true;
                             case R.id.action_open_kudos:
                                 Intent kudosIntent = new Intent(DeviceActivity.this, KudosActivity.class);
-                                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, bluetoothConnection.getUUID());
+                                kudosIntent.putExtra(TECIntent.CONNECTION_UUID, bluetoothConnection.getUUID());
                                 startActivity(kudosIntent);
                                 return true;
                             case R.id.action_open_controller:
@@ -476,7 +450,7 @@ public class DeviceActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
-                        terminalIntent.putExtra(TECIntent.TCPIP_CONNECTION_UUID, tcpIpConnection.getUUID());
+                        terminalIntent.putExtra(TECIntent.CONNECTION_UUID, tcpIpConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_TCPIP);
                         startActivity(terminalIntent);
                     }

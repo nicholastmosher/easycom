@@ -64,6 +64,8 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             return;
         }
 
+        mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.CONNECTION_UUID));
+
         //If the string key for connection type is null, we won't know what to do.
         String connectionType = intent.getStringExtra(TECIntent.CONNECTION_TYPE);
         if(connectionType == null) {
@@ -76,7 +78,6 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a BluetoothConnection.
             case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
                 toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
 
                 //Initialize icons for bluetooth.
@@ -88,7 +89,6 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a TcpIpConnection.
             case TECIntent.CONNECTION_TYPE_TCPIP:
-                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
                 toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
 
                 //Initialize icons for tcpip.
@@ -199,7 +199,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             //Pressed Kudos button
             case R.id.Kudos:
                 Intent kudosIntent = new Intent(this, KudosActivity.class);
-                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, mConnection.getUUID());
+                kudosIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
                 startActivity(kudosIntent);
                 return true;
 

@@ -44,7 +44,7 @@ public class KudosActivity extends AppCompatActivity {
         setContentView(R.layout.activity_kudos);
 
         Intent launchIntent = getIntent();
-        mConnection = launchIntent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_UUID);
+        mConnection = launchIntent.getParcelableExtra(TECIntent.CONNECTION_UUID);
         Preconditions.checkNotNull(mConnection);
 
         Toolbar toolbar = new Toolbar(this);

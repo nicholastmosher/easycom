@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,13 +28,6 @@ public class BluetoothConnection extends Connection {
      * UUID used for connecting to Serial boards.
      */
     public static final UUID BLUETOOTH_SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-    /**
-     * Static Map is used to store object references to BluetoothSockets, since
-     * BluetoothSockets do not transmit through the Parcelable framework well.
-     * This connection's UUID is used as the key.
-     */
-    private static Map<UUID, BluetoothSocket> sockets = new HashMap<>();
 
     /**
      * The MAC Address of the remote bluetooth device for this Connection.
@@ -116,6 +110,14 @@ public class BluetoothConnection extends Connection {
     }
 
     /**
+     * Convenience method for use with intent extra "CONNECTION_TYPE".
+     * @return The string "connection type" as defined by TECIntent.
+     */
+    public String getConnectionType() {
+        return TECIntent.CONNECTION_TYPE_BLUETOOTH;
+    }
+
+    /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
      * @throws java.lang.IllegalStateException If not connected.
@@ -168,7 +170,6 @@ public class BluetoothConnection extends Connection {
     void setBluetoothSocket(BluetoothSocket socket) {
         Preconditions.checkNotNull(socket);
         mBluetoothSocket = socket;
-        sockets.put(mUUID, mBluetoothSocket);
     }
 
     /**

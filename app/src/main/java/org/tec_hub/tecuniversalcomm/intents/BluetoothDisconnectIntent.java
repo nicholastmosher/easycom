@@ -36,6 +36,6 @@ public class BluetoothDisconnectIntent extends Intent implements TECIntent {
 
         setAction(ACTION_BLUETOOTH_DISCONNECT);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_BLUETOOTH);
-        putExtra(BLUETOOTH_CONNECTION_UUID, uuid);
+        putExtra(CONNECTION_UUID, uuid);
     }
 }

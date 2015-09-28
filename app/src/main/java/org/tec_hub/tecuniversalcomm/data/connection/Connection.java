@@ -129,6 +129,12 @@ public abstract class Connection {
     public abstract Status getStatus();
 
     /**
+     * Convenience method for use with intent extra "CONNECTION_TYPE".
+     * @return The string "connection type" as defined by TECIntent.
+     */
+    public abstract String getConnectionType();
+
+    /**
      * Returns an InputStream that reads from this Connection's remote source.
      * @return An InputStream that reads from this Connection's remote source.
      * @throws IllegalStateException If this Connection is not connected.
