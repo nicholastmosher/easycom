@@ -18,6 +18,7 @@ import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.data.device.Device;
 import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
+import org.tec_hub.tecuniversalcomm.data.device.DeviceObserver;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,7 +35,7 @@ import java.lang.reflect.Type;
  * The mode of data storage is through GSON to files
  * where object data is kept.
  */
-public class StorageAdapter {
+public class StorageAdapter implements DeviceObserver {
     public static final String FILE_DEVICES = "devices.ser";
 
     private static File mDevicesFolder;
@@ -45,6 +46,8 @@ public class StorageAdapter {
     private static Type mDeviceListType;
     private static Type mConnectionListType;
     private static Gson mGson;
+
+    public static final StorageAdapter OBSERVER = new StorageAdapter();
 
     /*
      * Since the StorageAdapter is used entirely statically, this
@@ -106,6 +109,31 @@ public class StorageAdapter {
 
     public static DeviceList getDevices() {
         return readDevicesFromFile();
+    }
+
+    /**
+     * StorageAdapter has a singleton instance whose sole purpose is to
+     * act as a DeviceObserver.  This method is the only non-static
+     * function in this class, and it's being hacked to be essentially
+     * static.  Every device adds StorageAdapter as an observer, and
+     * whenever a change is made to a Device's data this method is called
+     * so we can reflect those changes in storage.
+     * @param observable The Device whose data has changed.
+     * @param cue A flag representing the type of change.
+     */
+    @Override
+    public void onUpdate(Device observable, Device.Status cue) {
+        StorageAdapter.update(observable, cue);
+    }
+
+    /**
+     * Static method behind the object-instance onUpdate method.  Writes
+     * changes to Device data to storage file.
+     * @param observable The Device whose data has changed.
+     * @param status A flag representing the type of change.
+     */
+    private static void update(Device observable, Device.Status status) {
+        putDevice(observable);
     }
 
     /**

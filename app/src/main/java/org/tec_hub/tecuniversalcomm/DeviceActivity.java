@@ -183,8 +183,6 @@ public class DeviceActivity extends AppCompatActivity {
 
                     if(connection != null) {
                         mDevice.addConnection(connection);
-                        mDevice.notifyObservers(Device.Status.ConnectionsUpdated);
-                        mConnectionAdapter.notifyDataSetChanged();
                     }
                 }
                 break;
@@ -531,12 +529,6 @@ public class DeviceActivity extends AppCompatActivity {
             } else {
                 button.setImageDrawable(icon);
             }
-        }
-
-        @Override
-        public void notifyDataSetChanged() {
-            super.notifyDataSetChanged();
-            StorageAdapter.putDevice(mDevice);
         }
     }
 }

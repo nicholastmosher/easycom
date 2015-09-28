@@ -2,6 +2,7 @@ package org.tec_hub.tecuniversalcomm.data.device;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 
@@ -38,6 +39,7 @@ public class Device {
      * Status to specify to observers what kind of update is happening.
      */
     public enum Status {
+        NameUpdated,
         ConnectionsUpdated
     }
 
@@ -59,6 +61,7 @@ public class Device {
         mConnections = Preconditions.checkNotNull(connections);
         mUUID = Preconditions.checkNotNull(uuid);
         devices.put(mUUID, this);
+        addObserver(StorageAdapter.OBSERVER);
     }
 
     /**
@@ -70,6 +73,7 @@ public class Device {
         mUUID = UUID.randomUUID();
         mConnections = new ConnectionList();
         devices.put(mUUID, this);
+        addObserver(StorageAdapter.OBSERVER);
     }
 
     /**
@@ -163,6 +167,7 @@ public class Device {
 
     public void init() {
         devices.put(mUUID, this);
+        addObserver(StorageAdapter.OBSERVER);
     }
 
     /**
@@ -171,6 +176,7 @@ public class Device {
      */
     public void setName(String mName) {
         this.mName = mName;
+        notifyObservers(Status.NameUpdated);
     }
 
     /**
