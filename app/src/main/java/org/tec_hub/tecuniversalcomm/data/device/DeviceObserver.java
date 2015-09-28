@@ -5,5 +5,5 @@ package org.tec_hub.tecuniversalcomm.data.device;
  */
 public interface DeviceObserver {
 
-    void onUpdate(Device observable, Device.Cues cue);
+    void onUpdate(Device observable, Device.Status cue);
 }

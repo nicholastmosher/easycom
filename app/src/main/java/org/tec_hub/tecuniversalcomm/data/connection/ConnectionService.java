@@ -63,10 +63,10 @@ public class ConnectionService extends Service implements ConnectionObserver {
                 Connection connection = null;
                 switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
                     case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                        connection = intent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+                        connection = Connection.getConnection(intent.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
                         break;
                     case TECIntent.CONNECTION_TYPE_TCPIP:
-                        connection = intent.getParcelableExtra(TECIntent.TCPIP_CONNECTION_DATA);
+                        connection = Connection.getConnection(intent.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
                         break;
                     default:
                 }
@@ -157,7 +157,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
     }
 
     @Override
-    public void onUpdate(Connection observable, Connection.Cues cue) {
+    public void onUpdate(Connection observable, Connection.Status cue) {
 
         //If the update came from a BluetoothConnection, handle it accordingly.
         if (observable instanceof BluetoothConnection) {
@@ -222,7 +222,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
         Preconditions.checkNotNull(connection);
         Preconditions.checkNotNull(data);
 
-        if(connection.isConnected()) {
+        if(connection.getStatus().equals(Connection.Status.Connected)) {
             try {
                 connection.getOutputStream().write(data);
             } catch(IOException e) {
@@ -313,12 +313,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
             super.onPostExecute(success);
             if(success) {
                 System.out.println("Connected success");
-                mConnection.notifyObservers(Connection.Cues.Connected);
+                mConnection.notifyObservers(Connection.Status.Connected);
             } else {
                 System.out.println("Connected failed");
                 if(mBluetoothSocket.isConnected()) {
                     System.out.println("WARNING: ConnectBluetoothTask reported error, but is connected.");
-                    mConnection.notifyObservers(Connection.Cues.Connected);
+                    mConnection.notifyObservers(Connection.Status.Connected);
                 } else {
                     if(retryCount < 3) {
                         retryCount++;
@@ -330,7 +330,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
-                        mConnection.notifyObservers(Connection.Cues.ConnectFailed);
+                        mConnection.notifyObservers(Connection.Status.ConnectFailed);
                     }
                 }
             }
@@ -351,7 +351,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
 
         @Override
         protected Void doInBackground(Void... params) {
-            if(mConnection.isConnected()) {
+            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getBluetoothSocket().close();
                 } catch(IOException e) {
@@ -365,8 +365,8 @@ public class ConnectionService extends Service implements ConnectionObserver {
         @Override
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
-            if(!mConnection.isConnected()) {
-                mConnection.notifyObservers(Connection.Cues.Disconnected);
+            if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
+                mConnection.notifyObservers(Connection.Status.Disconnected);
             }
         }
     }
@@ -408,12 +408,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
             super.onPostExecute(success);
             if(success) {
                 System.out.println("Connected success");
-                mConnection.notifyObservers(Connection.Cues.Connected);
+                mConnection.notifyObservers(Connection.Status.Connected);
             } else if(mSocket != null) {
                 System.out.println("Connected failed");
                 if(mSocket.isConnected()) {
                     System.out.println("WARNING: ConnectBluetoothTask reported error, but is connected.");
-                    mConnection.notifyObservers(Connection.Cues.Connected);
+                    mConnection.notifyObservers(Connection.Status.Connected);
                 } else {
                     if(retryCount < 3) {
                         retryCount++;
@@ -424,12 +424,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
-                        mConnection.notifyObservers(Connection.Cues.ConnectFailed);
+                        mConnection.notifyObservers(Connection.Status.ConnectFailed);
                     }
                 }
             } else {
                 System.err.println("Error, TcpIp socket is null");
-                mConnection.notifyObservers(Connection.Cues.ConnectFailed);
+                mConnection.notifyObservers(Connection.Status.ConnectFailed);
             }
         }
     }
@@ -448,7 +448,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
 
         @Override
         protected Void doInBackground(Void... params) {
-            if(mConnection.isConnected()) {
+            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getSocket().close();
                 } catch(IOException ioe) {
@@ -462,8 +462,8 @@ public class ConnectionService extends Service implements ConnectionObserver {
         @Override
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
-            if(!mConnection.isConnected()) {
-                mConnection.notifyObservers(Connection.Cues.Disconnected);
+            if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
+                mConnection.notifyObservers(Connection.Status.Disconnected);
             }
         }
     }
@@ -486,7 +486,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
             super.run();
             String line = "";
             BufferedReader bufferedReader = null;
-            while(mConnection.isConnected() && isRunning) {
+            while((mConnection.getStatus().equals(Connection.Status.Connected)) && isRunning) {
                 try {
                     if(bufferedReader == null) {
                         InputStream inputStream = Preconditions.checkNotNull(mConnection.getInputStream());
@@ -507,10 +507,10 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     //Set a flag-extra in the intent indicating connection type.
                     if(mConnection instanceof BluetoothConnection) {
                         receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
-                        receivedInputIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_DATA, mConnection);
+                        receivedInputIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, mConnection.getUUID());
                     } else if(mConnection instanceof TcpIpConnection) {
                         receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_TCPIP);
-                        receivedInputIntent.putExtra(TECIntent.TCPIP_CONNECTION_DATA, mConnection);
+                        receivedInputIntent.putExtra(TECIntent.TCPIP_CONNECTION_UUID, mConnection.getUUID());
                     }
 
                     //Send the data back to any listeners.

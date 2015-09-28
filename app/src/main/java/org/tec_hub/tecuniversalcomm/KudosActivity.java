@@ -44,7 +44,7 @@ public class KudosActivity extends AppCompatActivity {
         setContentView(R.layout.activity_kudos);
 
         Intent launchIntent = getIntent();
-        mConnection = launchIntent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_DATA);
+        mConnection = launchIntent.getParcelableExtra(TECIntent.BLUETOOTH_CONNECTION_UUID);
         Preconditions.checkNotNull(mConnection);
 
         Toolbar toolbar = new Toolbar(this);
@@ -170,7 +170,7 @@ public class KudosActivity extends AppCompatActivity {
                     if(thinner % 5 == 0) {
                         sendData = Packet.asBoolean("KudosEnable", true).toJson();
                         System.out.println("Data to send: " + sendData);
-                        BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                        BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection.getUUID(), sendData);
                         LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(enableKudosIntent);
                     }
 
@@ -201,12 +201,12 @@ public class KudosActivity extends AppCompatActivity {
 
                     sendData = Packet.asDoubleArray("KudosDrive", new double[]{x, y}).toJson();
                     System.out.println("Data to send: " + sendData);
-                    BluetoothSendIntent driveKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                    BluetoothSendIntent driveKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection.getUUID(), sendData);
                     LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(driveKudosIntent);
                 } else {
                     sendData = Packet.asBoolean("KudosEnable", false).toJson();
                     System.out.println("Data to send: " + sendData);
-                    BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection, sendData);
+                    BluetoothSendIntent enableKudosIntent = new BluetoothSendIntent(KudosActivity.this, mConnection.getUUID(), sendData);
                     LocalBroadcastManager.getInstance(KudosActivity.this).sendBroadcast(enableKudosIntent);
                 }
 

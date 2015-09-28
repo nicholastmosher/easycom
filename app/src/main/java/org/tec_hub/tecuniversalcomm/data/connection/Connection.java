@@ -1,32 +1,40 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.google.common.base.Preconditions;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public abstract class Connection implements Parcelable {
+public abstract class Connection {
+
+    /**
+     * Static maps stores all constructed connections.  This way we
+     * can reference them from different activities without needing
+     * to pass through the Parcelable framework.
+     */
+    protected static transient Map<UUID, Connection> connections = new HashMap<>();
 
     /**
      * Holds references to observers.  Transient to avoid being parsed to Json.
      */
-    private transient List<ConnectionObserver> observers = new ArrayList<ConnectionObserver>();
+    private transient List<ConnectionObserver> observers = new ArrayList<>();
 
     /**
-     * Cues to specify to observers what kind of update is occurring.
+     * Status to specify to observers what kind of update is occurring.
      */
-    public enum Cues {
+    public enum Status {
         Connected,
+        Connecting,
         Disconnected,
         ConnectFailed,
         ConnectCanceled
@@ -44,6 +52,12 @@ public abstract class Connection implements Parcelable {
     protected transient final UUID mUUID;
 
     /**
+     * Keeps track of the status of the connectivity.  Transient
+     * to avoid being parsed as Json.
+     */
+    protected transient Status mStatus = Status.Disconnected;
+
+    /**
      * Constructs a Connection using a given name.  Addresses or
      * connection information are managed by subclasses.
      * @param name The name of the connection.
@@ -51,17 +65,7 @@ public abstract class Connection implements Parcelable {
     public Connection(String name) {
         mConnectionName = Preconditions.checkNotNull(name);
         mUUID = UUID.randomUUID();
-    }
-
-    public Connection(Parcel in) {
-        Preconditions.checkNotNull(in);
-        mConnectionName = Preconditions.checkNotNull(in.readString());
-        mUUID = Preconditions.checkNotNull(UUID.fromString(in.readString()));
-    }
-
-    public void writeToParcel(Parcel out, int flags) {
-        out.writeString(mConnectionName);
-        out.writeString(mUUID.toString());
+        connections.put(mUUID, this);
     }
 
     /**
@@ -76,16 +80,26 @@ public abstract class Connection implements Parcelable {
      * Returns the unique identifier of this Connection.
      * @return The unique identifier of this Connection.
      */
-    public UUID getUUID() {
-        return mUUID;
+    public String getUUID() {
+        return mUUID.toString();
     }
 
     /**
-     * Requirement of Parcelable, not sure what for.
-     * @return 0.
+     * Returns an existing connection being held in the static map.
+     * @param uuid The UUID of the connection.
+     * @return The Connection, or null if there is no key for the UUID.
      */
-    public int describeContents() {
-        return 0;
+    public static Connection getConnection(UUID uuid) {
+        return connections.get(uuid);
+    }
+
+    /**
+     * Returns an existing connection being held in the static map.
+     * @param uuid The UUID of the connection.
+     * @return The Connection, or null if there is no kwy for the UUID.
+     */
+    public static Connection getConnection(String uuid) {
+        return getConnection(UUID.fromString(uuid));
     }
 
     /**
@@ -103,10 +117,16 @@ public abstract class Connection implements Parcelable {
     public abstract void disconnect(Context context);
 
     /**
-     * Tells whether this Connection is actively connected.
-     * @return True if connected.
+     * Tells what the status of this connection is.
+     * Statuses include:
+     *  Connected
+     *  Connecting
+     *  Disconnected
+     *  Connect Failed
+     *  Connect Canceled
+     * @return Status of connection.
      */
-    public abstract boolean isConnected();
+    public abstract Status getStatus();
 
     /**
      * Returns an InputStream that reads from this Connection's remote source.
@@ -151,9 +171,9 @@ public abstract class Connection implements Parcelable {
         }
     }
 
-    public void notifyObservers(Cues cue) {
+    public void notifyObservers(Status status) {
         for(ConnectionObserver observer : observers) {
-            observer.onUpdate(this, cue);
+            observer.onUpdate(this, status);
         }
     }
 }

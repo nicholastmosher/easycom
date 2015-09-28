@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDiscoveredIntent;
 
 import java.util.ArrayList;
@@ -85,8 +86,8 @@ public class DiscoveryActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 BluetoothDiscoveredIntent intent = new BluetoothDiscoveredIntent(
                         DiscoveryActivity.this,
-                        MainActivity.class,
-                        (BluetoothConnection) connectionAdapter.getItem(position));
+                        DeviceActivity.class,
+                        ((BluetoothConnection) connectionAdapter.getItem(position)).getUUID());
 
                 setResult(RESULT_OK, intent);
                 finish();
@@ -117,25 +118,16 @@ public class DiscoveryActivity extends AppCompatActivity {
     }
 
     private class ConnectionListAdapter extends BaseAdapter {
-        private List<Connection> discoveredConnections;
+        private ConnectionList discoveredConnections;
 
         public ConnectionListAdapter() {
-            discoveredConnections = new ArrayList<>();
+            discoveredConnections = new ConnectionList();
         }
 
         public void add(Connection connection) {
             if (connection != null) {
-                boolean flagDuplicate = false;
-                for (Connection c : discoveredConnections) {
-                    if (c.equals(connection)) {
-                        flagDuplicate = true;
-                        break;
-                    }
-                }
-                if (!flagDuplicate) {
-                    discoveredConnections.add(connection);
-                    notifyDataSetChanged();
-                }
+                discoveredConnections.add(connection);
+                notifyDataSetChanged();
             }
         }
 

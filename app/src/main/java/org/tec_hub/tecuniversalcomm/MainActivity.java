@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private DeviceListAdapter mDeviceAdapter;
 
+<<<<<<< HEAD
     public EditText askForName(){
         final EditText deviceName = new EditText(this);
         deviceName.setHint("Enter Device Name:");
@@ -74,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
         newNameDialog.setView(newName);
         newNameDialog.show();
     }
+=======
+>>>>>>> 6de158c676206c216d0ee2064e9167fe177d4749
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -261,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
-                    intent.putExtra(TECIntent.DEVICE_DATA, (Device) mDeviceAdapter.getItem(position));
+                    intent.putExtra(TECIntent.DEVICE_UUID, ((Device) mDeviceAdapter.getItem(position)).getUUID());
                     startActivity(intent);
                 }
             });

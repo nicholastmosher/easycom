@@ -2,7 +2,6 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -11,7 +10,6 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,25 +21,12 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 4/16/15.
  */
-public class BluetoothConnection extends Connection implements Parcelable {
+public class BluetoothConnection extends Connection {
 
     /**
      * UUID used for connecting to Serial boards.
      */
     public static final UUID BLUETOOTH_SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-    /**
-     * Required for Parcelable framework.
-     */
-    public static final Parcelable.Creator<BluetoothConnection> CREATOR = new Parcelable.Creator<BluetoothConnection>() {
-        public BluetoothConnection createFromParcel(Parcel in) {
-            return new BluetoothConnection(in);
-        }
-
-        public BluetoothConnection[] newArray(int size) {
-            return new BluetoothConnection[size];
-        }
-    };
 
     /**
      * Static Map is used to store object references to BluetoothSockets, since
@@ -71,36 +56,21 @@ public class BluetoothConnection extends Connection implements Parcelable {
     }
 
     /**
-     * Constructs a BluetoothConnection from a Parcel.  This happens when passing
-     * objects across the Android framework e.g. through intents.
-     * @param in The input Parcel to recreate the BluetoothConnection from.
-     */
-    public BluetoothConnection(Parcel in) {
-        super(Preconditions.checkNotNull(in));
-        mBluetoothAddress = Preconditions.checkNotNull(in.readString());
-        mBluetoothSocket = sockets.get(mUUID);
-    }
-
-    @Override
-    public void writeToParcel(Parcel out, int flags) {
-        super.writeToParcel(out, flags);
-        out.writeString(mBluetoothAddress);
-        sockets.put(mUUID, mBluetoothSocket);
-    }
-
-    /**
      * Send connect request to ConnectionService to open a BluetoothConnection
      * using this object's data.
      * @param context The context to send the intent to launch the Service.
      */
     public void connect(Context context) {
-        if(!isConnected()) {
+        if(!(getStatus().equals(Status.Connected))) {
 
             //Build intent with this connection data to send to service
-            BluetoothConnectIntent connectIntent = new BluetoothConnectIntent(context, this);
+            BluetoothConnectIntent connectIntent = new BluetoothConnectIntent(context, mUUID);
 
             //Send intent through LocalBroadcastManager
             LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+
+            //Indicate that this connection's status is now "connecting".
+            mStatus = Status.Connecting;
         }
     }
 
@@ -110,10 +80,10 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * @param context The context to send the intent to launch the Service.
      */
     public void disconnect(Context context) {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
 
             //Build intent with this connection data to send to service
-            BluetoothDisconnectIntent disconnectIntent = new BluetoothDisconnectIntent(context, this);
+            BluetoothDisconnectIntent disconnectIntent = new BluetoothDisconnectIntent(context, mUUID);
 
             //Send intent through LocalBroadcastManager
             LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
@@ -124,19 +94,25 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * Tells whether this BluetoothConnection is actively connected.
      * @return True if connected, false otherwise.
      */
-    public boolean isConnected() {
+    public Status getStatus() {
+
+        //If we know we're trying to connect to something.
+        if(mStatus.equals(Status.Connecting)) return Status.Connecting;
+
+        //If not in the process of connecting, verify active connections.
         if(mBluetoothSocket != null) {
             if(!mBluetoothSocket.isConnected()) {
                 try {
+                    //Closing a socket really "should" never throw an error unless it's FUBAR.
                     mBluetoothSocket.close();
                 } catch(IOException e) {
                     System.out.println("Bluetooth socket not connected; error closing socket!");
                     e.printStackTrace();
                 }
             }
-            return mBluetoothSocket.isConnected();
+            return mBluetoothSocket.isConnected() ? Status.Connected : Status.Disconnected;
         }
-        return false;
+        return Status.Disconnected;
     }
 
     /**
@@ -146,7 +122,7 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * @return The OutputStream to the remote bluetooth device.
      */
     public OutputStream getOutputStream() throws IllegalStateException {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
             try {
                 return mBluetoothSocket.getOutputStream();
             } catch(IOException e) {
@@ -165,7 +141,7 @@ public class BluetoothConnection extends Connection implements Parcelable {
      * @return The InputStream from the remote bluetooth device.
      */
     public InputStream getInputStream() throws IllegalStateException {
-        if(isConnected()) {
+        if(getStatus().equals(Status.Connected)) {
             try {
                 return mBluetoothSocket.getInputStream();
             } catch(IOException e) {
