@@ -246,6 +246,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
         mConnection.sendData(this, data.getBytes());
+        appendTerminal("TEC-COMM:~$ " + data);
         return false;
     }
 
@@ -255,7 +256,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
      */
     private void receivedData(byte[] data) {
         try {
-            appendTerminal(mConnection.getName() + ": " + new String(data, "UTF-8"));
+            appendTerminal(mConnection.getName() + ":~$ " + new String(data, "UTF-8"));
         } catch(UnsupportedEncodingException e) {
             e.printStackTrace();
         }
