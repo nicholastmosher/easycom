@@ -149,6 +149,14 @@ public abstract class Connection {
     public abstract OutputStream getOutputStream() throws IllegalStateException;
 
     /**
+     * Sends an intent to ConnectionService with data that should be sent over this
+     * connection.
+     * @param context The context to send the intent from.
+     * @param data The data to send.
+     */
+    public abstract void sendData(Context context, byte[] data);
+
+    /**
      * Hashing a connection object will tell if the two objects contain
      * the exact content data, but the same connection - if any
      * member values are changed - will hash differently.  This method

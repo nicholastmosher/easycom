@@ -72,17 +72,14 @@ public class ConnectionService extends Service implements ConnectionObserver {
 
                     //Received action to establish bluetooth connection
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
-
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(ConnectionService.this);
-
                         //Initiate connecting
                         new ConnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
 
                     //Received action to disconnect bluetooth
                     case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
-
                         //Initiate disconnecting
                         new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
@@ -90,30 +87,27 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     //Received intent with data to send over bluetooth
                     case TECIntent.ACTION_BLUETOOTH_SEND_DATA:
                         //System.out.println("Service -> Sending Data...");
-                        String btData = intent.getStringExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
+                        byte[] btData = intent.getByteArrayExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
                         sendData(connection, btData);
                         break;
 
                     //Received action to establish tcpip connection.
                     case TECIntent.ACTION_TCPIP_CONNECT:
-
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(ConnectionService.this);
-
                         //Initiate connecting.
                         new ConnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to disconnect tcpip connection.
                     case TECIntent.ACTION_TCPIP_DISCONNECT:
-
                         //Disconnect.
                         new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to send data over tcpip.
                     case TECIntent.ACTION_TCPIP_SEND_DATA:
-                        String tcpData = intent.getStringExtra(TECIntent.TCPIP_TO_SEND_DATA);
+                        byte[] tcpData = intent.getByteArrayExtra(TECIntent.TCPIP_TO_SEND_DATA);
                         sendData(connection, tcpData);
                         break;
 
@@ -179,9 +173,6 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     oldThread.interrupt();
                     receiveThreads.remove(observable);
                 }
-
-                //Since we're disconnected, we no longer need to watch that connection.
-                //observable.deleteObserver(this); TODO Check if this is necessary
                 break;
             case ConnectFailed:
                 break;
@@ -190,7 +181,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
     }
 
     private void sendData(Connection connection, String data) {
-        if(!data.equals("")) {
+        if(data != null && !data.equals("")) {
             sendData(connection, data.getBytes());
         } else {
             System.out.println("Data to send is blank!");
@@ -493,7 +484,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, TerminalActivity.class, line);
+                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, TerminalActivity.class, line.getBytes());
                     receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, mConnection.getConnectionType());
                     receivedInputIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
 

@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.io.IOException;
@@ -118,6 +119,25 @@ public class BluetoothConnection extends Connection {
     }
 
     /**
+     * Retrieves the Input Stream if this Connection is connected and
+     * the Input Stream is not null.
+     * @throws java.lang.IllegalStateException If not connected.
+     * @return The InputStream from the remote bluetooth device.
+     */
+    public InputStream getInputStream() throws IllegalStateException {
+        if(getStatus().equals(Status.Connected)) {
+            try {
+                return mBluetoothSocket.getInputStream();
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            throw new IllegalStateException("Connection is not active!");
+        }
+        return null;
+    }
+
+    /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
      * @throws java.lang.IllegalStateException If not connected.
@@ -137,22 +157,12 @@ public class BluetoothConnection extends Connection {
     }
 
     /**
-     * Retrieves the Input Stream if this Connection is connected and
-     * the Input Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
-     * @return The InputStream from the remote bluetooth device.
+     * Sends the given data over this connection.
+     * @param context The context to send the intent from.
+     * @param data The data to send.
      */
-    public InputStream getInputStream() throws IllegalStateException {
-        if(getStatus().equals(Status.Connected)) {
-            try {
-                return mBluetoothSocket.getInputStream();
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            throw new IllegalStateException("Connection is not active!");
-        }
-        return null;
+    public void sendData(Context context, byte[] data) {
+        LocalBroadcastManager.getInstance(context).sendBroadcast(new BluetoothSendIntent(context, getUUID(), data));
     }
 
     /**

@@ -28,6 +28,9 @@ import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Created by Nick Mosher on 4/13/15.
  * Opens a terminal-like interface for sending data over an established connection.
@@ -138,7 +141,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             public void onReceive(Context context, Intent intent) {
                 switch(intent.getAction()) {
                     case TECIntent.ACTION_RECEIVED_DATA:
-                        receivedData(intent.getStringExtra(TECIntent.RECEIVED_DATA));
+                        receivedData(intent.getByteArrayExtra(TECIntent.RECEIVED_DATA));
                         break;
                     default:
                 }
@@ -242,19 +245,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
-
-        Intent sendIntent = null;
-        if(mConnection instanceof BluetoothConnection) {
-            sendIntent = new BluetoothSendIntent(this, ((BluetoothConnection) mConnection).getUUID(), data);
-
-        } else if(mConnection instanceof TcpIpConnection) {
-            sendIntent = new TcpIpSendIntent(this, ((TcpIpConnection) mConnection).getUUID(), data);
-
-        }
-
-        if(sendIntent != null) {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent);
-        }
+        mConnection.sendData(this, data.getBytes());
         return false;
     }
 
@@ -262,8 +253,12 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
      * Invoked whenever we receive valid data from a connection.
      * @param data The data we received from the connection.
      */
-    private void receivedData(String data) {
-        appendTerminal(mConnection.getName() + ": " + data);
+    private void receivedData(byte[] data) {
+        try {
+            appendTerminal(mConnection.getName() + ": " + new String(data, "UTF-8"));
+        } catch(UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

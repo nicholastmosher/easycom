@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpConnectIntent;
 import org.tec_hub.tecuniversalcomm.intents.TcpIpDisconnectIntent;
+import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,6 +118,25 @@ public class TcpIpConnection extends Connection {
     }
 
     /**
+     * Retrieves the Input Stream if this Connection is connected and
+     * the Input Stream is not null.
+     * @throws java.lang.IllegalStateException If not connected.
+     * @return The InputStream from the remote device.
+     */
+    public InputStream getInputStream() {
+        if(getStatus().equals(Status.Connected)) {
+            try {
+                return mSocket.getInputStream();
+            } catch(IOException ioe) {
+                ioe.printStackTrace();
+            }
+        } else {
+            throw new IllegalStateException("Connection is not active!");
+        }
+        return null;
+    }
+
+    /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
      * @throws java.lang.IllegalStateException If not connected.
@@ -136,22 +156,12 @@ public class TcpIpConnection extends Connection {
     }
 
     /**
-     * Retrieves the Input Stream if this Connection is connected and
-     * the Input Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
-     * @return The InputStream from the remote device.
+     * Sends the given data over this connection.
+     * @param context The context to send the intent from.
+     * @param data The data to send.
      */
-    public InputStream getInputStream() {
-        if(getStatus().equals(Status.Connected)) {
-            try {
-                return mSocket.getInputStream();
-            } catch(IOException ioe) {
-                ioe.printStackTrace();
-            }
-        } else {
-            throw new IllegalStateException("Connection is not active!");
-        }
-        return null;
+    public void sendData(Context context, byte[] data) {
+        LocalBroadcastManager.getInstance(context).sendBroadcast(new TcpIpSendIntent(context, getUUID(), data));
     }
 
     /**

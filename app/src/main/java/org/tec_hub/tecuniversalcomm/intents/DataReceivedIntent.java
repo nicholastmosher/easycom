@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
  */
 public class DataReceivedIntent extends Intent implements TECIntent {
 
-    public DataReceivedIntent(Context context, Class target, String data) {
+    public DataReceivedIntent(Context context, Class target, byte[] data) {
         super(context, target);
         Preconditions.checkNotNull(data);
 
