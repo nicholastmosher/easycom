@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("TEC COMM | Devices");
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
 
         //Creates a dialog to make a new Device.
         final EditText deviceName = new EditText(this);
