@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
@@ -56,6 +57,14 @@
             android:name=".KudosActivity"
             android:label="Launch Kudos Controls"
             android:screenOrientation="landscape"
+            android:parentActivityName=".DeviceActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
+        </activity>
+
+        <activity
+            android:name=".NewTerminalActivity"
             android:parentActivityName=".DeviceActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

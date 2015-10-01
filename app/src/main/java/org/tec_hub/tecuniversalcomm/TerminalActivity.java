@@ -24,12 +24,9 @@ import org.tec_hub.tecuniversalcomm.data.connection.ConnectionObserver;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Created by Nick Mosher on 4/13/15.
@@ -245,7 +242,21 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
-        mConnection.sendData(this, data.getBytes());
+/*        byte[] hacked = {(byte) 0xFE,
+                (byte) 0x0E,
+                (byte) 0x00,
+                (byte) 0x11,
+                (byte) 0x4C,
+                (byte) 0x08,
+                (byte) 0x01,
+                (byte) 0x06,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x19};*/
+        mConnection.sendData(this, data.getBytes()/*hacked*/);
         appendTerminal("TEC-COMM:~$ " + data);
         return false;
     }
