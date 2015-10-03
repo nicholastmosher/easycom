@@ -9,4 +9,10 @@
     <item
         android:id="@+id/action_open_controller"
         android:title="Controls"/>
+    <item
+        android:id="@+id/action_rename_connection"
+        android:title="Rename"/>
+    <item
+        android:id="@+id/action_delete_connection"
+        android:title="Delete"/>
 </menu>

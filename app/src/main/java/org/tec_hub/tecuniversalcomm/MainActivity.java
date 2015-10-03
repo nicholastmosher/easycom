@@ -26,10 +26,11 @@ import android.widget.TextView;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
+import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.device.Device;
-import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
+import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
+import org.tec_hub.tecuniversalcomm.dialogs.DialogRenameDevice;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,39 +45,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private DeviceListAdapter mDeviceAdapter;
 
-<<<<<<< HEAD
-    public EditText askForName(){
-        final EditText deviceName = new EditText(this);
-        deviceName.setHint("Enter Device Name:");
-        return deviceName;
-    }
-    public AlertDialog.Builder dialogBuilder(String message){
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle(message);
-        return dialogBuilder;
-    }
-    public void rename(TextView name){
-        final EditText newName = askForName();
-        final TextView nameView = name;
-        final AlertDialog.Builder newNameDialog = dialogBuilder("Rename Device");
-        newNameDialog.setPositiveButton("Rename", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if(!newName.getText().toString().equals(""));
-                nameView.setText(newName.getText());
-            }
-        });
-        newNameDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                return;
-            }
-        });
-        newNameDialog.setView(newName);
-        newNameDialog.show();
-    }
-=======
->>>>>>> 6de158c676206c216d0ee2064e9167fe177d4749
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,11 +52,9 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("TEC COMM | Devices");
-        toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textColor));
 
         //Creates a dialog to make a new Device.
-        //EditText with function for re-use
-        final EditText deviceName = askForName();
+        final EditText deviceName = new EditText(this);
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
         dialogBuilder.setTitle("Create New Device");
         dialogBuilder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
@@ -237,8 +203,6 @@ public class MainActivity extends AppCompatActivity {
             ImageButton deviceImageButton = (ImageButton) root.findViewById(R.id.device_image_button);
             RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
             ImageButton optionButton = (ImageButton) root.findViewById(R.id.device_options);
-            optionButton.setColorFilter(R.color.blue);
-
 
             //Set the title to the device name
             nameView.setText(device.getName());
@@ -278,8 +242,7 @@ public class MainActivity extends AppCompatActivity {
                     //Switch action based on clicked item
                     switch(item.getItemId()) {
                         case R.id.action_rename_device:
-                            //TODO implement renaming
-                            rename(nameView);
+                            new DialogRenameDevice(MainActivity.this, device).rename();
                             return true;
                         case R.id.action_delete_device:
                             delete(device);

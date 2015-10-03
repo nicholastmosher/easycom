@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Nick Mosher on 4/23/15.
@@ -31,13 +33,11 @@ public class ConnectionService extends Service implements ConnectionObserver {
 
     private static boolean launched = false;
 
-    //Thread to run an input reading loop
-    ReceiveDataThread receiveBtThread;
-
-    ReceiveDataThread receiveTcpIpThread;
+    private Map<Connection, ReceiveDataThread> receiveThreads;
 
     public void onCreate() {
         launched = true;
+        receiveThreads = new HashMap<>();
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -60,16 +60,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     return;
                 }
 
-                Connection connection = null;
-                switch(intent.getStringExtra(TECIntent.CONNECTION_TYPE)) {
-                    case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                        connection = Connection.getConnection(intent.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
-                        break;
-                    case TECIntent.CONNECTION_TYPE_TCPIP:
-                        connection = Connection.getConnection(intent.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
-                        break;
-                    default:
-                }
+                Connection connection = Connection.getConnection(intent.getStringExtra(TECIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
                 if(connection == null) {
@@ -81,48 +72,42 @@ public class ConnectionService extends Service implements ConnectionObserver {
 
                     //Received action to establish bluetooth connection
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
-
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(ConnectionService.this);
-
                         //Initiate connecting
                         new ConnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
 
                     //Received action to disconnect bluetooth
                     case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
-
                         //Initiate disconnecting
                         new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
 
-                    //Received intent with data to send over blueooth
+                    //Received intent with data to send over bluetooth
                     case TECIntent.ACTION_BLUETOOTH_SEND_DATA:
                         //System.out.println("Service -> Sending Data...");
-                        String btData = intent.getStringExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
+                        byte[] btData = intent.getByteArrayExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
                         sendData(connection, btData);
                         break;
 
                     //Received action to establish tcpip connection.
                     case TECIntent.ACTION_TCPIP_CONNECT:
-
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(ConnectionService.this);
-
                         //Initiate connecting.
                         new ConnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to disconnect tcpip connection.
                     case TECIntent.ACTION_TCPIP_DISCONNECT:
-
                         //Disconnect.
                         new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to send data over tcpip.
                     case TECIntent.ACTION_TCPIP_SEND_DATA:
-                        String tcpData = intent.getStringExtra(TECIntent.TCPIP_TO_SEND_DATA);
+                        byte[] tcpData = intent.getByteArrayExtra(TECIntent.TCPIP_TO_SEND_DATA);
                         sendData(connection, tcpData);
                         break;
 
@@ -156,62 +141,47 @@ public class ConnectionService extends Service implements ConnectionObserver {
         return launched;
     }
 
+    /**
+     * Connections are susceptible to change.  They can connect or disconnect,
+     * drop, etc. so we need to know when those changes happen.  This method
+     * is called by each connection we've subscribed to whenever something
+     * changes.
+     * @param observable The connection we're observing that's changed.
+     * @param status The status given by the connection during the change.
+     */
     @Override
-    public void onUpdate(Connection observable, Connection.Status cue) {
+    public void onUpdate(Connection observable, Connection.Status status) {
 
         //If the update came from a BluetoothConnection, handle it accordingly.
-        if (observable instanceof BluetoothConnection) {
-            BluetoothConnection connection = (BluetoothConnection) observable;
-            switch (cue) {
-                case Connected:
-                    if (receiveBtThread != null) {
-                        receiveBtThread.interrupt();
-                    }
-                    receiveBtThread = new ReceiveDataThread(connection);
-                    receiveBtThread.start();
-                    break;
-                case Disconnected:
-                    if (receiveBtThread != null) {
-                        receiveBtThread.interrupt();
-                    }
-                    receiveBtThread = null;
+        switch (status) {
+            case Connected:
+                ReceiveDataThread newThread;
+                if(receiveThreads.containsKey(observable)) {
+                    newThread = receiveThreads.get(observable);
+                    newThread.interrupt();
+                } else {
+                    newThread = new ReceiveDataThread(observable);
+                    receiveThreads.put(observable, new ReceiveDataThread(observable));
+                }
+                newThread.start();
+                break;
 
-                    //Since we're disconnected, we no longer need to watch that connection.
-                    //observable.deleteObserver(this); TODO Check if this is necessary
-                    break;
-                case ConnectFailed:
-                    break;
-                default:
-            }
-
-        } else if (observable instanceof TcpIpConnection) {
-            TcpIpConnection connection = (TcpIpConnection) observable;
-            switch (cue) {
-                case Connected:
-                    System.out.println("TCP successfully connected!");
-                    if(receiveTcpIpThread != null) {
-                        receiveTcpIpThread.interrupt();
-                    }
-                    receiveTcpIpThread = new ReceiveDataThread(connection);
-                    receiveTcpIpThread.start();
-                    break;
-                case Disconnected:
-                    System.out.println("TCP successfully disconnected!");
-                    if(receiveTcpIpThread != null) {
-                        receiveTcpIpThread.interrupt();
-                    }
-                    receiveTcpIpThread = null;
-                    break;
-                case ConnectFailed:
-                    System.out.println("TCP connecting failed!");
-                    break;
-                default:
-            }
+            case Disconnected:
+                ReceiveDataThread oldThread;
+                if(receiveThreads.containsKey(observable)) {
+                    oldThread = receiveThreads.get(observable);
+                    oldThread.interrupt();
+                    receiveThreads.remove(observable);
+                }
+                break;
+            case ConnectFailed:
+                break;
+            default:
         }
     }
 
     private void sendData(Connection connection, String data) {
-        if(!data.equals("")) {
+        if(data != null && !data.equals("")) {
             sendData(connection, data.getBytes());
         } else {
             System.out.println("Data to send is blank!");
@@ -256,6 +226,11 @@ public class ConnectionService extends Service implements ConnectionObserver {
             this(connection, 0);
         }
 
+        /**
+         * This method runs on a separate, non-UI thread.  Heavy lifting goes here.
+         * @param params
+         * @return True if connecting succeeded, false if it failed.
+         */
         protected Boolean doInBackground(Void... params) {
             //Check if BT is enabled
             if (!mBluetoothAdapter.isEnabled()) {
@@ -308,6 +283,11 @@ public class ConnectionService extends Service implements ConnectionObserver {
             return true;
         }
 
+        /**
+         * Result method that runs on the UI thread.  Background thread reports
+         * to this thread when it's finished.
+         * @param success Whether the background thread succeeded or failed.
+         */
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
@@ -492,6 +472,7 @@ public class ConnectionService extends Service implements ConnectionObserver {
                         InputStream inputStream = Preconditions.checkNotNull(mConnection.getInputStream());
                         bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                     }
+                    //Fun fact, if the input stream disconnects, readLine() decides to return null :/
                     line = bufferedReader.readLine();
 
                 } catch(IOException e) {
@@ -500,18 +481,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
                 }
 
                 //Ensure that we're not just sending blank strings; can happen if connection ends.
-                if(!line.equals("")) {
-                    System.out.println(line);
-                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, TerminalActivity.class, line);
+                if(line != null && !line.equals("")) {
 
-                    //Set a flag-extra in the intent indicating connection type.
-                    if(mConnection instanceof BluetoothConnection) {
-                        receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
-                        receivedInputIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, mConnection.getUUID());
-                    } else if(mConnection instanceof TcpIpConnection) {
-                        receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_TCPIP);
-                        receivedInputIntent.putExtra(TECIntent.TCPIP_CONNECTION_UUID, mConnection.getUUID());
-                    }
+                    System.out.println(line);
+                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, TerminalActivity.class, line.getBytes());
+                    receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, mConnection.getConnectionType());
+                    receivedInputIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
 
                     //Send the data back to any listeners.
                     LocalBroadcastManager.getInstance(ConnectionService.this).sendBroadcast(receivedInputIntent);

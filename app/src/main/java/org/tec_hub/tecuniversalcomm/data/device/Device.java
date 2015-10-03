@@ -21,7 +21,7 @@ import java.util.UUID;
  * Each interface is represented by a Connection. (see Connection.java)
  * These Connections are managed with an ArrayList in Device.
  */
-public class Device {
+public class  Device {
 
     /**
      * Static maps stores all constructed devices.  This way we
@@ -40,7 +40,8 @@ public class Device {
      */
     public enum Status {
         NameUpdated,
-        ConnectionsUpdated
+        ConnectionsUpdated,
+        ConnectionNameUpdated
     }
 
     private String mName;
@@ -210,6 +211,9 @@ public class Device {
      * @return The Device, or null if there is no key for the UUID.
      */
     public static Device getDevice(String uuid) {
+        if(uuid == null) {
+            return null;
+        }
         return getDevice(UUID.fromString(uuid));
     }
 

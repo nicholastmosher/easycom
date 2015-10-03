@@ -10,12 +10,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public abstract class Connection {
+public abstract class Connection extends Observable{
 
     /**
      * Static maps stores all constructed connections.  This way we
@@ -38,12 +39,13 @@ public abstract class Connection {
         Disconnected,
         ConnectFailed,
         ConnectCanceled
+
     }
 
     /**
      * The immutable name of this Connection.
      */
-    private final String mConnectionName;
+    private String mConnectionName;
 
     /**
      * A unique identifier for this Connection, used as a reliable key
@@ -72,6 +74,10 @@ public abstract class Connection {
      * Returns the name of this connection.
      * @return The name of this connection.
      */
+    public void setName(String name){
+        mConnectionName = name;
+        notifyObservers();
+    }
     public String getName() {
         return this.mConnectionName;
     }
@@ -129,6 +135,12 @@ public abstract class Connection {
     public abstract Status getStatus();
 
     /**
+     * Convenience method for use with intent extra "CONNECTION_TYPE".
+     * @return The string "connection type" as defined by TECIntent.
+     */
+    public abstract String getConnectionType();
+
+    /**
      * Returns an InputStream that reads from this Connection's remote source.
      * @return An InputStream that reads from this Connection's remote source.
      * @throws IllegalStateException If this Connection is not connected.
@@ -141,6 +153,14 @@ public abstract class Connection {
      * @throws IllegalStateException If this Connection is not connected.
      */
     public abstract OutputStream getOutputStream() throws IllegalStateException;
+
+    /**
+     * Sends an intent to ConnectionService with data that should be sent over this
+     * connection.
+     * @param context The context to send the intent from.
+     * @param data The data to send.
+     */
+    public abstract void sendData(Context context, byte[] data);
 
     /**
      * Hashing a connection object will tell if the two objects contain
@@ -170,7 +190,6 @@ public abstract class Connection {
             }
         }
     }
-
     public void notifyObservers(Status status) {
         for(ConnectionObserver observer : observers) {
             observer.onUpdate(this, status);

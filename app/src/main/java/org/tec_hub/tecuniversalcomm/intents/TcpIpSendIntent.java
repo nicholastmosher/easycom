@@ -20,7 +20,7 @@ public class TcpIpSendIntent extends Intent implements TECIntent {
      * @param uuid The UUID of the Connection to send data over.
      * @param data The data being sent over the Connection.
      */
-    public TcpIpSendIntent(Context context, UUID uuid, String data) {
+    public TcpIpSendIntent(Context context, UUID uuid, byte[] data) {
         this(context, uuid.toString(), data);
     }
 
@@ -30,13 +30,13 @@ public class TcpIpSendIntent extends Intent implements TECIntent {
      * @param uuid The String UUID of the Connection to send data over.
      * @param data The data being sent over the Connection.
      */
-    public TcpIpSendIntent(Context context, String uuid, String data) {
+    public TcpIpSendIntent(Context context, String uuid, byte[] data) {
         super(context, ConnectionService.class);
         Preconditions.checkNotNull(uuid);
 
         setAction(ACTION_TCPIP_SEND_DATA);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
-        putExtra(TCPIP_CONNECTION_UUID, uuid);
+        putExtra(CONNECTION_UUID, uuid);
         putExtra(TCPIP_TO_SEND_DATA, data);
     }
 }

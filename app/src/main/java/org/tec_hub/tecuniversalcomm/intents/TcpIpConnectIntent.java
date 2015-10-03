@@ -34,6 +34,6 @@ public class TcpIpConnectIntent extends Intent implements TECIntent {
 
         setAction(ACTION_TCPIP_CONNECT);
         putExtra(CONNECTION_TYPE, CONNECTION_TYPE_TCPIP);
-        putExtra(TCPIP_CONNECTION_UUID, uuid);
+        putExtra(CONNECTION_UUID, uuid);
     }
 }

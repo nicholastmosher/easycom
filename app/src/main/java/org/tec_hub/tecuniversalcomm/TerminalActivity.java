@@ -24,9 +24,9 @@ import org.tec_hub.tecuniversalcomm.data.connection.ConnectionObserver;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Nick Mosher on 4/13/15.
@@ -64,6 +64,8 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             return;
         }
 
+        mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.CONNECTION_UUID));
+
         //If the string key for connection type is null, we won't know what to do.
         String connectionType = intent.getStringExtra(TECIntent.CONNECTION_TYPE);
         if(connectionType == null) {
@@ -76,7 +78,6 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a BluetoothConnection.
             case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.BLUETOOTH_CONNECTION_UUID));
                 toolbar.setSubtitle(((BluetoothConnection) mConnection).getAddress());
 
                 //Initialize icons for bluetooth.
@@ -88,7 +89,6 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             //If the connection passed in the intent is a TcpIpConnection.
             case TECIntent.CONNECTION_TYPE_TCPIP:
-                mConnection = Connection.getConnection(intent.getStringExtra(TECIntent.TCPIP_CONNECTION_UUID));
                 toolbar.setSubtitle(((TcpIpConnection) mConnection).getServerIp() + ":" + ((TcpIpConnection) mConnection).getServerPort());
 
                 //Initialize icons for tcpip.
@@ -138,7 +138,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             public void onReceive(Context context, Intent intent) {
                 switch(intent.getAction()) {
                     case TECIntent.ACTION_RECEIVED_DATA:
-                        receivedData(intent.getStringExtra(TECIntent.RECEIVED_DATA));
+                        receivedData(intent.getByteArrayExtra(TECIntent.RECEIVED_DATA));
                         break;
                     default:
                 }
@@ -199,7 +199,7 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
             //Pressed Kudos button
             case R.id.Kudos:
                 Intent kudosIntent = new Intent(this, KudosActivity.class);
-                kudosIntent.putExtra(TECIntent.BLUETOOTH_CONNECTION_UUID, mConnection.getUUID());
+                kudosIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
                 startActivity(kudosIntent);
                 return true;
 
@@ -242,19 +242,22 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
     private boolean sendData(String data) {
         System.out.println("sendData(" + data + ")");
-
-        Intent sendIntent = null;
-        if(mConnection instanceof BluetoothConnection) {
-            sendIntent = new BluetoothSendIntent(this, ((BluetoothConnection) mConnection).getUUID(), data);
-
-        } else if(mConnection instanceof TcpIpConnection) {
-            sendIntent = new TcpIpSendIntent(this, ((TcpIpConnection) mConnection).getUUID(), data);
-
-        }
-
-        if(sendIntent != null) {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(sendIntent);
-        }
+/*        byte[] hacked = {(byte) 0xFE,
+                (byte) 0x0E,
+                (byte) 0x00,
+                (byte) 0x11,
+                (byte) 0x4C,
+                (byte) 0x08,
+                (byte) 0x01,
+                (byte) 0x06,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x00,
+                (byte) 0x19};*/
+        mConnection.sendData(this, data.getBytes()/*hacked*/);
+        appendTerminal("TEC-COMM:~$ " + data);
         return false;
     }
 
@@ -262,8 +265,12 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
      * Invoked whenever we receive valid data from a connection.
      * @param data The data we received from the connection.
      */
-    private void receivedData(String data) {
-        appendTerminal(mConnection.getName() + ": " + data);
+    private void receivedData(byte[] data) {
+        try {
+            appendTerminal(mConnection.getName() + ":~$ " + new String(data, "UTF-8"));
+        } catch(UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

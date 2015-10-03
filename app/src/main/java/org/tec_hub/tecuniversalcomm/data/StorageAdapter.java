@@ -325,7 +325,6 @@ public class StorageAdapter implements DeviceObserver {
          * Key to store TcpIp remote Port.
          */
         public static final String TCPIP_PORT = "tcpPort";
-
         /**
          * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
          * @param writer The JsonWriter to write the objects into.
