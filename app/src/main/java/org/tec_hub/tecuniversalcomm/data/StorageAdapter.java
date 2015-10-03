@@ -90,7 +90,6 @@ public class StorageAdapter implements DeviceObserver {
     public static void putDevice(Device device) {
         mHandler.post(new AddDeviceTask(device));
     }
-
     /**
      * Removes a specified device from storage.
      * @param device The device object to find and remove from persistent storage.

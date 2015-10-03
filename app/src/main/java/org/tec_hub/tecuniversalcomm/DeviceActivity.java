@@ -237,6 +237,12 @@ public class DeviceActivity extends AppCompatActivity {
                     break;
             }
         }
+
+        /**
+         * Function to delete connections
+         * @param connection
+         * @param observable
+         */
         public void delete(Connection connection, Device observable){
             observable.removeConnection(connection);
         }

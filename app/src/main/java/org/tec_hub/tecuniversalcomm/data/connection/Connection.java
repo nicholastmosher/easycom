@@ -10,13 +10,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
 import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
  */
-public abstract class Connection extends Observable{
+public abstract class Connection {
 
     /**
      * Static maps stores all constructed connections.  This way we
@@ -71,13 +70,17 @@ public abstract class Connection extends Observable{
     }
 
     /**
-     * Returns the name of this connection.
-     * @return The name of this connection.
+     * Sets the name of the connection
+     * @param name
      */
     public void setName(String name){
         mConnectionName = name;
-        notifyObservers();
     }
+    /**
+     * Returns the name of this connection.
+     * @return The name of this connection.
+     */
+
     public String getName() {
         return this.mConnectionName;
     }
