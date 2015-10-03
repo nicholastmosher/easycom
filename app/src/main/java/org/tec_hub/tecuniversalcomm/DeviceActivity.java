@@ -345,7 +345,7 @@ public class DeviceActivity extends AppCompatActivity {
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent terminalIntent = new Intent(DeviceActivity.this, TerminalActivity.class);
+                        Intent terminalIntent = new Intent(DeviceActivity.this, NewTerminalActivity.class);
                         terminalIntent.putExtra(TECIntent.CONNECTION_UUID, bluetoothConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
                         startActivity(terminalIntent);

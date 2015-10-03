@@ -8,4 +8,7 @@
     <string name="action_temp_disable">Disable</string>
     <string name="terminal_clear">Clear Terminal</string>
     <string name="rename_device">Rename</string>
+
+    <string name="drawer_open">Drawer Open</string>
+    <string name="drawer_closed">Drawer Closed</string>
 </resources>
