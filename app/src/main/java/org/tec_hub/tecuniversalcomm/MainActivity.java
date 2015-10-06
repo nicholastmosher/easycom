@@ -1,266 +1,300 @@
 package org.tec_hub.tecuniversalcomm;
 
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.Build;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.PopupMenu;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.common.base.Preconditions;
-
-import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
-import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
-import org.tec_hub.tecuniversalcomm.data.device.Device;
-import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
-import org.tec_hub.tecuniversalcomm.dialogs.DialogRenameDevice;
+import org.tec_hub.tecuniversalcomm.data.NewStorageAdapter;
+import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.connection.Connection;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
+import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
+import java.util.ArrayList;
+
+/**
+ * Created by Nick Mosher on 9/30/15.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * The View item that displays all device items in a list.
-     */
-    private ListView mDeviceListView;
-
-    /**
-     * The custom data adapter that ports device data to the mDeviceListView.
-     */
-    private DeviceListAdapter mDeviceAdapter;
+    private Connection mActiveConnection;
+    private NewStorageAdapter.DataAdapter<ConnectionList> mConnectionAdapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("TEC COMM | Devices");
+        //Initialize Storage Adapter
+        mConnectionAdapter = NewStorageAdapter.getInstance(this)
+                .getDataAdapter(ConnectionList.class, "Connections", ConnectionList.getTypeAdapter());
 
-        //Creates a dialog to make a new Device.
-        final EditText deviceName = new EditText(this);
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-        dialogBuilder.setTitle("Create New Device");
-        dialogBuilder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
+        final ConnectionList mConnections = new ConnectionList();
+        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
+        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
+        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
+        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
+        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
+        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
+        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
+        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
+        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
+        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
+
+        System.out.println("Writing connections: " + mConnections.toString());
+        mConnectionAdapter.write(mConnections, new NewStorageAdapter.DataEventListener<ConnectionList>() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if(!deviceName.getText().toString().equals("")) {
-                    Device newDevice = Device.build(deviceName.getText().toString());
-                    mDeviceAdapter.put(newDevice);
-                }
+            public void onDataWrite(final ConnectionList data) {
+                super.onDataWrite(data);
+                System.out.println("Finished writing data.");
+
+                mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
+                    @Override
+                    public void onDataRead(ConnectionList data) {
+                        System.out.println("Read data: " + data.toString());
+                    }
+                });
             }
         });
-        dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
 
+        //Initialize Toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.terminal_toolbar);
+        toolbar.setTitle("Title");
+
+        //Initialize Recycler
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.drawer_recycler);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new DrawerLayoutAdapter());
+
+        //Initialize DrawerLayout
+        DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout.setDrawerListener(new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_closed) {
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
             }
         });
-        dialogBuilder.setView(deviceName);
-        final AlertDialog newDeviceDialog = dialogBuilder.create();
 
-        FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.action_button);
-        actionButton.setImageResource(R.drawable.ic_add_white_48dp);
-        actionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deviceName.setText("");
-                newDeviceDialog.show();
-            }
-        });
-        setSupportActionBar(toolbar);
+        //Initialize Tabbed Views
+        ViewPager viewPager = (ViewPager) findViewById(R.id.main_pager);
+        ViewPagerAdapter pagerAdapter = new ViewPagerAdapter(viewPager, getSupportFragmentManager());
+        viewPager.setAdapter(pagerAdapter);
 
-        StorageAdapter.init(this);
-        mDeviceAdapter = new DeviceListAdapter();
-        mDeviceListView = (ListView) findViewById(R.id.tec_activity_listview);
-        mDeviceListView.setAdapter(mDeviceAdapter);
-        mDeviceListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-
-        ConnectionService.launch(this); //FIXME does this need to launch here?
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_tec, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.action_settings:
-                System.out.println("Settings button!");
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.main_tabs);
+        tabLayout.setupWithViewPager(viewPager);
     }
 
     /**
-     * Serves data about current Device data to the mDeviceListView.  Manages the dynamic and
-     * persistent storage of the configured Devices and constructs views of each individual
-     * list item for placement in the list.
+     * Manages loading views into the RecyclerView.  All Connections
+     * are handled through this adapter since this is where they are
+     * displayed.
      */
-    private class DeviceListAdapter extends BaseAdapter {
+    public class DrawerLayoutAdapter extends RecyclerView.Adapter<DrawerLayoutAdapter.ConnectionViewHolder> {
+
+        private ConnectionList mConnections = new ConnectionList();
 
         /**
-         * Dynamic array that keeps track of all devices currently being managed.
-         * This is held in memory and is readily accessible so that system calls
-         * requesting View updates can be satisfied quickly.
+         * Acts as a container for each view in the RecyclerView.
          */
-        private DeviceList mDevices;
+        public class ConnectionViewHolder extends RecyclerView.ViewHolder {
 
-        public DeviceListAdapter() {
-            mDevices = StorageAdapter.getDevices();
+            public LinearLayout mContainer;
+            public ImageView mIcon;
+            public TextView mTitle;
+
+            public ConnectionViewHolder(LinearLayout container) {
+                super(container);
+                mContainer = container;
+                mIcon = (ImageView) mContainer.findViewById(R.id.list_icon);
+                mTitle = (TextView) mContainer.findViewById(R.id.list_title);
+            }
         }
 
         /**
-         * Inserts the given device into storage and notifies the mDeviceListView of a data update.
-         * @param newDevice The device to add to memory.
+         * Constructs a new DrawerLayoutAdapter using an initial list
+         * of Connections.
          */
-        public void put(Device newDevice) {
-            Preconditions.checkNotNull(newDevice);
-            mDevices.add(newDevice);
-            notifyDataSetChanged();
-        }
-
-        /**
-         * If the given device exists in storage, delete it and remove it from the mDeviceListView.
-         * @param device
-         */
-        public void delete(Device device) {
-            mDevices.remove(device);
-            notifyDataSetChanged();
+        public DrawerLayoutAdapter() {
+            //System.out.println("Data read sent");
+//            mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
+//                @Override
+//                public void onDataRead(ConnectionList data) {
+//                    System.out.println("Data read returned");
+//                    if(data != null) {
+//                        System.out.println("Data not null!");
+//                        mConnections = data;
+//                    }
+//                }
+//            });
         }
 
         @Override
-        public void notifyDataSetChanged() {
-            StorageAdapter.setDevices(mDevices);
-            super.notifyDataSetChanged();
+        public ConnectionViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LinearLayout listItem = (LinearLayout) LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.new_list_item_connection, parent, false);
+
+            return new ConnectionViewHolder(listItem);
         }
 
-        public int getCount() {
-            if (mDevices != null) {
-                return mDevices.size();
+        @Override
+        public void onBindViewHolder(ConnectionViewHolder holder, int position) {
+
+            //Set icon.
+            Drawable icon;
+            switch(mConnections.get(position).getConnectionType()) {
+                case TECIntent.CONNECTION_TYPE_BLUETOOTH:
+                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_bluetooth_black_48dp);
+                    icon.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
+                    break;
+                case TECIntent.CONNECTION_TYPE_TCPIP:
+                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_signal_wifi_4_bar_black_48dp);
+                    icon.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
+                    break;
+                default:
+                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_action_new);
+            }
+            holder.mIcon.setImageDrawable(icon);
+            holder.mTitle.setText(mConnections.get(position).getName());
+        }
+
+        @Override
+        public int getItemCount() {
+            if(mConnections != null) {
+                return mConnections.size();
             }
             return 0;
         }
+    }
 
-        public Object getItem(int position) {
-            return mDevices.get(position);
+    public class ViewPagerAdapter extends FragmentPagerAdapter {
+
+        private ArrayList<CustomFragment> fragments = new ArrayList<>();
+        ViewPager mViewPager;
+
+        public ViewPagerAdapter(ViewPager pager, FragmentManager manager) {
+            super(manager);
+            mViewPager = pager;
+
+            fragments.add(new TerminalFragment("Terminal"));
+            fragments.add(new CommandFragment("Commands"));
         }
 
-        public long getItemId(int position) {
-            return position;
+        @Override
+        public Fragment getItem(int position) {
+            return fragments.get(position);
         }
 
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            LinearLayout root;
+        @Override
+        public int getCount() {
+            return fragments.size();
+        }
 
-            //Inflate or instantiate the root view
-            if (convertView != null) {
-                root = (LinearLayout) convertView;
-            } else {
-                root = new LinearLayout(MainActivity.this);
-                LayoutInflater inflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                inflater.inflate(R.layout.list_item_device, root, true);
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return fragments.get(position).getName();
+        }
+    }
+
+    public static class CustomFragment extends Fragment {
+
+        private String mName;
+
+        public CustomFragment(String name) {
+            mName = name;
+        }
+
+        public String getName() {
+            return mName;
+        }
+    }
+
+    public static class TerminalFragment extends CustomFragment {
+
+        public TerminalFragment(String name) {
+            super(name);
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View terminalView = inflater.inflate(R.layout.fragment_terminal, container, false);
+            return terminalView;
+        }
+    }
+
+    public class CommandFragment extends CustomFragment {
+
+        public CommandFragment(String name) {
+            super(name);
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+            View commandView = inflater.inflate(R.layout.fragment_command, container, false);
+
+            //Initialize Recycler
+            RecyclerView recyclerView = (RecyclerView) commandView.findViewById(R.id.command_recycler);
+            recyclerView.setHasFixedSize(true);
+            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            recyclerView.setAdapter(new CommandAdapter());
+            return commandView;
+        }
+
+        public class CommandAdapter extends RecyclerView.Adapter<CommandAdapter.CommandViewHolder> {
+
+            public class CommandViewHolder extends RecyclerView.ViewHolder {
+
+                public LinearLayout mCommandLayout;
+
+                public CommandViewHolder(LinearLayout container) {
+                    super(container);
+                    mCommandLayout = container;
+                }
             }
 
-            //Retrieve current Device object
-            final Device device = (Device) getItem(position);
-            Preconditions.checkNotNull(device);
-
-            //Load views from xml
-            final TextView nameView = (TextView) root.findViewById(R.id.device_name);
-            TextView detailsView = (TextView) root.findViewById(R.id.device_details);
-            ImageButton deviceImageButton = (ImageButton) root.findViewById(R.id.device_image_button);
-            RelativeLayout listClickable = (RelativeLayout) root.findViewById(R.id.list_clickable);
-            ImageButton optionButton = (ImageButton) root.findViewById(R.id.device_options);
-
-            //Set the title to the device name
-            nameView.setText(device.getName());
-            detailsView.setText("Connections: " + device.getConnections().size());
-
-            //Set the image resource of the device icon button based on SDK version
-            if (Build.VERSION.SDK_INT >= 16) {
-                deviceImageButton.setBackground(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_48dp));
-            } else {
-                deviceImageButton.setImageDrawable(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_memory_black_48dp));
+            @Override
+            public CommandViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                return new CommandViewHolder(new LinearLayout(MainActivity.this));
             }
 
-            //Set action to do on device icon button pressed
-            deviceImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            @Override
+            public void onBindViewHolder(CommandViewHolder holder, int position) {
 
-                }
-            });
+            }
 
-            //Set the clickable area of the list item
-            listClickable.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
-                    intent.putExtra(TECIntent.DEVICE_UUID, ((Device) mDeviceAdapter.getItem(position)).getUUID());
-                    startActivity(intent);
-                }
-            });
-
-            //Create a popup menu to launch when the options button is pressed
-            final PopupMenu optionMenu = new PopupMenu(MainActivity.this, optionButton);
-            optionMenu.inflate(R.menu.menu_device_options);
-            optionMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    //Switch action based on clicked item
-                    switch(item.getItemId()) {
-                        case R.id.action_rename_device:
-                            new DialogRenameDevice(MainActivity.this, device).rename();
-                            return true;
-                        case R.id.action_delete_device:
-                            delete(device);
-                            return true;
-                    }
-                    return false;
-                }
-            });
-
-            //Show options menu on option button clicked
-            optionButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    optionMenu.show();
-                }
-            });
-
-            return root;
+            @Override
+            public int getItemCount() {
+                return 0;
+            }
         }
     }
 }

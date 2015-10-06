@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Created by Nick Mosher on 4/23/15.
  */
-public class ConnectionService extends Service implements ConnectionObserver {
+public class ConnectionService extends Service {
 
     private static boolean launched = false;
 
@@ -73,7 +73,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     //Received action to establish bluetooth connection
                     case TECIntent.ACTION_BLUETOOTH_CONNECT:
                         //Create callbacks for successful connection and disconnection
-                        connection.addObserver(ConnectionService.this);
+                        connection.addObserver(new ConnectionObserver() {
+                            @Override
+                            void onUpdate(Connection connection, Connection.Status status) {
+                                super.onUpdate(connection, status);
+                            }
+                        });
                         //Initiate connecting
                         new ConnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
@@ -94,7 +99,12 @@ public class ConnectionService extends Service implements ConnectionObserver {
                     //Received action to establish tcpip connection.
                     case TECIntent.ACTION_TCPIP_CONNECT:
                         //Create callbacks for successful connection and disconnection
-                        connection.addObserver(ConnectionService.this);
+                        connection.addObserver(new ConnectionObserver() {
+                            @Override
+                            void onUpdate(Connection.Status status) {
+                                //FIXME add observer handling here
+                            }
+                        });
                         //Initiate connecting.
                         new ConnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
@@ -141,44 +151,44 @@ public class ConnectionService extends Service implements ConnectionObserver {
         return launched;
     }
 
-    /**
-     * Connections are susceptible to change.  They can connect or disconnect,
-     * drop, etc. so we need to know when those changes happen.  This method
-     * is called by each connection we've subscribed to whenever something
-     * changes.
-     * @param observable The connection we're observing that's changed.
-     * @param status The status given by the connection during the change.
-     */
-    @Override
-    public void onUpdate(Connection observable, Connection.Status status) {
-
-        //If the update came from a BluetoothConnection, handle it accordingly.
-        switch (status) {
-            case Connected:
-                ReceiveDataThread newThread;
-                if(receiveThreads.containsKey(observable)) {
-                    newThread = receiveThreads.get(observable);
-                    newThread.interrupt();
-                } else {
-                    newThread = new ReceiveDataThread(observable);
-                    receiveThreads.put(observable, new ReceiveDataThread(observable));
-                }
-                newThread.start();
-                break;
-
-            case Disconnected:
-                ReceiveDataThread oldThread;
-                if(receiveThreads.containsKey(observable)) {
-                    oldThread = receiveThreads.get(observable);
-                    oldThread.interrupt();
-                    receiveThreads.remove(observable);
-                }
-                break;
-            case ConnectFailed:
-                break;
-            default:
-        }
-    }
+//    /**
+//     * Connections are susceptible to change.  They can connect or disconnect,
+//     * drop, etc. so we need to know when those changes happen.  This method
+//     * is called by each connection we've subscribed to whenever something
+//     * changes.
+//     * @param observable The connection we're observing that's changed.
+//     * @param status The status given by the connection during the change.
+//     */
+//    @Override
+//    public void onUpdate(Connection observable, Connection.Status status) {
+//
+//        //If the update came from a BluetoothConnection, handle it accordingly.
+//        switch (status) {
+//            case Connected:
+//                ReceiveDataThread newThread;
+//                if(receiveThreads.containsKey(observable)) {
+//                    newThread = receiveThreads.get(observable);
+//                    newThread.interrupt();
+//                } else {
+//                    newThread = new ReceiveDataThread(observable);
+//                    receiveThreads.put(observable, new ReceiveDataThread(observable));
+//                }
+//                newThread.start();
+//                break;
+//
+//            case Disconnected:
+//                ReceiveDataThread oldThread;
+//                if(receiveThreads.containsKey(observable)) {
+//                    oldThread = receiveThreads.get(observable);
+//                    oldThread.interrupt();
+//                    receiveThreads.remove(observable);
+//                }
+//                break;
+//            case ConnectFailed:
+//                break;
+//            default:
+//        }
+//    }
 
     private void sendData(Connection connection, String data) {
         if(data != null && !data.equals("")) {

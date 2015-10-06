@@ -3,7 +3,11 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 import android.content.Context;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -17,6 +21,17 @@ import java.util.UUID;
  */
 public abstract class Connection {
 
+    private transient List<ConnectionObserver> mObservers = new ArrayList<>();
+
+    public enum Status {
+        Connected,
+        Disconnected,
+        Connecting,
+        ConnectFailed,
+        ConnectCanceled,
+        DataChanged
+    }
+
     /**
      * Static maps stores all constructed connections.  This way we
      * can reference them from different activities without needing
@@ -25,31 +40,15 @@ public abstract class Connection {
     protected static transient Map<UUID, Connection> connections = new HashMap<>();
 
     /**
-     * Holds references to observers.  Transient to avoid being parsed to Json.
-     */
-    private transient List<ConnectionObserver> observers = new ArrayList<>();
-
-    /**
-     * Status to specify to observers what kind of update is occurring.
-     */
-    public enum Status {
-        Connected,
-        Connecting,
-        Disconnected,
-        ConnectFailed,
-        ConnectCanceled
-    }
-
-    /**
      * The immutable name of this Connection.
      */
-    private final String mConnectionName;
+    protected final String mName;
 
     /**
      * A unique identifier for this Connection, used as a reliable key
      * for storing and retrieving data from static Maps.
      */
-    protected transient final UUID mUUID;
+    protected final UUID mUUID;
 
     /**
      * Keeps track of the status of the connectivity.  Transient
@@ -63,7 +62,17 @@ public abstract class Connection {
      * @param name The name of the connection.
      */
     public Connection(String name) {
-        mConnectionName = Preconditions.checkNotNull(name);
+        mName = Preconditions.checkNotNull(name);
+        mUUID = UUID.randomUUID();
+        connections.put(mUUID, this);
+    }
+
+    /**
+     * No-argument constructor made private so that Gson can correctly
+     * build this object and then populate the members with Json data.
+     */
+    protected Connection() {
+        mName = null;
         mUUID = UUID.randomUUID();
         connections.put(mUUID, this);
     }
@@ -73,7 +82,7 @@ public abstract class Connection {
      * @return The name of this connection.
      */
     public String getName() {
-        return this.mConnectionName;
+        return this.mName;
     }
 
     /**
@@ -170,23 +179,14 @@ public abstract class Connection {
         return c.getUUID().equals(this.getUUID());
     }
 
-    /**
-     * Adds an observer object to our list.  All observers are notified of relevant updates.
-     * @param observer The new observer to keep track of.
-     */
     public void addObserver(ConnectionObserver observer) {
-        if(observer == null) {
-            throw new NullPointerException("Observer is null!");
-        }
-        synchronized (this) {
-            if(!observers.contains(observer)) {
-                observers.add(observer);
-            }
+        if(!mObservers.contains(observer)) {
+            mObservers.add(observer);
         }
     }
 
     public void notifyObservers(Status status) {
-        for(ConnectionObserver observer : observers) {
+        for(ConnectionObserver observer : mObservers) {
             observer.onUpdate(this, status);
         }
     }

@@ -14,13 +14,8 @@
         android:label="@string/app_name"
         android:theme="@style/MyTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".OldMainActivity"
             android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
 
         <activity
@@ -41,16 +36,13 @@
                 android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
         </activity>
 
-        <!--Temporary only-->
-        <!--Temporary only-->
-
         <activity
             android:name=".DeviceActivity"
             android:label="Manage Device Connections"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".OldMainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.tec_hub.tecuniversalcomm.MainActivity"/>
+                android:value=".OldMainActivity"/>
         </activity>
 
         <activity
@@ -64,11 +56,13 @@
         </activity>
 
         <activity
-            android:name=".NewTerminalActivity"
+            android:name=".MainActivity"
             android:parentActivityName=".DeviceActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.tec_hub.tecuniversalcomm.DeviceActivity"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
 
         <service

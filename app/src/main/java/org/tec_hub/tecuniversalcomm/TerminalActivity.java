@@ -32,7 +32,7 @@ import java.io.UnsupportedEncodingException;
  * Created by Nick Mosher on 4/13/15.
  * Opens a terminal-like interface for sending data over an established connection.
  */
-public class TerminalActivity extends AppCompatActivity implements ConnectionObserver {
+public class TerminalActivity extends AppCompatActivity {
 
     private Connection mConnection;
     private Drawable mConnectedIcon;
@@ -128,7 +128,35 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
         mTerminalSend.setBackgroundColor(ContextCompat.getColor(this, R.color.colorAccent));
 
         //Set a listener to accordingly change the status of the connection indicator
-        mConnection.addObserver(this);
+        mConnection.addObserver(new ConnectionObserver() { //FIXME not overriding
+            /**
+             * Callback method lets us update the Activity based on changing Connection
+             * statuses.
+             * @param observable The Connection that we're observing.
+             * @param cue The flag that tells what update is occurring.
+             */
+            public void onUpdate(Connection observable, Connection.Status cue) {
+                switch(cue) {
+                    case Connected:
+                        if (mConnectionIndicator != null) {
+                            mConnectionIndicator.setIcon(mConnectedIcon);
+                        }
+                        break;
+                    case Disconnected:
+                        if (mConnectionIndicator != null) {
+                            mConnectionIndicator.setIcon(mDisconnectedIcon);
+                        }
+                        break;
+                    case ConnectFailed:
+                        if(mConnectionIndicator != null) {
+                            mConnectionIndicator.setIcon(mDisconnectedIcon);
+                        }
+                        break;
+                    default:
+                }
+//                super.onUpdate(observable, cue);
+            }
+        });
 
         //Set up an intent filter to alert us if there's new data incoming from the connection.
         IntentFilter intentFilter = new IntentFilter();
@@ -210,33 +238,6 @@ public class TerminalActivity extends AppCompatActivity implements ConnectionObs
 
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    /**
-     * Callback method lets us update the Activity based on changing Connection
-     * statuses.
-     * @param observable The Connection that we're observing.
-     * @param cue The flag that tells what update is occurring.
-     */
-    public void onUpdate(Connection observable, Connection.Status cue) {
-        switch(cue) {
-            case Connected:
-                if (mConnectionIndicator != null) {
-                    mConnectionIndicator.setIcon(mConnectedIcon);
-                }
-                break;
-            case Disconnected:
-                if (mConnectionIndicator != null) {
-                    mConnectionIndicator.setIcon(mDisconnectedIcon);
-                }
-                break;
-            case ConnectFailed:
-                if(mConnectionIndicator != null) {
-                    mConnectionIndicator.setIcon(mDisconnectedIcon);
-                }
-                break;
-            default:
         }
     }
 

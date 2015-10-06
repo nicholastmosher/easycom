@@ -63,7 +63,7 @@ public class StorageAdapter implements DeviceObserver {
         mDeviceListType = new TypeToken<DeviceList>(){}.getType();
         mConnectionListType = new TypeToken<ConnectionList>(){}.getType();
 
-        mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());;
+        //mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());
         mGson = mGsonBuilder.create();
     }
 
@@ -89,6 +89,14 @@ public class StorageAdapter implements DeviceObserver {
      */
     public static void putDevice(Device device) {
         mHandler.post(new AddDeviceTask(device));
+    }
+
+    /**
+     * Adds a list of connections to storage.
+     * @param connections The connections to store.
+     */
+    public static void putConnections(ConnectionList connections) {
+
     }
 
     /**
@@ -178,7 +186,7 @@ public class StorageAdapter implements DeviceObserver {
 
             //If there was no data received, return the empty List.
             String jsonFile = stringBuilder.toString();
-            System.out.println("Read: " + jsonFile);
+            System.out.println("Read json data: " + jsonFile);
             if(jsonFile.equals("")) {
                 return devices;
             }
@@ -274,166 +282,6 @@ public class StorageAdapter implements DeviceObserver {
             Preconditions.checkNotNull(fileDevices);
             fileDevices.remove(mDevice);
             writeDevicesToFile(fileDevices);
-        }
-    }
-
-    /**
-     * Special class implementing GSON's TypeAdapter.  This is used to tell
-     * GSON exactly how to serialize and deserialize Connection Lists.
-     */
-    private static final class ConnectionListTypeAdapter extends TypeAdapter<ConnectionList> {
-
-        /**
-         * Name key of all Connections.
-         */
-        public static final String CONNECTION_NAME = "name";
-
-        /**
-         * Key of Connection Implementation.
-         */
-        public static final String CONNECTION_IMP = "imp";
-
-        /**
-         * Key of Connection Universal Identifier.
-         */
-        public static final String CONNECTION_UUID = "uuid";
-
-        //Implementations of Connection
-        /**
-         * Implementation key of Bluetooth Connections.
-         */
-        public static final String IMP_BLUETOOTH = "impBt";
-
-        /**
-         * Implementation key of TCPIP Conncetions.
-         */
-        public static final String IMP_TCPIP = "impTcp";
-
-        //BluetoothConnection specific data
-        /**
-         * Key to store BluetoothConnection address.
-         */
-        public static final String BLUETOOTH_ADDRESS = "btAddr";
-
-        //TcpIpConnection specific data
-        /**
-         * Key to store TcpIp remote Ip.
-         */
-        public static final String TCPIP_IP = "tcpIp";
-
-        /**
-         * Key to store TcpIp remote Port.
-         */
-        public static final String TCPIP_PORT = "tcpPort";
-
-        /**
-         * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
-         * @param writer The JsonWriter to write the objects into.
-         * @param connections The Connections data to convert into JSON.
-         * @throws IOException
-         */
-        @Override
-        public void write(JsonWriter writer, ConnectionList connections) throws IOException {
-            //Begin array of Connections
-            writer.beginArray();
-            for(Connection connection : connections) {
-                Preconditions.checkNotNull(connection);
-
-                //Begin this Connection
-                writer.beginObject();
-                writer.name(CONNECTION_NAME).value(connection.getName()); //Write connection name
-
-                //Write all properties specific to BluetoothConnections.
-                if(connection instanceof BluetoothConnection) {
-                    BluetoothConnection btConnection = (BluetoothConnection) connection;
-                    writer.name(CONNECTION_IMP).value(IMP_BLUETOOTH); //Write connection implementation
-                    writer.name(BLUETOOTH_ADDRESS).value(btConnection.getAddress()); //Write BluetoothConnection address
-
-                //Write all properties specific to TcpIpConnections.
-                } else if(connection instanceof TcpIpConnection) {
-                    TcpIpConnection tcpIpConnection = (TcpIpConnection) connection;
-                    writer.name(CONNECTION_IMP).value(IMP_TCPIP);
-                    writer.name(TCPIP_IP).value(tcpIpConnection.getServerIp());
-                    writer.name(TCPIP_PORT).value(tcpIpConnection.getServerPort());
-                }
-
-                //End this Connection
-                writer.endObject();
-            }
-            //End array of Connections
-            writer.endArray();
-        }
-
-        /**
-         * Parses data from a JsonReader back into a List of Connections.
-         * @param reader The source of a JSON string to convert.
-         * @return A List of Connections parsed from the reader.
-         * @throws IOException
-         */
-        @Override
-        public ConnectionList read(JsonReader reader) throws IOException {
-            ConnectionList connections = new ConnectionList();
-
-            //Begin array of Connections
-            reader.beginArray();
-            while(reader.hasNext()) {
-                //Create local variables as a cache to build a Connection
-                String connectionName = null;
-                String imp = null;
-                String btAddr = null;
-                String tcpIp = null;
-                int tcpPort = -1;
-
-                //Begin this Connection
-                reader.beginObject();
-                while(reader.hasNext()) {
-                    String name = reader.nextName();
-                    switch(name) {
-                        case CONNECTION_NAME: //Read Connection name
-                            connectionName = reader.nextString();
-                            break;
-                        case CONNECTION_IMP: //Read Connection implementation
-                            imp = reader.nextString();
-                            break;
-                        case BLUETOOTH_ADDRESS: //Read BluetoothConnection address
-                            btAddr = reader.nextString();
-                            break;
-                        case TCPIP_IP:
-                            tcpIp = reader.nextString();
-                            break;
-                        case TCPIP_PORT:
-                            tcpPort = reader.nextInt();
-                            break;
-                        default:
-                    }
-                }
-                //End this Connection
-                reader.endObject();
-
-                //Parse Connection data into object
-                Connection connection = null;
-                Preconditions.checkNotNull(connectionName);
-                Preconditions.checkNotNull(imp);
-
-                if(imp.equals(IMP_BLUETOOTH)) { //If this Connection is a BluetoothConnection
-                    Preconditions.checkNotNull(btAddr);
-                    connection = new BluetoothConnection(connectionName, btAddr);
-
-                } else if(imp.equals(IMP_TCPIP)) {
-                    Preconditions.checkNotNull(tcpIp);
-                    if(tcpPort == -1) throw new IllegalStateException("Port was not read!");
-                    connection = new TcpIpConnection(connectionName, tcpIp, tcpPort);
-                }
-
-                if(connection != null) {
-                    connections.add(connection);
-                } else {
-                    System.err.println("Failed to read connection: " + connectionName);
-                }
-            }
-            //End array of Connections
-            reader.endArray();
-            return connections;
         }
     }
 }

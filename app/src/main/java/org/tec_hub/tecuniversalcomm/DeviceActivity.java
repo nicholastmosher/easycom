@@ -302,26 +302,26 @@ public class DeviceActivity extends AppCompatActivity {
                         iconConnected : iconDisconnected);
 
                 //Set callback for connection status changed to change icon
-                bluetoothConnection.addObserver(new ConnectionObserver() {
-                    @Override
-                    public void onUpdate(Connection observable, Connection.Status cue) {
-                        switch (cue) {
-                            case Connected:
-                                setImageButtonDrawable(iconButton, iconConnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            case Disconnected:
-                                setImageButtonDrawable(iconButton, iconDisconnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            case ConnectFailed:
-                                setImageButtonDrawable(iconButton, iconDisconnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            default:
-                        }
-                    }
-                });
+//                bluetoothConnection.addObserver(new ConnectionObserver() {
+//                    @Override
+//                    public void onUpdate(Connection observable, Connection.Status cue) {
+//                        switch (cue) {
+//                            case Connected:
+//                                setImageButtonDrawable(iconButton, iconConnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            case Disconnected:
+//                                setImageButtonDrawable(iconButton, iconDisconnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            case ConnectFailed:
+//                                setImageButtonDrawable(iconButton, iconDisconnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            default:
+//                        }
+//                    }
+//                });
 
                 //Set action to do on icon button click
                 iconButton.setOnClickListener(new View.OnClickListener() {
@@ -345,7 +345,7 @@ public class DeviceActivity extends AppCompatActivity {
                 listClickable.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent terminalIntent = new Intent(DeviceActivity.this, NewTerminalActivity.class);
+                        Intent terminalIntent = new Intent(DeviceActivity.this, MainActivity.class);
                         terminalIntent.putExtra(TECIntent.CONNECTION_UUID, bluetoothConnection.getUUID());
                         terminalIntent.putExtra(TECIntent.CONNECTION_TYPE, TECIntent.CONNECTION_TYPE_BLUETOOTH);
                         startActivity(terminalIntent);
@@ -406,26 +406,26 @@ public class DeviceActivity extends AppCompatActivity {
                         iconConnected : iconDisconnected);
 
                 //Define callbacks for when the connection's status changes in order to update the view.
-                tcpIpConnection.addObserver(new ConnectionObserver() {
-                    @Override
-                    public void onUpdate(Connection observable, Connection.Status cue) {
-                        switch (cue) {
-                            case Connected:
-                                setImageButtonDrawable(iconButton, iconConnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            case Disconnected:
-                                setImageButtonDrawable(iconButton, iconDisconnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            case ConnectFailed:
-                                setImageButtonDrawable(iconButton, iconDisconnected);
-                                progressIndicator.setVisibility(View.GONE);
-                                break;
-                            default:
-                        }
-                    }
-                });
+//                tcpIpConnection.addObserver(new ConnectionObserver() {
+//                    @Override
+//                    public void onUpdate(Connection observable, Connection.Status cue) {
+//                        switch (cue) {
+//                            case Connected:
+//                                setImageButtonDrawable(iconButton, iconConnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            case Disconnected:
+//                                setImageButtonDrawable(iconButton, iconDisconnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            case ConnectFailed:
+//                                setImageButtonDrawable(iconButton, iconDisconnected);
+//                                progressIndicator.setVisibility(View.GONE);
+//                                break;
+//                            default:
+//                        }
+//                    }
+//                });
 
                 //Set action to do on icon button click
                 iconButton.setOnClickListener(new View.OnClickListener() {

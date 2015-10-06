@@ -1,8 +1,6 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
@@ -16,9 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 9/15/15.
@@ -50,6 +45,15 @@ public class TcpIpConnection extends Connection {
         super(name);
         mServerIp = ip; //TODO add a way to verify IP layout
         mServerPort = port; //TODO add a way to check port bounds
+    }
+
+    /**
+     * No-argument constructor made private so that Gson can correctly
+     * build this object and then populate the members with Json data.
+     */
+    protected TcpIpConnection() {
+        mServerIp = null;
+        mServerPort = -1;
     }
 
     /**
@@ -200,5 +204,10 @@ public class TcpIpConnection extends Connection {
         } else {
             throw new NullPointerException("TCP/IP socket is null!");
         }
+    }
+
+    @Override
+    public String toString() {
+        return mName + ", " + mServerIp + ":" + mServerPort;
     }
 }

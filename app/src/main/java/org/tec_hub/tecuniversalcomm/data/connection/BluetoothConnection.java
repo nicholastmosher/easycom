@@ -2,8 +2,6 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
@@ -16,8 +14,6 @@ import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -33,7 +29,7 @@ public class BluetoothConnection extends Connection {
     /**
      * The MAC Address of the remote bluetooth device for this Connection.
      */
-    private final String mBluetoothAddress;
+    private String mAddress;
 
     /**
      * The Bluetooth Socket used to communicate to the remote device.
@@ -47,7 +43,16 @@ public class BluetoothConnection extends Connection {
      */
     public BluetoothConnection(String name, String address) {
         super(Preconditions.checkNotNull(name));
-        mBluetoothAddress = Preconditions.checkNotNull(address);
+        mAddress = Preconditions.checkNotNull(address);
+    }
+
+    /**
+     * No-argument constructor made private so that Gson can correctly
+     * build this object and then populate the members with Json data.
+     */
+    protected BluetoothConnection() {
+        super();
+        mAddress = null;
     }
 
     /**
@@ -170,7 +175,7 @@ public class BluetoothConnection extends Connection {
      * @return A Bluetooth MAC Address.
      */
     public String getAddress() {
-        return mBluetoothAddress;
+        return mAddress;
     }
 
     /**
@@ -193,5 +198,10 @@ public class BluetoothConnection extends Connection {
         } else {
             throw new NullPointerException("Bluetooth Socket is null!");
         }
+    }
+
+    @Override
+    public String toString() {
+        return mName + ", " + mAddress;
     }
 }
