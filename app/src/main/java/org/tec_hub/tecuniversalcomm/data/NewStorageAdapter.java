@@ -277,8 +277,12 @@ public class NewStorageAdapter {
                     }
                     String json = builder.toString();
                     System.out.println("Read json data: (" + json + ")");
-                    if(json.equals("")) return null;
+                    if(json.equals("")) {
+                        System.out.println("RETURNING NULL");
+                        return null;
+                    }
 
+                    System.out.println("About to construct data: ");
                     data = mGson.fromJson(json, mDataType);
                     System.out.println("Constructed json data: " + data.toString());
                     return data;

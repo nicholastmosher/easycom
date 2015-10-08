@@ -49,34 +49,6 @@ public class MainActivity extends AppCompatActivity {
         mConnectionAdapter = NewStorageAdapter.getInstance(this)
                 .getDataAdapter(ConnectionList.class, "Connections", ConnectionList.getTypeAdapter());
 
-        final ConnectionList mConnections = new ConnectionList();
-        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
-        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
-        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
-        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
-        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
-        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
-        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
-        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
-        mConnections.add(new BluetoothConnection("Bluetooth", "Address"));
-        mConnections.add(new TcpIpConnection("TCP/IP", "IP", 7777));
-
-        System.out.println("Writing connections: " + mConnections.toString());
-        mConnectionAdapter.write(mConnections, new NewStorageAdapter.DataEventListener<ConnectionList>() {
-            @Override
-            public void onDataWrite(final ConnectionList data) {
-                super.onDataWrite(data);
-                System.out.println("Finished writing data.");
-
-                mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
-                    @Override
-                    public void onDataRead(ConnectionList data) {
-                        System.out.println("Read data: " + data.toString());
-                    }
-                });
-            }
-        });
-
         //Initialize Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.terminal_toolbar);
         toolbar.setTitle("Title");
@@ -142,17 +114,14 @@ public class MainActivity extends AppCompatActivity {
          * of Connections.
          */
         public DrawerLayoutAdapter() {
-            //System.out.println("Data read sent");
-//            mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
-//                @Override
-//                public void onDataRead(ConnectionList data) {
-//                    System.out.println("Data read returned");
-//                    if(data != null) {
-//                        System.out.println("Data not null!");
-//                        mConnections = data;
-//                    }
-//                }
-//            });
+            mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
+                @Override
+                public void onDataRead(ConnectionList data) {
+                    if(data != null) {
+                        mConnections = data;
+                    }
+                }
+            });
         }
 
         @Override

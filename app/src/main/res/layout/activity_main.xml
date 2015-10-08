@@ -66,15 +66,23 @@
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="#FFFFFF">
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="75dp"
             android:padding="20dp"
-            android:background="#FFFFFF"
             android:text="Connections"
             android:textSize="24sp"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/add_connection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            app:elevation="6dp"
+            app:pressedTranslationZ="12dp"/>
 
         <View
             android:layout_width="match_parent"
@@ -85,8 +93,7 @@
             android:id="@+id/drawer_recycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scrollbars="vertical"
-            android:background="#FFFFFF"/>
+            android:scrollbars="vertical"/>
 
     </LinearLayout>
 
