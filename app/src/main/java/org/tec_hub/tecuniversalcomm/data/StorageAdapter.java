@@ -1,24 +1,12 @@
 package org.tec_hub.tecuniversalcomm.data;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.HandlerThread;
+import android.database.DataSetObserver;
+import android.os.AsyncTask;
 
-import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.data.connection.Connection;
-import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.data.device.Device;
-import org.tec_hub.tecuniversalcomm.data.device.DeviceList;
-import org.tec_hub.tecuniversalcomm.data.device.DeviceObserver;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,260 +16,293 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Created by Nick Mosher on 3/2/2015.
- * This class manages all persistent data of the application.
- * The mode of data storage is through GSON to files
- * where object data is kept.
+ * Created by Nick Mosher on 10/3/15.
  */
-public class StorageAdapter implements DeviceObserver {
-    public static final String FILE_DEVICES = "devices.ser";
+public class StorageAdapter {
 
-    private static File mDevicesFolder;
-    private static File mDevicesFile;
-    private static HandlerThread mHandlerThread;
-    private static Handler mHandler;
-    private static GsonBuilder mGsonBuilder;
-    private static Type mDeviceListType;
-    private static Type mConnectionListType;
-    private static Gson mGson;
+    private static StorageAdapter STORAGE_ADAPTER;
 
-    public static final StorageAdapter OBSERVER = new StorageAdapter();
+    private Context mContext;
+    private File mDataFolder;
 
-    /*
-     * Since the StorageAdapter is used entirely statically, this
-     * initializes all values so we don't get any null pointer
-     * exceptions.
+    /**
+     * Constructor for singleton style Storage Adapter.
+     * @param context The context of the caller.
      */
-    static {
-        mHandlerThread = new HandlerThread("StorageAdapter Handler Thread");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-
-        mGsonBuilder = new GsonBuilder();
-        mDeviceListType = new TypeToken<DeviceList>(){}.getType();
-        mConnectionListType = new TypeToken<ConnectionList>(){}.getType();
-
-        //mGsonBuilder.registerTypeAdapter(mConnectionListType, new ConnectionListTypeAdapter());
-        mGson = mGsonBuilder.create();
+    private StorageAdapter(Context context) {
+        mContext = context;
+        mDataFolder = mContext.getFilesDir();
     }
 
     /**
-     * Initializes the StorageAdapter within a certain context.  This is
-     * how the StorageAdapter has access to the filesystem and such.
-     * @param context The context of the application.
+     * Singleton retriever for Storage Adapter.
+     * @param context The context of the caller.
+     * @return The singleton instance of the Storage Adapter.
      */
-    public static void init(Context context) {
-        mDevicesFolder = context.getFilesDir();
-        mDevicesFile = new File(mDevicesFolder, FILE_DEVICES);
-        try {
-            //If the file to store device data in doesn't exist, create it.
-            mDevicesFile.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static StorageAdapter getInstance(Context context) {
+        if(STORAGE_ADAPTER == null) {
+            STORAGE_ADAPTER = new StorageAdapter(context);
         }
+        return STORAGE_ADAPTER;
     }
 
     /**
-     * Adds a device to place in storage.
-     * @param device The new or updated device to put to persistent storage.
+     * Data Adapters have a pseudo-singleton model.  If a new type is
+     * passed, a new Data Adapter is created, but if a previously-used
+     * type is passed, the existing Data Adapter is returned.
+     * @param type The type of Data Adapter.
+     * @param <T> The type of Data Adapter.
+     * @param adapter A custom TypeAdapter for Gson to use to encode/decode json.
+     * @param name The name of the Data Adapter.
+     * @return The Data Adapter.
      */
-    public static void putDevice(Device device) {
-        mHandler.post(new AddDeviceTask(device));
+    public <T> DataAdapter<T> getDataAdapter(Class<T> type, String name, TypeAdapter<T> adapter) {
+        return DataAdapter.getDataAdapter(type, name, adapter);
     }
 
     /**
-     * Adds a list of connections to storage.
-     * @param connections The connections to store.
+     * Data Adapters have a pseudo-singleton model.  If a new type is
+     * passed, a new Data Adapter is created, but if a previously-used
+     * type is passed, the existing Data Adapter is returned.
+     * @param type The type of Data Adapter.
+     * @param <T> The type of Data Adapter.
+     * @param name The name of the Data Adapter.
+     * @return The Data Adapter.
      */
-    public static void putConnections(ConnectionList connections) {
-
+    public <T> DataAdapter<T> getDataAdapter(Class<T> type, String name) {
+        return DataAdapter.getDataAdapter(type, name);
     }
 
     /**
-     * Removes a specified device from storage.
-     * @param device The device object to find and remove from persistent storage.
+     * Data Adapters have a pseudo-singleton model.  If a new type is
+     * passed, a new Data Adapter is created, but if a previously-used
+     * type is passed, the existing Data Adapter is returned.
+     * @param type The type of Data Adapter.
+     * @param <T> The type of Data Adapter.
+     * @return The Data Adapter.
      */
-    public static void deleteDevice(Device device) {
-        mHandler.post(new RemoveDeviceTask(device));
+    public <T> DataAdapter<T> getDataAdapter(Class<T> type) {
+        return DataAdapter.getDataAdapter(type);
     }
 
     /**
-     * Puts the specified list of devices as the sole object in persistent storage.
-     * @param devices The list of devices to write to disk.
+     * Defines a listener that external entities can use to receive
+     * updates about when data transfers are complete.
+     * @param <T>
      */
-    public static void setDevices(DeviceList devices) {
-        mHandler.post(new WriteDevicesTask(devices));
-    }
-
-    public static DeviceList getDevices() {
-        return readDevicesFromFile();
-    }
-
-    /**
-     * StorageAdapter has a singleton instance whose sole purpose is to
-     * act as a DeviceObserver.  This method is the only non-static
-     * function in this class, and it's being hacked to be essentially
-     * static.  Every device adds StorageAdapter as an observer, and
-     * whenever a change is made to a Device's data this method is called
-     * so we can reflect those changes in storage.
-     * @param observable The Device whose data has changed.
-     * @param cue A flag representing the type of change.
-     */
-    @Override
-    public void onUpdate(Device observable, Device.Status cue) {
-        StorageAdapter.update(observable, cue);
+    public static abstract class DataEventListener<T> {
+        public void onDataRead(T data) { }
+        public void onDataWrite(T data) { }
     }
 
     /**
-     * Static method behind the object-instance onUpdate method.  Writes
-     * changes to Device data to storage file.
-     * @param observable The Device whose data has changed.
-     * @param status A flag representing the type of change.
+     * Allows us to create objects that will read from and write to
+     * files in persistent storage.  Each DataAdapter has a unique
+     * @param <T>
      */
-    private static void update(Device observable, Device.Status status) {
-        putDevice(observable);
-    }
+    public static class DataAdapter<T> extends DataSetObserver {
 
-    /**
-     * Writes the given List of devices to the persistent storage file.
-     * This overwrites the existing storage.
-     * @param devices The List of devices being stored.
-     */
-    private static void writeDevicesToFile(DeviceList devices) {
-        Preconditions.checkNotNull(devices);
-        wipeDevicesFile();
-        if(mDevicesFile.exists()) {
-            String json = mGson.toJson(devices);
-            System.out.println("Wrote: " + json);
+        private static Map<String, DataAdapter<?>> adapters = new HashMap<>();
+
+        private Type mDataType;
+        private File mDataFile;
+        private Gson mGson;
+
+        private DataAdapter(Class<T> type, String name, TypeAdapter<T> adapter) {
+            mDataType = type;
+            mDataFile = new File(STORAGE_ADAPTER.mDataFolder, name);
+            GsonBuilder builder = new GsonBuilder();
+            builder.registerTypeAdapter(type, adapter);
+            mGson = builder.create();
+        }
+
+        private DataAdapter(Class<T> type, String name) {
+            mDataType = type;
+            mDataFile = new File(STORAGE_ADAPTER.mDataFolder, name);
+            mGson = new Gson();
+        }
+
+        private DataAdapter(Class<T> type) {
+            this(type, type.toString());
+        }
+
+        public static <T> DataAdapter<T> getDataAdapter(Class<T> type, String name, TypeAdapter<T> adapter) {
+            //If we already have a DataAdapter of this type, return it.
+            if(adapters.containsKey(name)) {
+                //The fact that the adapters are stored by their type makes this safe.
+                return (DataAdapter<T>) adapters.get(name);
+
+            //If we don't have a DataAdapter of this type, create one and add it and return it.
+            } else {
+                DataAdapter<T> dataAdapter = new DataAdapter<>(type, name, adapter);
+                adapters.put(name, dataAdapter);
+                return dataAdapter;
+            }
+        }
+
+        public static <T> DataAdapter<T> getDataAdapter(Class<T> type, String name) {
+            //If we already have a DataAdapter of this type, return it.
+            if(adapters.containsKey(name)) {
+                //The fact that the adapters are stored by their type makes this safe.
+                return (DataAdapter<T>) adapters.get(name);
+
+                //If we don't have a DataAdapter of this type, create one and add it and return it.
+            } else {
+                DataAdapter<T> dataAdapter = new DataAdapter<>(type, name);
+                adapters.put(name, dataAdapter);
+                return dataAdapter;
+            }
+        }
+
+        public static <T> DataAdapter<T> getDataAdapter(Class<T> type) {
+            return getDataAdapter(type, type.toString());
+        }
+
+        /**
+         * Initiates an asynchronous task to write the given
+         * data to storage.
+         * @param data The data to write.
+         */
+        public void write(T data) {
+            new WriteTask(data).execute();
+        }
+
+        /**
+         * Initiate an asynchronous task to write the given data
+         * to storage
+         * @param data The data to write to file.
+         * @param listener Listener that notifies when write is finished.
+         */
+        public void write(T data, DataEventListener<T> listener) {
+            new WriteTask(data, listener).execute();
+        }
+
+        /**
+         * Initiates an asynchronous task to read data from
+         * this DataAdapter's file.  Callers provide a
+         * DataEventListener which is used to deliver the
+         * parsed data.
+         * @param listener The listener to deliver the data to.
+         */
+        public void read(DataEventListener<T> listener) {
+            new ReadTask(listener).execute();
+        }
+
+        /**
+         * Erases this Data Adapter's data file.
+         */
+        public void wipeFile() {
             try {
-                FileOutputStream fileOutputStream = new FileOutputStream(mDevicesFile, true);
-                fileOutputStream.write(json.getBytes());
-                fileOutputStream.close();
+                new PrintWriter(mDataFile).close();
             } catch(IOException e) {
                 e.printStackTrace();
             }
         }
-    }
 
-    /**
-     * Returns a List of devices retrieved from the persistent data file.
-     * @return a List of devices retrieved from the persistent data file.
-     */
-    private static DeviceList readDevicesFromFile() {
-        DeviceList devices = new DeviceList();
-        try {
-            //Reads a file line-by-line
-            BufferedReader bufferedReader = new BufferedReader(
-                             new InputStreamReader(
-                             new FileInputStream(mDevicesFile)));
+        public class WriteTask extends AsyncTask<Void, Void, T> {
 
-            //Read each line of the file into a buffer
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
+            private T mData;
+            private DataEventListener<T> mListener;
+
+            public WriteTask(T data) {
+                mData = data;
             }
 
-            //If there was no data received, return the empty List.
-            String jsonFile = stringBuilder.toString();
-            System.out.println("Read json data: " + jsonFile);
-            if(jsonFile.equals("")) {
-                return devices;
+            public WriteTask(T data, DataEventListener<T> listener) {
+                this(data);
+                mListener = listener;
             }
 
-            DeviceList temp = mGson.fromJson(jsonFile, mDeviceListType);
-            Preconditions.checkNotNull(temp);
-            devices = temp;
+            /**
+             * Actually performs data writing.
+             * @param params Null in this case.
+             * @return True if written successfully, false otherwise.
+             */
+            @Override
+            protected T doInBackground(Void... params) {
+                wipeFile();
+                if(!mDataFile.exists()) {
+                    try {
+                        mDataFile.createNewFile();
+                        System.out.println("Successfully created new DataFile " + mDataFile.toString());
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
 
-            //Since these devices are magically assembled by Gson, we need to manually init them.
-            for(Device d : devices) {
-                d.init();
+                String json = mGson.toJson(mData);
+                try {
+                    FileOutputStream fos = new FileOutputStream(mDataFile, true);
+                    fos.write(json.getBytes());
+                    fos.close();
+                    return mData;
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
-        } catch(IOException | IllegalStateException ioe) {
-            ioe.printStackTrace();
-        }
-        return devices;
-    }
 
-    /**
-     * Wipes all data from the persistent data file.
-     */
-    public static void wipeDevicesFile() {
-        try {
-            new PrintWriter(mDevicesFile).close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Building block class meant to be passed to StorageAdapter's Handler,
-     * which runs on a separate thread so that this heavy lifting doesn't
-     * interfere with the main UI thread.
-     */
-    private static class AddDeviceTask implements Runnable {
-        private Device mDevice;
-
-        /**
-         * Constructs a new AddDeviceTask with a reference to a device to
-         * write to the persistent data file.
-         * @param device The device to write to storage.
-         */
-        public AddDeviceTask(Device device) {
-            mDevice = Preconditions.checkNotNull(device);
+            @Override
+            protected void onPostExecute(T data) {
+                super.onPostExecute(data);
+                mListener.onDataWrite(data);
+            }
         }
 
-        /**
-         * Checks to see if the given device exists in the persistent data.
-         * If it does, then it replaces the device instance from the file
-         * input with the new, updated version of the device, then rewrites
-         * it to the storage file.  Otherwise, it adds the device to a new
-         * index of the List that will then be written back to the file.
-         */
-        @Override
-        public void run() {
-            DeviceList fileDevices = readDevicesFromFile();
-            fileDevices.add(mDevice);
-            writeDevicesToFile(fileDevices);
-        }
-    }
+        public class ReadTask extends AsyncTask<Void, Void, T> {
 
-    /**
-     * This class can be instantiated to run on a handler in a different thread.
-     * At construction, this class takes a List of Devices and writes it into
-     * the persistent storage, erasing all previous data.
-     */
-    private static class WriteDevicesTask implements Runnable {
-        private DeviceList mDevices;
-        public WriteDevicesTask(DeviceList devices) {
-            mDevices = devices;
-        }
+            private DataEventListener<T> mListener;
 
-        @Override
-        public void run() {
-            writeDevicesToFile(mDevices);
-        }
-    }
+            public ReadTask(DataEventListener<T> listener) {
+                mListener = listener;
+            }
 
-    /**
-     * Building block class meant to be passed to StorageAdapter's Handler,
-     * which runs on a separate thread so that this heavy lifting doesn't
-     * interfere with the main UI thread.
-     */
-    private static class RemoveDeviceTask implements Runnable {
-        private Device mDevice;
-        public RemoveDeviceTask(Device device) {
-            mDevice = Preconditions.checkNotNull(device);
-        }
+            @Override
+            protected T doInBackground(Void... params) {
+                T data;
+                try {
+                    BufferedReader br = new BufferedReader(
+                                        new InputStreamReader(
+                                        new FileInputStream(mDataFile)));
 
-        @Override
-        public synchronized void run() {
-            DeviceList fileDevices = readDevicesFromFile();
-            Preconditions.checkNotNull(fileDevices);
-            fileDevices.remove(mDevice);
-            writeDevicesToFile(fileDevices);
+                    StringBuilder builder = new StringBuilder();
+                    String line;
+                    while((line = br.readLine()) != null) {
+                        builder.append(line);
+                    }
+                    String json = builder.toString();
+                    System.out.println("Read json data: (" + json + ")");
+                    if(json.equals("")) {
+                        System.out.println("RETURNING NULL");
+                        return null;
+                    }
+
+                    System.out.println("About to construct data: ");
+                    data = mGson.fromJson(json, mDataType);
+                    System.out.println("Constructed json data: " + data.toString());
+                    return data;
+
+                } catch(IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            /**
+             * When we've finished parsing the data, call the listener
+             * to deliver the constructed object.
+             * @param data The data read from storage.
+             */
+            @Override
+            protected void onPostExecute(T data) {
+                super.onPostExecute(data);
+                mListener.onDataRead(data);
+            }
         }
     }
 }

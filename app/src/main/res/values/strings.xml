@@ -2,13 +2,32 @@
     <string name="app_name">TEC COMM</string>
 
     <string name="action_settings">Settings</string>
-    <string name="action_add_device">Add Device</string>
-    <string name="action_delete_device">Delete</string>
-    <string name="action_temp_enable">Enable</string>
-    <string name="action_temp_disable">Disable</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_enable">Enable</string>
+    <string name="action_disable">Disable</string>
     <string name="terminal_clear">Clear Terminal</string>
     <string name="rename_device">Rename</string>
 
     <string name="drawer_open">Drawer Open</string>
     <string name="drawer_closed">Drawer Closed</string>
+
+    <string name="hex0">0</string>
+    <string name="hex1">1</string>
+    <string name="hex2">2</string>
+    <string name="hex3">3</string>
+    <string name="hex4">4</string>
+    <string name="hex5">5</string>
+    <string name="hex6">6</string>
+    <string name="hex7">7</string>
+    <string name="hex8">8</string>
+    <string name="hex9">9</string>
+    <string name="hexA">A</string>
+    <string name="hexB">B</string>
+    <string name="hexC">C</string>
+    <string name="hexD">D</string>
+    <string name="hexE">E</string>
+    <string name="hexF">F</string>
+
+    <string name="bin0">0</string>
+    <string name="bin1">1</string>
 </resources>

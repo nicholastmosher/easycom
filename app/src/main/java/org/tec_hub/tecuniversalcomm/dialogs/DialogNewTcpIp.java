@@ -5,16 +5,14 @@ import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.graphics.PorterDuff;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import org.tec_hub.tecuniversalcomm.R;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
 import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
-import org.tec_hub.tecuniversalcomm.data.device.Device;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpDiscoveredIntent;
 
 /**
  * Created by Nick Mosher on 9/24/15.
@@ -23,7 +21,7 @@ public class DialogNewTcpIp {
 
     private static LinearLayout address;
 
-    public static AlertDialog build(final Context context, final Device device) {
+    public static AlertDialog build(final Context context, final ConnectionList list) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Create New Device");
@@ -45,7 +43,7 @@ public class DialogNewTcpIp {
                 if(!name.getText().toString().equals("") && !ip.getText().toString().equals("")) {
                     try {
                         int portNum = Integer.parseInt(port.getText().toString());
-                        device.addConnection(new TcpIpConnection(name.getText().toString(), ip.getText().toString(), portNum));
+                        list.add(new TcpIpConnection(name.getText().toString(), ip.getText().toString(), portNum));
                     } catch(NumberFormatException e) {
                         e.printStackTrace();
                     }

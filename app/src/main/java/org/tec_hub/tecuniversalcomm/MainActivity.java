@@ -3,7 +3,6 @@ package org.tec_hub.tecuniversalcomm;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -23,14 +22,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.data.NewStorageAdapter;
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import org.tec_hub.tecuniversalcomm.fragments.CommandFragment;
+import org.tec_hub.tecuniversalcomm.fragments.TerminalFragment;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Nick Mosher on 9/30/15.
@@ -38,7 +38,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private Connection mActiveConnection;
-    private NewStorageAdapter.DataAdapter<ConnectionList> mConnectionAdapter;
+    private StorageAdapter.DataAdapter<ConnectionList> mConnectionAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //Initialize Storage Adapter
-        mConnectionAdapter = NewStorageAdapter.getInstance(this)
+        mConnectionAdapter = StorageAdapter.getInstance(this)
                 .getDataAdapter(ConnectionList.class, "Connections", ConnectionList.getTypeAdapter());
 
         //Initialize Toolbar
@@ -114,10 +114,10 @@ public class MainActivity extends AppCompatActivity {
          * of Connections.
          */
         public DrawerLayoutAdapter() {
-            mConnectionAdapter.read(new NewStorageAdapter.DataEventListener<ConnectionList>() {
+            mConnectionAdapter.read(new StorageAdapter.DataEventListener<ConnectionList>() {
                 @Override
                 public void onDataRead(ConnectionList data) {
-                    if(data != null) {
+                    if (data != null) {
                         mConnections = data;
                     }
                 }
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public ConnectionViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LinearLayout listItem = (LinearLayout) LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.new_list_item_connection, parent, false);
+                    .inflate(R.layout.list_item_connection, parent, false);
 
             return new ConnectionViewHolder(listItem);
         }
@@ -162,17 +162,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Handles exchanging of fragment views in the ViewPager.
+     */
     public class ViewPagerAdapter extends FragmentPagerAdapter {
 
-        private ArrayList<CustomFragment> fragments = new ArrayList<>();
+        private List<Fragment> fragments = new ArrayList<>();
+        private List<String> names = new ArrayList<>();
         ViewPager mViewPager;
 
         public ViewPagerAdapter(ViewPager pager, FragmentManager manager) {
             super(manager);
             mViewPager = pager;
 
-            fragments.add(new TerminalFragment("Terminal"));
-            fragments.add(new CommandFragment("Commands"));
+            fragments.add(new TerminalFragment());
+            names.add("Terminal");
+            fragments.add(new CommandFragment());
+            names.add("Commands");
         }
 
         @Override
@@ -187,83 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return fragments.get(position).getName();
-        }
-    }
-
-    public static class CustomFragment extends Fragment {
-
-        private String mName;
-
-        public CustomFragment(String name) {
-            mName = name;
-        }
-
-        public String getName() {
-            return mName;
-        }
-    }
-
-    public static class TerminalFragment extends CustomFragment {
-
-        public TerminalFragment(String name) {
-            super(name);
-        }
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View terminalView = inflater.inflate(R.layout.fragment_terminal, container, false);
-            return terminalView;
-        }
-    }
-
-    public class CommandFragment extends CustomFragment {
-
-        public CommandFragment(String name) {
-            super(name);
-        }
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
-            View commandView = inflater.inflate(R.layout.fragment_command, container, false);
-
-            //Initialize Recycler
-            RecyclerView recyclerView = (RecyclerView) commandView.findViewById(R.id.command_recycler);
-            recyclerView.setHasFixedSize(true);
-            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-            recyclerView.setAdapter(new CommandAdapter());
-            return commandView;
-        }
-
-        public class CommandAdapter extends RecyclerView.Adapter<CommandAdapter.CommandViewHolder> {
-
-            public class CommandViewHolder extends RecyclerView.ViewHolder {
-
-                public LinearLayout mCommandLayout;
-
-                public CommandViewHolder(LinearLayout container) {
-                    super(container);
-                    mCommandLayout = container;
-                }
-            }
-
-            @Override
-            public CommandViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                return new CommandViewHolder(new LinearLayout(MainActivity.this));
-            }
-
-            @Override
-            public void onBindViewHolder(CommandViewHolder holder, int position) {
-
-            }
-
-            @Override
-            public int getItemCount() {
-                return 0;
-            }
+            return names.get(position);
         }
     }
 }

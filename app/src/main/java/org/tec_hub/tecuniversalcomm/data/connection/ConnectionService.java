@@ -14,7 +14,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.TerminalActivity;
+import org.tec_hub.tecuniversalcomm.MainActivity;
 import org.tec_hub.tecuniversalcomm.intents.DataReceivedIntent;
 import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
@@ -494,7 +494,7 @@ public class ConnectionService extends Service {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, TerminalActivity.class, line.getBytes());
+                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, MainActivity.class, line.getBytes());
                     receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, mConnection.getConnectionType());
                     receivedInputIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
 
