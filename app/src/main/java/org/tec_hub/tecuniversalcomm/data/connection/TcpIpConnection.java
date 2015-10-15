@@ -5,10 +5,10 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpConnectIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpDisconnectIntent;
-import org.tec_hub.tecuniversalcomm.intents.TcpIpSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpConnectIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpDisconnectIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpSendIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,10 +115,10 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
-     * @return The string "connection type" as defined by TECIntent.
+     * @return The string "connection type" as defined by ConnectionIntent.
      */
     public String getConnectionType() {
-        return TECIntent.CONNECTION_TYPE_TCPIP;
+        return ConnectionIntent.CONNECTION_TYPE_TCPIP;
     }
 
     /**

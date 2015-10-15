@@ -139,7 +139,7 @@ public abstract class Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
-     * @return The string "connection type" as defined by TECIntent.
+     * @return The string "connection type" as defined by ConnectionIntent.
      */
     public abstract String getConnectionType();
 

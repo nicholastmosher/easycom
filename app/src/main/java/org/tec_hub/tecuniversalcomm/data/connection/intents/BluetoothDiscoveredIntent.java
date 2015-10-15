@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.intents;
+package org.tec_hub.tecuniversalcomm.data.connection.intents;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +10,7 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 9/22/15.
  */
-public class BluetoothDiscoveredIntent extends Intent implements TECIntent {
+public class BluetoothDiscoveredIntent extends Intent implements ConnectionIntent {
 
     /**
      * Creates an intent with a UUID of the Connection we've discovered.

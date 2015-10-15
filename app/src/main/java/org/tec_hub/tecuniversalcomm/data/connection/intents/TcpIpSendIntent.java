@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.intents;
+package org.tec_hub.tecuniversalcomm.data.connection.intents;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +12,7 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 9/15/15.
  */
-public class TcpIpSendIntent extends Intent implements TECIntent {
+public class TcpIpSendIntent extends Intent implements ConnectionIntent {
 
     /**
      * Creates an intent with the UUID of the Connection to send data over.

@@ -15,8 +15,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.google.common.base.Preconditions;
 
 import org.tec_hub.tecuniversalcomm.MainActivity;
-import org.tec_hub.tecuniversalcomm.intents.DataReceivedIntent;
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceivedIntent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -43,13 +43,13 @@ public class ConnectionService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(TECIntent.ACTION_BLUETOOTH_CONNECT);
-        intentFilter.addAction(TECIntent.ACTION_BLUETOOTH_DISCONNECT);
-        intentFilter.addAction(TECIntent.ACTION_BLUETOOTH_SEND_DATA);
+        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_CONNECT);
+        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_DISCONNECT);
+        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_SEND_DATA);
 
-        intentFilter.addAction(TECIntent.ACTION_TCPIP_CONNECT);
-        intentFilter.addAction(TECIntent.ACTION_TCPIP_DISCONNECT);
-        intentFilter.addAction(TECIntent.ACTION_TCPIP_SEND_DATA);
+        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_CONNECT);
+        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_DISCONNECT);
+        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_SEND_DATA);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
@@ -60,7 +60,7 @@ public class ConnectionService extends Service {
                     return;
                 }
 
-                Connection connection = Connection.getConnection(intent.getStringExtra(TECIntent.CONNECTION_UUID));
+                Connection connection = Connection.getConnection(intent.getStringExtra(ConnectionIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
                 if(connection == null) {
@@ -71,7 +71,7 @@ public class ConnectionService extends Service {
                 switch(intent.getAction()) {
 
                     //Received action to establish bluetooth connection
-                    case TECIntent.ACTION_BLUETOOTH_CONNECT:
+                    case ConnectionIntent.ACTION_BLUETOOTH_CONNECT:
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(new ConnectionObserver() {
                             @Override
@@ -84,20 +84,20 @@ public class ConnectionService extends Service {
                         break;
 
                     //Received action to disconnect bluetooth
-                    case TECIntent.ACTION_BLUETOOTH_DISCONNECT:
+                    case ConnectionIntent.ACTION_BLUETOOTH_DISCONNECT:
                         //Initiate disconnecting
                         new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
                         break;
 
                     //Received intent with data to send over bluetooth
-                    case TECIntent.ACTION_BLUETOOTH_SEND_DATA:
+                    case ConnectionIntent.ACTION_BLUETOOTH_SEND_DATA:
                         //System.out.println("Service -> Sending Data...");
-                        byte[] btData = intent.getByteArrayExtra(TECIntent.BLUETOOTH_TO_SEND_DATA);
+                        byte[] btData = intent.getByteArrayExtra(ConnectionIntent.BLUETOOTH_TO_SEND_DATA);
                         sendData(connection, btData);
                         break;
 
                     //Received action to establish tcpip connection.
-                    case TECIntent.ACTION_TCPIP_CONNECT:
+                    case ConnectionIntent.ACTION_TCPIP_CONNECT:
                         //Create callbacks for successful connection and disconnection
                         connection.addObserver(new ConnectionObserver() {
                             @Override
@@ -110,14 +110,14 @@ public class ConnectionService extends Service {
                         break;
 
                     //Received action to disconnect tcpip connection.
-                    case TECIntent.ACTION_TCPIP_DISCONNECT:
+                    case ConnectionIntent.ACTION_TCPIP_DISCONNECT:
                         //Disconnect.
                         new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
                         break;
 
                     //Received action to send data over tcpip.
-                    case TECIntent.ACTION_TCPIP_SEND_DATA:
-                        byte[] tcpData = intent.getByteArrayExtra(TECIntent.TCPIP_TO_SEND_DATA);
+                    case ConnectionIntent.ACTION_TCPIP_SEND_DATA:
+                        byte[] tcpData = intent.getByteArrayExtra(ConnectionIntent.TCPIP_TO_SEND_DATA);
                         sendData(connection, tcpData);
                         break;
 
@@ -495,8 +495,8 @@ public class ConnectionService extends Service {
 
                     System.out.println(line);
                     DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, MainActivity.class, line.getBytes());
-                    receivedInputIntent.putExtra(TECIntent.CONNECTION_TYPE, mConnection.getConnectionType());
-                    receivedInputIntent.putExtra(TECIntent.CONNECTION_UUID, mConnection.getUUID());
+                    receivedInputIntent.putExtra(ConnectionIntent.CONNECTION_TYPE, mConnection.getConnectionType());
+                    receivedInputIntent.putExtra(ConnectionIntent.CONNECTION_UUID, mConnection.getUUID());
 
                     //Send the data back to any listeners.
                     LocalBroadcastManager.getInstance(ConnectionService.this).sendBroadcast(receivedInputIntent);

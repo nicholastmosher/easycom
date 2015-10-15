@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.intents;
+package org.tec_hub.tecuniversalcomm.data.connection.intents;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +14,7 @@ import java.util.UUID;
  * Is a pre-built intent that targets the ConnectionService that will
  * transfer String data to be sent over the given BluetoothConnection.
  */
-public class BluetoothSendIntent extends Intent implements TECIntent {
+public class BluetoothSendIntent extends Intent implements ConnectionIntent {
 
     /**
      * Creates an intent with a UUID of the desired Connection.

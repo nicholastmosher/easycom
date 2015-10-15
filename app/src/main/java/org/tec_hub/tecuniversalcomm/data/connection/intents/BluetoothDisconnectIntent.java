@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.intents;
+package org.tec_hub.tecuniversalcomm.data.connection.intents;
 
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +14,7 @@ import java.util.UUID;
  * Is a pre-built intent that targets the ConnectionService with the
  * provided BluetoothConnection to instruct a disconnect.
  */
-public class BluetoothDisconnectIntent extends Intent implements TECIntent {
+public class BluetoothDisconnectIntent extends Intent implements ConnectionIntent {
 
     /**
      * Creates an intent with the UUID of the Connection we're disconnecting.

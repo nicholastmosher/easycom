@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.intents;
+package org.tec_hub.tecuniversalcomm.data.connection.intents;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +10,7 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 9/22/15.
  */
-public class TcpIpDiscoveredIntent extends Intent implements TECIntent { //TODO this may not be a permanent thing.
+public class TcpIpDiscoveredIntent extends Intent implements ConnectionIntent { //TODO this may not be a permanent thing.
 
     /**
      * Creates an intent with the UUID of the Connection we've discovered.

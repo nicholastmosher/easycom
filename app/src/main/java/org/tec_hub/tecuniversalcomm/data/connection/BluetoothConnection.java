@@ -6,10 +6,10 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
-import org.tec_hub.tecuniversalcomm.intents.BluetoothConnectIntent;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothDisconnectIntent;
-import org.tec_hub.tecuniversalcomm.intents.BluetoothSendIntent;
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothConnectIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothDisconnectIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,10 +117,10 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
-     * @return The string "connection type" as defined by TECIntent.
+     * @return The string "connection type" as defined by ConnectionIntent.
      */
     public String getConnectionType() {
-        return TECIntent.CONNECTION_TYPE_BLUETOOTH;
+        return ConnectionIntent.CONNECTION_TYPE_BLUETOOTH;
     }
 
     /**
