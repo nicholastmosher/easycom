@@ -1,0 +1,42 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".TECActivity">
+
+    <item
+        android:title="@string/connections"
+        android:icon="@drawable/ic_device_hub_black_48dp">
+        <menu>
+            <item android:title="@string/connections_desc"/>
+        </menu>
+    </item>
+
+    <item
+        android:title="@string/terminal"
+        android:icon="@drawable/ic_dvr_black_48dp">
+        <menu>
+            <item android:title="@string/terminal_desc"/>
+        </menu>
+    </item>
+
+    <item
+        android:title="@string/commands"
+        android:icon="@drawable/ic_flash_on_black_48dp">
+        <menu>
+            <item android:title="@string/commands_desc"/>
+        </menu>
+    </item>
+
+    <item
+        android:title="@string/controls"
+        android:icon="@drawable/ic_gamepad_black_48dp">
+        <menu>
+            <item android:title="@string/controls_desc"/>
+        </menu>
+    </item>
+
+    <item
+        android:title="@string/settings"
+        android:icon="@drawable/ic_settings_black_48dp"/>
+
+</menu>

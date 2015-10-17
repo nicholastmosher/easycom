@@ -16,7 +16,7 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
-import org.tec_hub.tecuniversalcomm.OldMainActivity;
+import org.tec_hub.tecuniversalcomm.MainActivity;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceiveIntent;
 
@@ -35,7 +35,7 @@ import java.util.Map;
  * ConnectionService multiplexes tasks with all types of Connections, as well as
  * multiple instances of the same type of Connection (e.g. a TcpIpConnection and
  * a BluetoothConnection, or multiple BluetoothConnections, or any combination).
- *
+ * <p/>
  * All data flowing into and out of the ConnectionService is passed through custom
  * intents, with data Extras assigned via keys located in ConnectionIntent.  Most
  * typical operations such as Connecting, Disconnecting, Sending, and Receiving
@@ -70,7 +70,7 @@ public class ConnectionService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                if (intent == null) {
+                if(intent == null) {
                     System.out.println("Received intent is null!");
                     return;
                 }
@@ -78,17 +78,17 @@ public class ConnectionService extends Service {
                 Connection connection = Connection.getConnection(intent.getStringExtra(ConnectionIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
-                if (connection == null) {
+                if(connection == null) {
                     System.err.println("Received connection is null.");
                     return;
                 }
 
                 //Launch different handlers based on the type of connection.
-                switch (connection.getConnectionType()) {
+                switch(connection.getConnectionType()) {
                     //If it's a BluetoothConnection.
                     case ConnectionIntent.CONNECTION_TYPE_BLUETOOTH: {
                         //Launch different handlers based on the action specified.
-                        switch (intent.getAction()) {
+                        switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectBluetoothTask((BluetoothConnection) connection).execute();
@@ -106,7 +106,7 @@ public class ConnectionService extends Service {
                     //If it's a TcpIpConnection.
                     case ConnectionIntent.CONNECTION_TYPE_TCPIP: {
                         //Launch different handlers based on the action specified.
-                        switch (intent.getAction()) {
+                        switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectTcpIpTask((TcpIpConnection) connection).execute();
@@ -124,7 +124,7 @@ public class ConnectionService extends Service {
                     //If it's a UsbHostConnection
                     case ConnectionIntent.CONNECTION_TYPE_USB: {
                         //Launch different handlers based on the action specified.
-                        switch (intent.getAction()) {
+                        switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectUsbTask((UsbHostConnection) connection).execute();
@@ -204,6 +204,7 @@ public class ConnectionService extends Service {
 
     /**
      * Launches the ConnectionService if it is not already active.
+     *
      * @param context The context to launch the Service from.
      */
     public static void launch(Context context) {
@@ -239,12 +240,13 @@ public class ConnectionService extends Service {
 
         /**
          * This method runs on a separate, non-UI thread.  Heavy lifting goes here.
+         *
          * @param params
          * @return True if connecting succeeded, false if it failed.
          */
         protected Boolean doInBackground(Void... params) {
             //Check if BT is enabled
-            if (!mBluetoothAdapter.isEnabled()) {
+            if(!mBluetoothAdapter.isEnabled()) {
                 System.out.println("Bluetooth not enabled!"); //TODO better handling.
                 new IllegalStateException("Cannot connect, Bluetooth is disabled!").printStackTrace();
             }
@@ -253,7 +255,7 @@ public class ConnectionService extends Service {
             //Define a BluetoothDevice with the address from our Connection.
             String address = mConnection.getAddress();
             BluetoothDevice device;
-            if(address != null  && BluetoothAdapter.checkBluetoothAddress(address)) {
+            if(address != null && BluetoothAdapter.checkBluetoothAddress(address)) {
                 device = mBluetoothAdapter.getRemoteDevice(address);
                 System.out.println("Bluetooth Device parsed from BluetoothAdapter...");
             } else {
@@ -267,7 +269,7 @@ public class ConnectionService extends Service {
                 mBluetoothSocket = device.createRfcommSocketToServiceRecord(BluetoothConnection.BLUETOOTH_SERIAL_UUID);
                 System.out.println("BluetoothSocket retrieved from Bluetooth Device...");
 
-            } catch (IOException e) {
+            } catch(IOException e) {
                 e.printStackTrace();
                 return false;
             }
@@ -280,11 +282,11 @@ public class ConnectionService extends Service {
                 mBluetoothSocket.connect();
                 mConnection.setBluetoothSocket(mBluetoothSocket);
                 System.out.println("BluetoothSocket connected, success!");
-            } catch (IOException e) {
+            } catch(IOException e) {
                 e.printStackTrace();
                 try {
                     mBluetoothSocket.close();
-                } catch (IOException e2) {
+                } catch(IOException e2) {
                     e2.printStackTrace();
                 }
                 return false;
@@ -297,6 +299,7 @@ public class ConnectionService extends Service {
         /**
          * Result method that runs on the UI thread.  Background thread reports
          * to this thread when it's finished.
+         *
          * @param success Whether the background thread succeeded or failed.
          */
         @Override
@@ -597,7 +600,7 @@ public class ConnectionService extends Service {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    new DataReceiveIntent(ConnectionService.this, OldMainActivity.class, mConnection, line.getBytes()).sendLocal();
+                    new DataReceiveIntent(ConnectionService.this, MainActivity.class, mConnection, line.getBytes()).sendLocal();
                 }
 
                 try {

@@ -3,6 +3,7 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 
+import org.tec_hub.tecuniversalcomm.R;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
@@ -35,12 +36,13 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Constructs a BluetoothConnection from a name and bluetooth MAC address.
-     * @param name The name of this BluetoothConnection.
+     *
+     * @param name    The name of this BluetoothConnection.
      * @param address The MAC Address of the remote device to connect to.
      */
     public BluetoothConnection(String name, String address) {
         super(name);
-        if(mAddress == null) {
+        if(address == null) {
             throw new NullPointerException("Bluetooth address is null!");
         }
         mAddress = address;
@@ -58,6 +60,7 @@ public class BluetoothConnection extends Connection {
     /**
      * Send connect request to ConnectionService to open a BluetoothConnection
      * using this object's data.
+     *
      * @param context The context to send the intent to launch the Service.
      */
     public void connect(Context context) {
@@ -74,6 +77,7 @@ public class BluetoothConnection extends Connection {
     /**
      * Send disconnect request to ConnectionService to close a BluetoothConnection
      * using this object's data.
+     *
      * @param context The context to send the intent to launch the Service.
      */
     public void disconnect(Context context) {
@@ -86,6 +90,7 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Tells whether this BluetoothConnection is actively connected.
+     *
      * @return True if connected, false otherwise.
      */
     public Status getStatus() {
@@ -111,6 +116,7 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
+     *
      * @return The string "connection type" as defined by ConnectionIntent.
      */
     public String getConnectionType() {
@@ -120,8 +126,9 @@ public class BluetoothConnection extends Connection {
     /**
      * Retrieves the Input Stream if this Connection is connected and
      * the Input Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
+     *
      * @return The InputStream from the remote bluetooth device.
+     * @throws java.lang.IllegalStateException If not connected.
      */
     public InputStream getInputStream() throws IllegalStateException {
         if(getStatus().equals(Status.Connected)) {
@@ -139,8 +146,9 @@ public class BluetoothConnection extends Connection {
     /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
+     *
      * @return The OutputStream to the remote bluetooth device.
+     * @throws java.lang.IllegalStateException If not connected.
      */
     public OutputStream getOutputStream() throws IllegalStateException {
         if(getStatus().equals(Status.Connected)) {
@@ -157,15 +165,22 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Sends the given data over this connection.
+     *
      * @param context The context to send the intent from.
-     * @param data The data to send.
+     * @param data    The data to send.
      */
     public void sendData(Context context, byte[] data) {
         new DataSendIntent(context, getUUID(), data).sendLocal();
     }
 
+    @Override
+    public int getImageResourceId() {
+        return R.drawable.ic_bluetooth_black_48dp;
+    }
+
     /**
      * Gets the Bluetooth MAC Address of the remote device of this BluetoothConnection.
+     *
      * @return A Bluetooth MAC Address.
      */
     public String getAddress() {
@@ -174,6 +189,7 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Assigns the BluetoothSocket for this BluetoothConnection.
+     *
      * @param socket New BluetoothSocket.
      */
     void setBluetoothSocket(BluetoothSocket socket) {
@@ -186,8 +202,9 @@ public class BluetoothConnection extends Connection {
 
     /**
      * Gets this BluetoothConnection's BluetoothSocket if it exists.
-     * @throws java.lang.NullPointerException If BluetoothSocket is null.
+     *
      * @return This BluetoothSocket.
+     * @throws java.lang.NullPointerException If BluetoothSocket is null.
      */
     public BluetoothSocket getBluetoothSocket() throws NullPointerException {
         if(mBluetoothSocket != null) {

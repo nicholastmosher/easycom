@@ -4,13 +4,13 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#1A237E</color>
     <color name="colorAccent">#FF9800</color>
-    <color name="textColor">#dd000000</color>
+    <color name="textDark">#dd000000</color>
+    <color name="textDarkSecondary">#89000000</color>
+    <color name="textLight">#FFFFFFFF</color>
+    <color name="card">#FFFFFFFF</color>
+    <color name="underCard">#FFAAAAAA</color>
 
     <color name="connected">#00C853</color>
     <color name="disconnected">#212121</color>
     <color name="error">#D50000</color>
-
-    <color name="enabled">@color/connected</color>
-    <color name="disabled">@color/disconnected</color>
-    <color name="neutral">#9E9E9E</color>
 </resources>

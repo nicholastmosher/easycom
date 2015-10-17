@@ -53,6 +53,7 @@ public abstract class Connection {
     /**
      * Constructs a Connection using a given name.  Addresses or
      * connection information are managed by subclasses.
+     *
      * @param name The name of the connection.
      */
     public Connection(String name) {
@@ -78,6 +79,7 @@ public abstract class Connection {
 
     /**
      * Returns the name of this connection.
+     *
      * @return The name of this connection.
      */
     public String getName() {
@@ -86,6 +88,7 @@ public abstract class Connection {
 
     /**
      * Returns the unique identifier of this Connection.
+     *
      * @return The unique identifier of this Connection.
      */
     public String getUUID() {
@@ -94,6 +97,7 @@ public abstract class Connection {
 
     /**
      * Returns an existing connection being held in the static map.
+     *
      * @param uuid The UUID of the connection.
      * @return The Connection, or null if there is no key for the UUID.
      */
@@ -103,6 +107,7 @@ public abstract class Connection {
 
     /**
      * Returns an existing connection being held in the static map.
+     *
      * @param uuid The UUID of the connection.
      * @return The Connection, or null if there is no kwy for the UUID.
      */
@@ -113,6 +118,7 @@ public abstract class Connection {
     /**
      * Launches a Service action that initiates this connection's communication
      * link.
+     *
      * @param context The context to launch the Service from.
      */
     public abstract void connect(Context context);
@@ -120,6 +126,7 @@ public abstract class Connection {
     /**
      * Launches a Service action that disconnects this connection's communication
      * link.
+     *
      * @param context The context to launch the Service from.
      */
     public abstract void disconnect(Context context);
@@ -127,23 +134,26 @@ public abstract class Connection {
     /**
      * Tells what the status of this connection is.
      * Statuses include:
-     *  Connected
-     *  Connecting
-     *  Disconnected
-     *  Connect Failed
-     *  Connect Canceled
+     * Connected
+     * Connecting
+     * Disconnected
+     * Connect Failed
+     * Connect Canceled
+     *
      * @return Status of connection.
      */
     public abstract Status getStatus();
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
+     *
      * @return The string "connection type" as defined by ConnectionIntent.
      */
     public abstract String getConnectionType();
 
     /**
      * Returns an InputStream that reads from this Connection's remote source.
+     *
      * @return An InputStream that reads from this Connection's remote source.
      * @throws IllegalStateException If this Connection is not connected.
      */
@@ -151,6 +161,7 @@ public abstract class Connection {
 
     /**
      * Returns an OutputStream that writes to this Connection's remote destination.
+     *
      * @return An OutputStream that writes to this Connection's remote destination.
      * @throws IllegalStateException If this Connection is not connected.
      */
@@ -159,10 +170,13 @@ public abstract class Connection {
     /**
      * Sends an intent to ConnectionService with data that should be sent over this
      * connection.
+     *
      * @param context The context to send the intent from.
-     * @param data The data to send.
+     * @param data    The data to send.
      */
     public abstract void sendData(Context context, byte[] data);
+
+    public abstract int getImageResourceId();
 
     /**
      * Hashing a connection object will tell if the two objects contain
@@ -171,6 +185,7 @@ public abstract class Connection {
      * is here to compare two connection and determine whether they represent
      * the same connection regardless of the status of the member data.
      * This is determined by comparing the UUIDs of each connection.
+     *
      * @param c The connection to compare to this object.
      * @return True if connections are the same, False otherwise.
      */

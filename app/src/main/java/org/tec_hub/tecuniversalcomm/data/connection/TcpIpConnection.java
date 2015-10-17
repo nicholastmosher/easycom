@@ -1,12 +1,11 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
-import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.common.base.Preconditions;
-
+import org.tec_hub.tecuniversalcomm.R;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
@@ -16,6 +15,7 @@ import java.net.Socket;
 
 /**
  * Created by Nick Mosher on 9/15/15.
+ * Represents a connection to a remote device over an internet TCP/IP socket.
  */
 public class TcpIpConnection extends Connection {
 
@@ -36,8 +36,9 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Constructs a new TcpIpConnection with a given remote IP and port.
+     *
      * @param name The name of this Connection.
-     * @param ip The IP of the remote device.
+     * @param ip   The IP of the remote device.
      * @param port The port to connect over.
      */
     public TcpIpConnection(String name, String ip, int port) {
@@ -58,6 +59,7 @@ public class TcpIpConnection extends Connection {
     /**
      * Send connect request to TcpIpConnectionService to open a TcpIpConnection
      * using this object's data.
+     *
      * @param context The context to send the intent to launch the Service.
      */
     public void connect(Context context) {
@@ -74,6 +76,7 @@ public class TcpIpConnection extends Connection {
     /**
      * Send disconnect request to TcpIpConnectionService to close a TcpIpConnection
      * using this object's data.
+     *
      * @param context The context to send the intent to launch the Service.
      */
     public void disconnect(Context context) {
@@ -87,6 +90,7 @@ public class TcpIpConnection extends Connection {
     /**
      * Returns the current status of this Connection, verifying that the
      * status is correct.
+     *
      * @return The connectivity status.
      */
     public Status getStatus() {
@@ -113,6 +117,7 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
+     *
      * @return The string "connection type" as defined by ConnectionIntent.
      */
     public String getConnectionType() {
@@ -122,8 +127,9 @@ public class TcpIpConnection extends Connection {
     /**
      * Retrieves the Input Stream if this Connection is connected and
      * the Input Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
+     *
      * @return The InputStream from the remote device.
+     * @throws java.lang.IllegalStateException If not connected.
      */
     public InputStream getInputStream() {
         if(getStatus().equals(Status.Connected)) {
@@ -141,8 +147,9 @@ public class TcpIpConnection extends Connection {
     /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
-     * @throws java.lang.IllegalStateException If not connected.
+     *
      * @return The OutputStream to the remote device.
+     * @throws java.lang.IllegalStateException If not connected.
      */
     public OutputStream getOutputStream() {
         if(getStatus().equals(Status.Connected)) {
@@ -159,15 +166,22 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Sends the given data over this connection.
+     *
      * @param context The context to send the intent from.
-     * @param data The data to send.
+     * @param data    The data to send.
      */
     public void sendData(Context context, byte[] data) {
-        LocalBroadcastManager.getInstance(context).sendBroadcast(new TcpIpSendIntent(context, getUUID(), data));
+        new DataSendIntent(context, getUUID(), data).sendLocal();
+    }
+
+    @Override
+    public int getImageResourceId() {
+        return R.drawable.ic_wifi_black_48dp;
     }
 
     /**
      * Returns the IP address of the remote (server) device.
+     *
      * @return The IP address of the remote (server) device.
      */
     public String getServerIp() {
@@ -176,6 +190,7 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Returns the port over which connection will be established.
+     *
      * @return The port to establish connection over.
      */
     public int getServerPort() {
@@ -184,15 +199,20 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Sets the socket for this connection to use.
+     *
      * @param socket The socket to use to connect.
      */
     public void setSocket(Socket socket) {
-        Preconditions.checkNotNull(socket);
-        mSocket = socket;
+        if(socket == null) {
+            new NullPointerException("Socket is null!").printStackTrace();
+        } else {
+            mSocket = socket;
+        }
     }
 
     /**
      * Gets the socket used by this connection.
+     *
      * @return The socket used by this connection.
      * @throws NullPointerException If the socket is null.
      */

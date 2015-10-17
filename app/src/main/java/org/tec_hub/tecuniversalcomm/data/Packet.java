@@ -1,8 +1,7 @@
 package org.tec_hub.tecuniversalcomm.data;
 
-import com.google.common.base.Preconditions;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 
@@ -15,8 +14,12 @@ public class Packet<T> {
     private Object mData;
 
     private Packet(String name, Object data) {
-        mName = Preconditions.checkNotNull(name);
-        mData = Preconditions.checkNotNull(data);
+        if(name == null) {
+            throw new NullPointerException("Packet name is null!");
+        }
+        if(data == null) {
+            throw new NullPointerException("Packet data is null!");
+        }
     }
 
     public static Packet asBoolean(String name, boolean value) {
@@ -144,7 +147,8 @@ public class Packet<T> {
     }
 
     public static Type getTypeToken() {
-        return new TypeToken<Packet>(){}.getType();
+        return new TypeToken<Packet>() {
+        }.getType();
     }
 
     public String toJson() {
