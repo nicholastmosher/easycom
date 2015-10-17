@@ -2,14 +2,11 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.common.base.Preconditions;
-
-import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothConnectIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothDisconnectIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.BluetoothSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +39,11 @@ public class BluetoothConnection extends Connection {
      * @param address The MAC Address of the remote device to connect to.
      */
     public BluetoothConnection(String name, String address) {
-        super(Preconditions.checkNotNull(name));
-        mAddress = Preconditions.checkNotNull(address);
+        super(name);
+        if(mAddress == null) {
+            throw new NullPointerException("Bluetooth address is null!");
+        }
+        mAddress = address;
     }
 
     /**
@@ -63,11 +63,8 @@ public class BluetoothConnection extends Connection {
     public void connect(Context context) {
         if(!(getStatus().equals(Status.Connected))) {
 
-            //Build intent with this connection data to send to service
-            BluetoothConnectIntent connectIntent = new BluetoothConnectIntent(context, mUUID);
-
-            //Send intent through LocalBroadcastManager
-            LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+            //Send intent with this connection's data over LocalBroadcastManager
+            new ConnectIntent(context, this).sendLocal();
 
             //Indicate that this connection's status is now "connecting".
             mStatus = Status.Connecting;
@@ -82,11 +79,8 @@ public class BluetoothConnection extends Connection {
     public void disconnect(Context context) {
         if(getStatus().equals(Status.Connected)) {
 
-            //Build intent with this connection data to send to service
-            BluetoothDisconnectIntent disconnectIntent = new BluetoothDisconnectIntent(context, mUUID);
-
-            //Send intent through LocalBroadcastManager
-            LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
+            //Send intent with this connection's data over LocalBroadcastManager
+            new DisconnectIntent(context, this).sendLocal();
         }
     }
 
@@ -167,7 +161,7 @@ public class BluetoothConnection extends Connection {
      * @param data The data to send.
      */
     public void sendData(Context context, byte[] data) {
-        LocalBroadcastManager.getInstance(context).sendBroadcast(new BluetoothSendIntent(context, getUUID(), data));
+        new DataSendIntent(context, getUUID(), data).sendLocal();
     }
 
     /**
@@ -183,7 +177,10 @@ public class BluetoothConnection extends Connection {
      * @param socket New BluetoothSocket.
      */
     void setBluetoothSocket(BluetoothSocket socket) {
-        Preconditions.checkNotNull(socket);
+        if(socket == null) {
+            System.out.println("Socket is null!");
+            return;
+        }
         mBluetoothSocket = socket;
     }
 

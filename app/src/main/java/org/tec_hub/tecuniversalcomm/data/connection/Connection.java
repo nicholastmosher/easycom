@@ -2,12 +2,6 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
 
-import com.google.common.base.Preconditions;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -62,7 +56,12 @@ public abstract class Connection {
      * @param name The name of the connection.
      */
     public Connection(String name) {
-        mName = Preconditions.checkNotNull(name);
+        if(name == null) {
+            System.out.println("Connection has no name!");
+            mName = "";
+        } else {
+            mName = name;
+        }
         mUUID = UUID.randomUUID();
         connections.put(mUUID, this);
     }

@@ -8,15 +8,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.common.base.Preconditions;
-
 import org.tec_hub.tecuniversalcomm.MainActivity;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceivedIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceiveIntent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,6 +30,17 @@ import java.util.Map;
 
 /**
  * Created by Nick Mosher on 4/23/15.
+ * The ConnectionService handles all heavy networking operations with Connections
+ * such as connecting, disconnecting, sending, and receiving data.  The
+ * ConnectionService multiplexes tasks with all types of Connections, as well as
+ * multiple instances of the same type of Connection (e.g. a TcpIpConnection and
+ * a BluetoothConnection, or multiple BluetoothConnections, or any combination).
+ *
+ * All data flowing into and out of the ConnectionService is passed through custom
+ * intents, with data Extras assigned via keys located in ConnectionIntent.  Most
+ * typical operations such as Connecting, Disconnecting, Sending, and Receiving
+ * have custom intents representing them (ConnectIntent, DisconnectIntent,
+ * SendIntent, and ReceiveIntent, respectively).
  */
 public class ConnectionService extends Service {
 
@@ -35,27 +48,29 @@ public class ConnectionService extends Service {
 
     private Map<Connection, ReceiveDataThread> receiveThreads;
 
+    private UsbManager mUsbManager;
+
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
     public void onCreate() {
         launched = true;
         receiveThreads = new HashMap<>();
+        mUsbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_CONNECT);
-        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_DISCONNECT);
-        intentFilter.addAction(ConnectionIntent.ACTION_BLUETOOTH_SEND_DATA);
-
-        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_CONNECT);
-        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_DISCONNECT);
-        intentFilter.addAction(ConnectionIntent.ACTION_TCPIP_SEND_DATA);
-
+        //Listen for broadcasts regarding these actions.
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectionIntent.ACTION_CONNECT);
+        filter.addAction(ConnectionIntent.ACTION_DISCONNECT);
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                if(intent == null) {
+                if (intent == null) {
                     System.out.println("Received intent is null!");
                     return;
                 }
@@ -63,68 +78,123 @@ public class ConnectionService extends Service {
                 Connection connection = Connection.getConnection(intent.getStringExtra(ConnectionIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
-                if(connection == null) {
+                if (connection == null) {
                     System.err.println("Received connection is null.");
                     return;
                 }
 
-                switch(intent.getAction()) {
-
-                    //Received action to establish bluetooth connection
-                    case ConnectionIntent.ACTION_BLUETOOTH_CONNECT:
-                        //Create callbacks for successful connection and disconnection
-                        connection.addObserver(new ConnectionObserver() {
-                            @Override
-                            void onUpdate(Connection connection, Connection.Status status) {
-                                super.onUpdate(connection, status);
+                //Launch different handlers based on the type of connection.
+                switch (connection.getConnectionType()) {
+                    //If it's a BluetoothConnection.
+                    case ConnectionIntent.CONNECTION_TYPE_BLUETOOTH: {
+                        //Launch different handlers based on the action specified.
+                        switch (intent.getAction()) {
+                            //If it's a connect action.
+                            case ConnectionIntent.ACTION_CONNECT: {
+                                new ConnectBluetoothTask((BluetoothConnection) connection).execute();
                             }
-                        });
-                        //Initiate connecting
-                        new ConnectBluetoothTask((BluetoothConnection) connection).execute();
-                        break;
-
-                    //Received action to disconnect bluetooth
-                    case ConnectionIntent.ACTION_BLUETOOTH_DISCONNECT:
-                        //Initiate disconnecting
-                        new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
-                        break;
-
-                    //Received intent with data to send over bluetooth
-                    case ConnectionIntent.ACTION_BLUETOOTH_SEND_DATA:
-                        //System.out.println("Service -> Sending Data...");
-                        byte[] btData = intent.getByteArrayExtra(ConnectionIntent.BLUETOOTH_TO_SEND_DATA);
-                        sendData(connection, btData);
-                        break;
-
-                    //Received action to establish tcpip connection.
-                    case ConnectionIntent.ACTION_TCPIP_CONNECT:
-                        //Create callbacks for successful connection and disconnection
-                        connection.addObserver(new ConnectionObserver() {
-                            @Override
-                            void onUpdate(Connection.Status status) {
-                                //FIXME add observer handling here
+                            break;
+                            //If it's a disconnect action.
+                            case ConnectionIntent.ACTION_DISCONNECT: {
+                                new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
                             }
-                        });
-                        //Initiate connecting.
+                            break;
+                            default:
+                        }
+                    }
+                    break;
+                    //If it's a TcpIpConnection.
+                    case ConnectionIntent.CONNECTION_TYPE_TCPIP: {
+                        //Launch different handlers based on the action specified.
+                        switch (intent.getAction()) {
+                            //If it's a connect action.
+                            case ConnectionIntent.ACTION_CONNECT: {
+                                new ConnectTcpIpTask((TcpIpConnection) connection).execute();
+                            }
+                            break;
+                            //If it's a disconnect action.
+                            case ConnectionIntent.ACTION_DISCONNECT: {
+                                new ConnectTcpIpTask((TcpIpConnection) connection).execute();
+                            }
+                            break;
+                            default:
+                        }
                         new ConnectTcpIpTask((TcpIpConnection) connection).execute();
-                        break;
+                    }
+                    break;
+                    //If it's a UsbHostConnection
+                    case ConnectionIntent.CONNECTION_TYPE_USB: {
+                        //Launch different handlers based on the action specified.
+                        switch (intent.getAction()) {
+                            //If it's a connect action.
+                            case ConnectionIntent.ACTION_CONNECT: {
 
-                    //Received action to disconnect tcpip connection.
-                    case ConnectionIntent.ACTION_TCPIP_DISCONNECT:
-                        //Disconnect.
-                        new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
-                        break;
+                            }
+                            break;
+                            //If it's a disconnect action.
+                            case ConnectionIntent.ACTION_DISCONNECT: {
 
-                    //Received action to send data over tcpip.
-                    case ConnectionIntent.ACTION_TCPIP_SEND_DATA:
-                        byte[] tcpData = intent.getByteArrayExtra(ConnectionIntent.TCPIP_TO_SEND_DATA);
-                        sendData(connection, tcpData);
-                        break;
-
+                            }
+                            break;
+                            default:
+                        }
+                    }
+                    break;
                     default:
                 }
             }
-        }, intentFilter);
+        }, filter);
+
+        /*
+         * This Filter/Receiver pair listens for requests to send data over some
+         * Connection.
+         */
+        IntentFilter sendFilter = new IntentFilter();
+        sendFilter.addAction(ConnectionIntent.ACTION_SEND_DATA);
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent == null) {
+                    System.out.println("Received Send Intent");
+                }
+            }
+        }, sendFilter);
+
+        /*
+         * This Filter/Receiver pair listens for an Android system broadcast
+         * notifying about a newly attached USB device.  When a valid device
+         * is attached, create a new UsbConnection and pass it wherever it's
+         * needed.
+         */
+        IntentFilter usbAttachedFilter = new IntentFilter();
+        usbAttachedFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                UsbDevice usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                System.out.println("USB Device Attached!");
+                System.out.println("USB Name: " + usbDevice.getDeviceName());
+                System.out.println("USB Class: " + usbDevice.getDeviceClass());
+                System.out.println("USB ID: " + usbDevice.getDeviceId());
+                System.out.println("USB Protocol: " + usbDevice.getDeviceProtocol());
+                System.out.println("USB Subclass: " + usbDevice.getDeviceSubclass());
+            }
+        }, usbAttachedFilter);
+
+        /*
+         * This Filter/Receiver pair listens for an Android system broadcast
+         * notifying that a USB device has been detached.  When this happens,
+         * we need to close any open connections we may have had with that
+         * device.
+         */
+        IntentFilter usbDetachedFilter = new IntentFilter();
+        usbDetachedFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //Detach here
+            }
+        }, usbDetachedFilter);
 
         return Service.START_STICKY;
     }
@@ -143,76 +213,6 @@ public class ConnectionService extends Service {
         }
     }
 
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    public static boolean isLaunched() {
-        return launched;
-    }
-
-//    /**
-//     * Connections are susceptible to change.  They can connect or disconnect,
-//     * drop, etc. so we need to know when those changes happen.  This method
-//     * is called by each connection we've subscribed to whenever something
-//     * changes.
-//     * @param observable The connection we're observing that's changed.
-//     * @param status The status given by the connection during the change.
-//     */
-//    @Override
-//    public void onUpdate(Connection observable, Connection.Status status) {
-//
-//        //If the update came from a BluetoothConnection, handle it accordingly.
-//        switch (status) {
-//            case Connected:
-//                ReceiveDataThread newThread;
-//                if(receiveThreads.containsKey(observable)) {
-//                    newThread = receiveThreads.get(observable);
-//                    newThread.interrupt();
-//                } else {
-//                    newThread = new ReceiveDataThread(observable);
-//                    receiveThreads.put(observable, new ReceiveDataThread(observable));
-//                }
-//                newThread.start();
-//                break;
-//
-//            case Disconnected:
-//                ReceiveDataThread oldThread;
-//                if(receiveThreads.containsKey(observable)) {
-//                    oldThread = receiveThreads.get(observable);
-//                    oldThread.interrupt();
-//                    receiveThreads.remove(observable);
-//                }
-//                break;
-//            case ConnectFailed:
-//                break;
-//            default:
-//        }
-//    }
-
-    private void sendData(Connection connection, String data) {
-        if(data != null && !data.equals("")) {
-            sendData(connection, data.getBytes());
-        } else {
-            System.out.println("Data to send is blank!");
-        }
-    }
-
-    private void sendData(Connection connection, byte[] data) {
-        Preconditions.checkNotNull(connection);
-        Preconditions.checkNotNull(data);
-
-        if(connection.getStatus().equals(Connection.Status.Connected)) {
-            try {
-                connection.getOutputStream().write(data);
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Connection is not connected!");
-        }
-    }
-
     /**
      * Opens an asynchronous task that does not run on the UI thread
      * to handle opening BluetoothConnections.
@@ -226,7 +226,9 @@ public class ConnectionService extends Service {
         private static int retryCount;
 
         private ConnectBluetoothTask(BluetoothConnection connection, int retry) {
-            mConnection = Preconditions.checkNotNull(connection);
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             mBluetoothSocket = null;
             retryCount = retry;
@@ -336,7 +338,10 @@ public class ConnectionService extends Service {
         private BluetoothConnection mConnection;
 
         public DisconnectBluetoothTask(BluetoothConnection connection) {
-            mConnection = Preconditions.checkNotNull(connection);
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
+            mConnection = connection;
         }
 
         @Override
@@ -372,6 +377,9 @@ public class ConnectionService extends Service {
         private static int retryCount;
 
         private ConnectTcpIpTask(TcpIpConnection connection, int retry) {
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
             mConnection = connection;
             retryCount = retry;
         }
@@ -459,6 +467,97 @@ public class ConnectionService extends Service {
     }
 
     /**
+     * Uses an asynchronous task not on the UI thread to open a UsbHostConnection.
+     * Usage: new ConnectUsbTask(myUsbHostConnection).execute();
+     */
+    private class ConnectUsbTask extends AsyncTask<Void, Void, Boolean> {
+
+        private UsbHostConnection mConnection;
+
+        public ConnectUsbTask(UsbHostConnection connection) {
+            mConnection = connection;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            UsbDevice usbDevice = mConnection.getUsbDevice();
+            UsbInterface usbInterface = usbDevice.getInterface(0);
+            UsbDeviceConnection usbDeviceConnection = mUsbManager.openDevice(usbDevice);
+
+            //Force-claim the interface for this usb connection.  Will release at disconnect.
+            usbDeviceConnection.claimInterface(usbInterface, true);
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+        }
+    }
+
+    /**
+     * Uses an asynchronous task not on the UI thread to close a UsbHostConnection.
+     * Usage: new DisconnectUsbTask(myUsbHostConnection).execute();
+     */
+    private class DisconnectUsbTask extends AsyncTask<Void, Void, Void> {
+
+        private UsbHostConnection mConnection;
+
+        public DisconnectUsbTask(UsbHostConnection connection) {
+            mConnection = connection;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            UsbDevice usbDevice = mConnection.getUsbDevice();
+            UsbInterface usbInterface = usbDevice.getInterface(0);
+            UsbDeviceConnection usbDeviceConnection = mUsbManager.openDevice(usbDevice);
+
+            //Releases our claim on this usb connection.
+            usbDeviceConnection.releaseInterface(usbInterface);
+
+            return null;
+        }
+    }
+
+    /**
+     * Uses an asynchronous task not on the UI thread to send data over a Connection.
+     * Usage: new SendDataTask(myConnection, myData).execute();
+     */
+    private class SendDataTask extends AsyncTask<Void, Void, Boolean> {
+
+        private Connection mConnection;
+        private byte[] mData;
+
+        public SendDataTask(Connection connection, byte[] data) {
+            if(connection == null) {
+                throw new NullPointerException("[ConnectionService.sendData()] Connection is null!");
+            } else if(data == null) {
+                throw new NullPointerException("[ConnectionService.sendData()] Data is null!");
+            }
+            mConnection = connection;
+            mData = data;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
+                try {
+                    mConnection.getOutputStream().write(mData);
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Connection is not connected!");
+            }
+            return null;
+        }
+    }
+
+    /**
      * Opens a background thread that continuously monitors for input on a connection.
      */
     private class ReceiveDataThread extends Thread {
@@ -467,7 +566,9 @@ public class ConnectionService extends Service {
         private boolean isRunning;
 
         public ReceiveDataThread(Connection connection) {
-            mConnection = Preconditions.checkNotNull(connection);
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
             isRunning = true;
         }
 
@@ -479,7 +580,10 @@ public class ConnectionService extends Service {
             while((mConnection.getStatus().equals(Connection.Status.Connected)) && isRunning) {
                 try {
                     if(bufferedReader == null) {
-                        InputStream inputStream = Preconditions.checkNotNull(mConnection.getInputStream());
+                        InputStream inputStream = mConnection.getInputStream();
+                        if(inputStream == null) {
+                            throw new NullPointerException("Input Stream is null!");
+                        }
                         bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                     }
                     //Fun fact, if the input stream disconnects, readLine() decides to return null :/
@@ -494,12 +598,7 @@ public class ConnectionService extends Service {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    DataReceivedIntent receivedInputIntent = new DataReceivedIntent(ConnectionService.this, MainActivity.class, line.getBytes());
-                    receivedInputIntent.putExtra(ConnectionIntent.CONNECTION_TYPE, mConnection.getConnectionType());
-                    receivedInputIntent.putExtra(ConnectionIntent.CONNECTION_UUID, mConnection.getUUID());
-
-                    //Send the data back to any listeners.
-                    LocalBroadcastManager.getInstance(ConnectionService.this).sendBroadcast(receivedInputIntent);
+                    new DataReceiveIntent(ConnectionService.this, MainActivity.class, mConnection, line.getBytes()).sendLocal();
                 }
 
                 try {

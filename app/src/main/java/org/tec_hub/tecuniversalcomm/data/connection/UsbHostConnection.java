@@ -1,7 +1,11 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
+import android.hardware.usb.UsbDevice;
 
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -10,8 +14,11 @@ import java.io.OutputStream;
  */
 public class UsbHostConnection extends Connection {
 
-    static {
+    private UsbDevice mUsbDevice;
 
+    public UsbHostConnection(UsbDevice device) {
+        super(device.getDeviceName());
+        mUsbDevice = device;
     }
 
     @Override
@@ -36,16 +43,30 @@ public class UsbHostConnection extends Connection {
 
     @Override
     public String getConnectionType() {
-        return null;
+        return ConnectionIntent.CONNECTION_TYPE_USB;
     }
 
     @Override
     public InputStream getInputStream() throws IllegalStateException {
-        return null;
+        return new InputStream() {
+            @Override
+            public int read() throws IOException {
+                return 0;
+            }
+        };
     }
 
     @Override
     public OutputStream getOutputStream() throws IllegalStateException {
-        return null;
+        return new OutputStream() {
+            @Override
+            public void write(int oneByte) throws IOException {
+
+            }
+        };
+    }
+
+    public UsbDevice getUsbDevice() {
+        return mUsbDevice;
     }
 }

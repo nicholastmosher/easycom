@@ -7,110 +7,49 @@ package org.tec_hub.tecuniversalcomm.data.connection.intents;
 public interface ConnectionIntent {
 
     //Actions///////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Sent to the ConnectionService by any context that wants
-     * to initiate a BluetoothConnection.  The intent sent to the
-     * ConnectionService must have the BluetoothConnection in
-     * question added as a Parcelable Extra using the key
-     * ConnectionIntent.BLUETOOTH_CONNECTION_UUID.
-     */
-    String ACTION_BLUETOOTH_CONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_CONNECT";
 
     /**
-     * Sent to the ConnectionService by any context that wants
-     * to disconnect a BluetoothConnection.  The intent sent to the
-     * ConnectionService must have the BluetoothConnection in
-     * question added as a Parcelable Extra using the key
-     * ConnectionIntent.BLUETOOTH_CONNECTION_UUID.
+     * Action for intents that initiate the connection process in ConnectionService.
      */
-    String ACTION_BLUETOOTH_DISCONNECT = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCONNECT";
+    String ACTION_CONNECT = "org.tec_hub.tecuniversalcomm.CONNECT";
 
     /**
-     * Sent to the ConnectionService by any context that wants to
-     * send data over a BluetoothConnection.  The intent sent to the
-     * ConnectionService must have the BluetoothConnection in
-     * question added as a Parcelable Extra using the key
-     * ConnectionIntent.BLUETOOTH_CONNECTION_UUID.
+     * Action for intents that initiate the disconnection process in ConnectionService.
      */
-    String ACTION_BLUETOOTH_SEND_DATA = "org.tec_hub.tecuniversalcomm.BLUETOOTH_TO_SEND_DATA";
+    String ACTION_DISCONNECT = "org.tec_hub.tecuniversalcomm.DISCONNECT";
 
     /**
-     * Used to indicate that a BluetoothConnection has been discovered and report it back to some
-     * wanting Activity/Service.
+     * Action for intents that initiate the sending process in ConnectionService.
      */
-    String ACTION_BLUETOOTH_DISCOVERED = "org.tec_hub.tecuniversalcomm.BLUETOOTH_DISCOVERED";
+    String ACTION_SEND_DATA = "org.tec_hub.tecuniversalcomm.SEND_DATA";
 
     /**
-     * Sent to the TcpIpConnectionService by any context that wants
-     * to connect a TcpIpConnection.  The intent sent to the
-     * TcpIpConnectionService must have the TcpIpConnection in question
-     * added as a Parcelable Extra using the key ConnectionIntent.CONNECTION_UUID.
+     * Action for intents notifying about newly entered connections.
      */
-    String ACTION_TCPIP_CONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_CONNECT";
-
-    /**
-     * Sent to the TcpIpConnectionService by any context that wants
-     * to disconnect a TcpIpConnection.  The intent sent to the
-     * TcpIpConnectionService must have the TcpIpConnection in question
-     * added as a Parcelable Extra using the key ConnectionIntent.CONNECTION_UUID.
-     */
-    String ACTION_TCPIP_DISCONNECT = "org.tec_hub.tecuniversalcomm.TCPIP_DISCONNECT";
-
-    /**
-     * Sent to the TcpIpConnectionService by any context that wants to send data
-     * over a TcpIpConnection.  The intent sent to the TcpIpConnectionService must
-     * have the TcpIpConnection added as a Parcelable Extra with the key ConnectionIntent.CONNECTION_UUID,
-     * and that TcpIpConnection must already be connected.
-     */
-    String ACTION_TCPIP_SEND_DATA = "org.tec_hub.tecuniversalcomm.TCPIP_TO_SEND_DATA";
-
-    /**
-     * Broadcast by any Service or Activity that has discovered a new connection and is returning
-     * it to a waiting Activity or Service.
-     */
-    String ACTION_TCPIP_DISCOVERED = "org.tec_hub.tecuniversalcomm.TCPIP_DISCOVREED";
+    String ACTION_NEW_CONNECTION = "org.tec_hub.tecuniversalcomm.NEW_CONNECTION";
 
     /**
      * Used by the ConnectionService to broadcast updates to the
-     * app that it has received data from a Connection.  To indicate
-     * which Connection the data originated from, the broadcast
-     * intent contains a Parcelable Extra of the Connection of the
-     * type specified at Extra ConnectionIntent.CONNECTION_TYPE.
+     * app that it has received data from a Connection.
      */
     String ACTION_RECEIVED_DATA = "org.tec_hub.tecuniversalcomm.RECEIVED_DATA";
 
-
-
-
-
     //Extras////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Used to bundle the data that will be sent over a BluetoothConnection into an intent.
-     * The intent using this as an Extra key should have the action "ACTION_BLUETOOTH_SEND_DATA".
-     */
-    String BLUETOOTH_TO_SEND_DATA = "bluetooth_to_send_data";
 
     /**
-     * Used to bundle the data that will be sent over a TcpIpConnection into an intent.
-     * The intent using this as an Extra key should have the action "ACTION_TCPIP_SEND_DATA".
+     * Key for the data in DataSendIntents.
      */
-    String TCPIP_TO_SEND_DATA = "tcpip_to_send_data";
+    String SEND_DATA = "send_data";
 
     /**
-     * Used by any intent carrying a Connection UUID as an Extra.
-     */
-    String CONNECTION_UUID = "connection_uuid";
-
-    /**
-     * Used as an Extra key for any intent carrying a Device as a Parcelable.
-     */
-    String DEVICE_UUID = "device_uuid";
-
-    /**
-     * Used by the ConnectionService to indicate data has been received
-     * by an active Connection.
+     * Key for the data in DataReceiveIntents.
      */
     String RECEIVED_DATA = "received_data";
+
+    /**
+     * Key for the UUID of any connection reference in an intent.
+     */
+    String CONNECTION_UUID = "connection_uuid";
 
     /**
      * Key for placing "Connection Type" extras into intents.
@@ -126,4 +65,19 @@ public interface ConnectionIntent {
      * Value for "Connection Type" extra in TCPIP intents.
      */
     String CONNECTION_TYPE_TCPIP = "connection_type_tcpip";
+
+    /**
+     * Value for "Connection Type" extra in USB intents.
+     */
+    String CONNECTION_TYPE_USB = "connection_type_usb";
+
+    /**
+     * Sends this intent using Android's global broadcast system.
+     */
+    void send();
+
+    /**
+     * Sends this intent using a broadcast system local to this application.
+     */
+    void sendLocal();
 }

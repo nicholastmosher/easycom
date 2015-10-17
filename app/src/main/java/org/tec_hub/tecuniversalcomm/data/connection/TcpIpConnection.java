@@ -5,10 +5,9 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.base.Preconditions;
 
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpConnectIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpDisconnectIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.TcpIpSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,11 +62,12 @@ public class TcpIpConnection extends Connection {
      */
     public void connect(Context context) {
         if(!(getStatus().equals(Status.Connected))) {
-            //Build a connect intent with connection data.
-            TcpIpConnectIntent connectIntent = new TcpIpConnectIntent(context, mUUID);
 
-            //Send connect intent with local broadcast manager.
-            LocalBroadcastManager.getInstance(context).sendBroadcast(connectIntent);
+            //Send intent with this connection's data over LocalBroadcastManager
+            new ConnectIntent(context, this).sendLocal();
+
+            //Indicate that this connection's status is now "connecting".
+            mStatus = Status.Connecting;
         }
     }
 
@@ -78,11 +78,9 @@ public class TcpIpConnection extends Connection {
      */
     public void disconnect(Context context) {
         if(getStatus().equals(Status.Connected)) {
-            //Build a disconnect intent with connection data.
-            TcpIpDisconnectIntent disconnectIntent = new TcpIpDisconnectIntent(context, mUUID);
 
-            //Send disconnect intent with local broadcast manager.
-            LocalBroadcastManager.getInstance(context).sendBroadcast(disconnectIntent);
+            //Send intent with this connection's data over LocalBroadcastManager
+            new DisconnectIntent(context, this).sendLocal();
         }
     }
 
