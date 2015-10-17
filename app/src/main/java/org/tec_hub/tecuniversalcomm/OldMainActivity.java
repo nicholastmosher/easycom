@@ -25,9 +25,10 @@ import android.widget.TextView;
 import org.tec_hub.tecuniversalcomm.data.StorageAdapter;
 import org.tec_hub.tecuniversalcomm.data.connection.Connection;
 import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
+import org.tec_hub.tecuniversalcomm.data.connection.ConnectionService;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.fragments.CommandFragment;
 import org.tec_hub.tecuniversalcomm.fragments.TerminalFragment;
-import org.tec_hub.tecuniversalcomm.intents.TECIntent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ import java.util.List;
 /**
  * Created by Nick Mosher on 9/30/15.
  */
-public class MainActivity extends AppCompatActivity {
+public class OldMainActivity extends AppCompatActivity {
 
     private Connection mActiveConnection;
     private StorageAdapter.DataAdapter<ConnectionList> mConnectionAdapter;
@@ -43,7 +44,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.old_activity_main);
+
+        ConnectionService.launch(this);
 
         //Initialize Storage Adapter
         mConnectionAdapter = StorageAdapter.getInstance(this)
@@ -138,16 +141,16 @@ public class MainActivity extends AppCompatActivity {
             //Set icon.
             Drawable icon;
             switch(mConnections.get(position).getConnectionType()) {
-                case TECIntent.CONNECTION_TYPE_BLUETOOTH:
-                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_bluetooth_black_48dp);
-                    icon.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
+                case ConnectionIntent.CONNECTION_TYPE_BLUETOOTH:
+                    icon = ContextCompat.getDrawable(OldMainActivity.this, R.drawable.ic_bluetooth_black_48dp);
+                    icon.setColorFilter(ContextCompat.getColor(OldMainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
                     break;
-                case TECIntent.CONNECTION_TYPE_TCPIP:
-                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_signal_wifi_4_bar_black_48dp);
-                    icon.setColorFilter(ContextCompat.getColor(MainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
+                case ConnectionIntent.CONNECTION_TYPE_TCPIP:
+                    icon = ContextCompat.getDrawable(OldMainActivity.this, R.drawable.ic_wifi_black_48dp);
+                    icon.setColorFilter(ContextCompat.getColor(OldMainActivity.this, R.color.neutral), PorterDuff.Mode.SRC_ATOP);
                     break;
                 default:
-                    icon = ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_action_new);
+                    icon = ContextCompat.getDrawable(OldMainActivity.this, R.drawable.ic_action_new);
             }
             holder.mIcon.setImageDrawable(icon);
             holder.mTitle.setText(mConnections.get(position).getName());

@@ -16,7 +16,7 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
-import org.tec_hub.tecuniversalcomm.MainActivity;
+import org.tec_hub.tecuniversalcomm.OldMainActivity;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceiveIntent;
 
@@ -62,7 +62,7 @@ public class ConnectionService extends Service {
 
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        //Listen for broadcasts regarding these actions.
+        //Listen for broadcasts regarding connect and disconnect.
         IntentFilter filter = new IntentFilter();
         filter.addAction(ConnectionIntent.ACTION_CONNECT);
         filter.addAction(ConnectionIntent.ACTION_DISCONNECT);
@@ -119,7 +119,6 @@ public class ConnectionService extends Service {
                             break;
                             default:
                         }
-                        new ConnectTcpIpTask((TcpIpConnection) connection).execute();
                     }
                     break;
                     //If it's a UsbHostConnection
@@ -128,12 +127,12 @@ public class ConnectionService extends Service {
                         switch (intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
-
+                                new ConnectUsbTask((UsbHostConnection) connection).execute();
                             }
                             break;
                             //If it's a disconnect action.
                             case ConnectionIntent.ACTION_DISCONNECT: {
-
+                                new DisconnectUsbTask((UsbHostConnection) connection).execute();
                             }
                             break;
                             default:
@@ -598,7 +597,7 @@ public class ConnectionService extends Service {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    new DataReceiveIntent(ConnectionService.this, MainActivity.class, mConnection, line.getBytes()).sendLocal();
+                    new DataReceiveIntent(ConnectionService.this, OldMainActivity.class, mConnection, line.getBytes()).sendLocal();
                 }
 
                 try {

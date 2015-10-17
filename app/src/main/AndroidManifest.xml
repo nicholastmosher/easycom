@@ -15,7 +15,7 @@
         android:theme="@style/MyTheme">
 
         <activity
-            android:name=".MainActivity">
+            android:name=".OldMainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -26,10 +26,10 @@
             android:name=".KudosActivity"
             android:label="Launch Kudos Controls"
             android:screenOrientation="landscape"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".OldMainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.tec_hub.tecuniversalcomm.MainActivity"/>
+                android:value=".OldMainActivity"/>
         </activity>
 
         <service

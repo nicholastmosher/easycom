@@ -11,6 +11,10 @@
     <string name="drawer_open">Drawer Open</string>
     <string name="drawer_closed">Drawer Closed</string>
 
+    <string name="string_mode">String</string>
+    <string name="hex_mode">Hex</string>
+    <string name="binary_mode">Binary</string>
+
     <string name="hex0">0</string>
     <string name="hex1">1</string>
     <string name="hex2">2</string>
@@ -27,7 +31,6 @@
     <string name="hexD">D</string>
     <string name="hexE">E</string>
     <string name="hexF">F</string>
-
     <string name="bin0">0</string>
     <string name="bin1">1</string>
 </resources>
