@@ -3,6 +3,7 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 
+import org.tec_hub.tecuniversalcomm.R;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 
 import java.io.IOException;
@@ -64,6 +65,11 @@ public class UsbHostConnection extends Connection {
 
             }
         };
+    }
+
+    @Override
+    public int getImageResourceId() {
+        return R.drawable.ic_usb_black_48dp;
     }
 
     public UsbDevice getUsbDevice() {

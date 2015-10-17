@@ -1,6 +1,5 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
-import com.google.common.base.Preconditions;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -12,6 +11,8 @@ import java.util.List;
 
 /**
  * Created by Nick Mosher on 9/24/15.
+ * A wrapper around ArrayList specifically made for handling Connections, including
+ * checking for version duplicates and handling observable interactions.
  */
 public class ConnectionList implements Iterable<Connection> {
 
@@ -25,12 +26,13 @@ public class ConnectionList implements Iterable<Connection> {
      * Adds the given device to this list.  If no version of the
      * device already exists, it is added as a new entry.  If a
      * previous version of the device does exist, replace it.
+     *
      * @param newConnection The device to add or update.
      * @return True if we successfully added the device.
      */
     public boolean add(Connection newConnection) {
-        for (Connection connection : this) {
-            if (newConnection.isVersionOf(connection)) {
+        for(Connection connection : this) {
+            if(newConnection.isVersionOf(connection)) {
                 int index = mConnections.indexOf(connection);
                 if(index != -1) {
                     mConnections.set(index, newConnection);
@@ -49,10 +51,21 @@ public class ConnectionList implements Iterable<Connection> {
         return false;
     }
 
-    public Connection get(int i) {
-        return mConnections.get(i);
+    /**
+     * Returns the connection at the given index.
+     *
+     * @param index The index of the connection.
+     * @return The connection at the given index.
+     */
+    public Connection get(int index) {
+        return mConnections.get(index);
     }
 
+    /**
+     * Returns the number of connections in this List.
+     *
+     * @return The number of connections in this List.
+     */
     public int size() {
         return mConnections.size();
     }
@@ -60,6 +73,7 @@ public class ConnectionList implements Iterable<Connection> {
     /**
      * Checks if the object given matches a version of a Device
      * in this list.  If so, it removes it from the list.
+     *
      * @param object The object to check against this list.
      * @return True if we successfully removed the object.
      */
@@ -79,17 +93,33 @@ public class ConnectionList implements Iterable<Connection> {
         return false;
     }
 
+    /**
+     * Implement iterable so we can use a foreach loop.
+     *
+     * @return The underlying List's iterator.
+     */
     @Override
     public Iterator<Connection> iterator() {
         return mConnections.iterator();
     }
 
+    /**
+     * Adds an observer to this List, which we call any time a significant change is
+     * made (e.g. an addition or deletion).
+     *
+     * @param observer The new observer that we should keep notified.
+     */
     public void addObserver(ConnectionObserver observer) {
         if(!mObservers.contains(observer)) {
             mObservers.add(observer);
         }
     }
 
+    /**
+     * Alerts all registered observers about a change in this list's data.
+     *
+     * @param status The status indicates what type of change was made.
+     */
     public void notifyObservers(Connection.Status status) {
         for(ConnectionObserver observer : mObservers) {
             observer.onUpdate(status);
@@ -108,35 +138,37 @@ public class ConnectionList implements Iterable<Connection> {
     /**
      * Special class implementing GSON's TypeAdapter.  This is used to tell
      * GSON exactly how to serialize and deserialize Connection Lists.
+     * //TODO Instead of ConnectionListTypeAdapter, make a ConnectionTypeAdapter for abstractness.
      */
     private static final class ConnectionListTypeAdapter extends TypeAdapter<ConnectionList> {
 
-        /** Name key of all Connections.*/
+        /** Name key of all Connections. */
         public static final String CONNECTION_NAME = "name";
-        /** Key of Connection Implementation.*/
+        /** Key of Connection Implementation. */
         public static final String CONNECTION_IMP = "imp";
-        /** Key of Connection Universal Identifier.*/
+        /** Key of Connection Universal Identifier. */
         public static final String CONNECTION_UUID = "uuid";
 
         //Implementations of Connection
-        /** Implementation key of Bluetooth Connections.*/
+        /** Implementation key of Bluetooth Connections. */
         public static final String IMP_BLUETOOTH = "impBt";
-        /** Implementation key of TCPIP Connections.*/
+        /** Implementation key of TCPIP Connections. */
         public static final String IMP_TCPIP = "impTcp";
 
         //BluetoothConnection specific data
-        /** Key to store BluetoothConnection address.*/
+        /** Key to store BluetoothConnection address. */
         public static final String BLUETOOTH_ADDRESS = "btAddr";
 
         //TcpIpConnection specific data
-        /** Key to store TcpIp remote Ip.*/
+        /** Key to store TcpIp remote Ip. */
         public static final String TCPIP_IP = "tcpIp";
-        /** Key to store TcpIp remote Port.*/
+        /** Key to store TcpIp remote Port. */
         public static final String TCPIP_PORT = "tcpPort";
 
         /**
          * Takes a List of Connections and writes them to the JsonWriter as JSON objects.
-         * @param writer The JsonWriter to write the objects into.
+         *
+         * @param writer      The JsonWriter to write the objects into.
          * @param connections The Connections data to convert into JSON.
          * @throws IOException
          */
@@ -145,7 +177,10 @@ public class ConnectionList implements Iterable<Connection> {
             //Begin array of Connections
             writer.beginArray();
             for(Connection connection : connections) {
-                Preconditions.checkNotNull(connection);
+                if(connection == null) {
+                    System.out.println("Connection is null!");
+                    continue;
+                }
 
                 //Begin this Connection
                 writer.beginObject();
@@ -174,6 +209,7 @@ public class ConnectionList implements Iterable<Connection> {
 
         /**
          * Parses data from a JsonReader back into a List of Connections.
+         *
          * @param reader The source of a JSON string to convert.
          * @return A List of Connections parsed from the reader.
          * @throws IOException
@@ -188,7 +224,7 @@ public class ConnectionList implements Iterable<Connection> {
                 //Create local variables as a cache to build a Connection
                 String connectionName = null;
                 String imp = null;
-                String btAddr = null;
+                String btAddress = null;
                 String tcpIp = null;
                 int tcpPort = -1;
 
@@ -204,7 +240,7 @@ public class ConnectionList implements Iterable<Connection> {
                             imp = reader.nextString();
                             break;
                         case BLUETOOTH_ADDRESS: //Read BluetoothConnection address
-                            btAddr = reader.nextString();
+                            btAddress = reader.nextString();
                             break;
                         case TCPIP_IP:
                             tcpIp = reader.nextString();
@@ -220,24 +256,39 @@ public class ConnectionList implements Iterable<Connection> {
 
                 //Parse Connection data into object
                 Connection connection = null;
-                Preconditions.checkNotNull(connectionName);
-                Preconditions.checkNotNull(imp);
+                if(connectionName == null) {
+                    new NullPointerException("Connection name is null!").printStackTrace();
+                    continue;
+                }
+                if(imp == null) {
+                    new NullPointerException("Implementation is null!").printStackTrace();
+                    continue;
+                }
 
                 if(imp.equals(IMP_BLUETOOTH)) { //If this Connection is a BluetoothConnection
-                    Preconditions.checkNotNull(btAddr);
-                    connection = new BluetoothConnection(connectionName, btAddr);
+                    if(btAddress == null) {
+                        new NullPointerException("Bluetooth Address is null!").printStackTrace();
+                        continue;
+                    }
+                    connection = new BluetoothConnection(connectionName, btAddress);
 
                 } else if(imp.equals(IMP_TCPIP)) {
-                    Preconditions.checkNotNull(tcpIp);
-                    if(tcpPort == -1) throw new IllegalStateException("Port was not read!");
+                    if(tcpIp == null) {
+                        new NullPointerException("TcpIp IP is null!").printStackTrace();
+                        continue;
+                    }
+                    if(tcpPort == -1) {
+                        new NullPointerException("Port is null!").printStackTrace();
+                        continue;
+                    }
                     connection = new TcpIpConnection(connectionName, tcpIp, tcpPort);
                 }
 
-                if(connection != null) {
-                    connections.add(connection);
-                } else {
-                    System.err.println("Failed to read connection: " + connectionName);
+                if(connection == null) {
+                    new NullPointerException("Connection is null!").printStackTrace();
+                    continue;
                 }
+                connections.add(connection);
             }
             //End array of Connections
             reader.endArray();
