@@ -16,7 +16,7 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 
-import org.tec_hub.tecuniversalcomm.MainActivity;
+import org.tec_hub.tecuniversalcomm.ActivityMain;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataReceiveIntent;
 
@@ -600,7 +600,7 @@ public class ConnectionService extends Service {
                 if(line != null && !line.equals("")) {
 
                     System.out.println(line);
-                    new DataReceiveIntent(ConnectionService.this, MainActivity.class, mConnection, line.getBytes()).sendLocal();
+                    new DataReceiveIntent(ConnectionService.this, ActivityMain.class, mConnection, line.getBytes()).sendLocal();
                 }
 
                 try {

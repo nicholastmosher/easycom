@@ -15,7 +15,7 @@
         android:theme="@style/MyTheme">
 
         <activity
-            android:name=".MainActivity">
+            android:name=".ActivityMain">
 
             <intent-filter>
 
@@ -24,6 +24,46 @@
 
             </intent-filter>
 
+        </activity>
+
+        <activity
+            android:name=".ActivityConnection"
+            android:parentActivityName=".ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityMain"/>
+        </activity>
+
+        <activity
+            android:name=".ActivityTerminal"
+            android:parentActivityName=".ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityMain"/>
+        </activity>
+
+        <activity
+            android:name=".ActivityCommand"
+            android:parentActivityName=".ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityMain"/>
+        </activity>
+
+        <activity
+            android:name=".ActivityControl"
+            android:parentActivityName=".ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityMain"/>
+        </activity>
+
+        <activity
+            android:name=".ActivitySettings"
+            android:parentActivityName=".ActivityMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityMain"/>
         </activity>
 
         <service

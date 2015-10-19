@@ -1,8 +1,6 @@
 package org.tec_hub.tecuniversalcomm;
 
-import android.content.Context;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -21,17 +19,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
-import org.tec_hub.tecuniversalcomm.data.connection.Connection;
-import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Nick Mosher on 10/16/15.
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public class MainActivity extends AppCompatActivity {
+public class ActivityMain extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,8 +70,23 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                if(view.equals(mContainer)) {
+                //Perform check for casting to LinearLayout
+                if(view instanceof LinearLayout) {
+                    LinearLayout container = (LinearLayout) view;
+                    String title = ((TextView) container.findViewById(R.id.card_title)).getText().toString();
 
+                    //Launch Activities based on item click.
+                    if(title.equals(getString(R.string.connections))) {
+                        startActivity(new Intent(ActivityMain.this, ActivityConnection.class));
+                    } else if(title.equals(getString(R.string.terminal))) {
+                        startActivity(new Intent(ActivityMain.this, ActivityTerminal.class));
+                    } else if(title.equals(getString(R.string.commands))) {
+                        startActivity(new Intent(ActivityMain.this, ActivityCommand.class));
+                    } else if(title.equals(getString(R.string.controls))) {
+                        startActivity(new Intent(ActivityMain.this, ActivityControl.class));
+                    } else if(title.equals(getString(R.string.settings))) {
+                        startActivity(new Intent(ActivityMain.this, ActivitySettings.class));
+                    }
                 }
             }
         }
@@ -87,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
         private Menu mMenu;
 
         public RecyclerAdapter() {
-            mMenu = new MenuBuilder(MainActivity.this);
-            new MenuInflater(MainActivity.this).inflate(R.menu.main, mMenu);
+            mMenu = new MenuBuilder(ActivityMain.this);
+            new MenuInflater(ActivityMain.this).inflate(R.menu.main, mMenu);
         }
 
         @Override
