@@ -13,6 +13,8 @@ import java.util.UUID;
  * Intent that is broadcast by the ConnectionService whenever data is received
  * over some Connection.  The details of the Connection and the data received
  * is bundled into this intent to be received by some part of the program.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class DataReceiveIntent extends Intent implements ConnectionIntent {
 

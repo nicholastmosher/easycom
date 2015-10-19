@@ -41,6 +41,8 @@ import java.util.Map;
  * typical operations such as Connecting, Disconnecting, Sending, and Receiving
  * have custom intents representing them (ConnectIntent, DisconnectIntent,
  * SendIntent, and ReceiveIntent, respectively).
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class ConnectionService extends Service {
 

@@ -1,5 +1,6 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 
@@ -14,6 +15,8 @@ import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 4/16/15.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class BluetoothConnection extends Connection {
 
@@ -133,6 +136,23 @@ public class BluetoothConnection extends Connection {
     @Override
     public int getImageResourceId() {
         return R.drawable.ic_bluetooth_black_48dp;
+    }
+
+    /**
+     * Sets the bluetooth address of this Connection.
+     *
+     * @param address The MAC bluetooth address of the remote device.
+     */
+    public void setAddress(String address) {
+        if(address != null) {
+            if(BluetoothAdapter.checkBluetoothAddress(address)) {
+                mAddress = address;
+            } else {
+                new IllegalArgumentException("Bluetooth address is not valid!").printStackTrace();
+            }
+        } else {
+            new NullPointerException("Bluetooth address is null!").printStackTrace();
+        }
     }
 
     /**

@@ -11,6 +11,8 @@ import java.util.UUID;
 /**
  * Created by Nick Mosher on 9/22/15.
  * Intent used to notify when a new Connection is created.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class NewConnectionIntent extends Intent implements ConnectionIntent {
 

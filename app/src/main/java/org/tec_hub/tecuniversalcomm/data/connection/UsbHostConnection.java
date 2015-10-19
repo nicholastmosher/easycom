@@ -1,6 +1,5 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
-import android.content.Context;
 import android.hardware.usb.UsbDevice;
 
 import org.tec_hub.tecuniversalcomm.R;
@@ -12,6 +11,8 @@ import java.io.OutputStream;
 
 /**
  * Created by Nick Mosher on 10/15/15.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class UsbHostConnection extends Connection {
 

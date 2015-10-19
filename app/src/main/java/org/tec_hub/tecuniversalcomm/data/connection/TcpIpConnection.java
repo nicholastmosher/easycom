@@ -1,10 +1,7 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
-import android.content.Context;
-
 import org.tec_hub.tecuniversalcomm.R;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +11,8 @@ import java.net.Socket;
 /**
  * Created by Nick Mosher on 9/15/15.
  * Represents a connection to a remote device over an internet TCP/IP socket.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class TcpIpConnection extends Connection {
 

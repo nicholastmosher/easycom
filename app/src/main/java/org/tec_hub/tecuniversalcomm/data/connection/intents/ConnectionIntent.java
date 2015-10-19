@@ -3,6 +3,8 @@ package org.tec_hub.tecuniversalcomm.data.connection.intents;
 /**
  * Created by Nick Mosher on 4/17/15.
  * Defines intent constants for transmitting data across this app.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public interface ConnectionIntent {
 

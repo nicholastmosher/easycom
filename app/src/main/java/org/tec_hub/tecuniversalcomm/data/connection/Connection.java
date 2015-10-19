@@ -2,10 +2,15 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -17,10 +22,10 @@ import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 3/3/2015.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public abstract class Connection {
-
-    private transient List<Observer> mObservers = new ArrayList<>();
 
     public enum Status {
         Connected,
@@ -28,7 +33,7 @@ public abstract class Connection {
         Connecting,
         ConnectFailed,
         ConnectCanceled,
-        DataChanged
+        MetadataChanged;
     }
 
     /**
@@ -39,9 +44,22 @@ public abstract class Connection {
     protected static transient Map<UUID, Connection> connections = new HashMap<>();
 
     /**
+     * Connection Adapter for use with the Gson json library for correctly
+     * destructing and constructing Connections.
+     */
+    private static transient ConnectionTypeAdapter mTypeAdatper = new ConnectionTypeAdapter();
+
+    /**
+     * List of all observers registered to be watching this Connection.
+     * We use a custom implementation of the Observable framework so that
+     * this list can be transient so it isn't included into json.
+     */
+    private transient List<Observer> mObservers = new ArrayList<>();
+
+    /**
      * The immutable name of this Connection.
      */
-    protected final String mName;
+    protected String mName;
 
     /**
      * A unique identifier for this Connection, used as a reliable key
@@ -80,6 +98,20 @@ public abstract class Connection {
         mName = null;
         mUUID = UUID.randomUUID();
         connections.put(mUUID, this);
+    }
+
+    /**
+     * Sets the name of this connection.
+     *
+     * @param name The new name of this connection.
+     */
+    public void setName(String name) {
+        if(name != null) {
+            mName = name;
+            notifyObservers(Status.MetadataChanged);
+        } else {
+            new NullPointerException("Name is nulL!").printStackTrace();
+        }
     }
 
     /**
@@ -236,6 +268,161 @@ public abstract class Connection {
     public void notifyObservers(Status status) {
         for(Observer observer : mObservers) {
             observer.update(null, status);
+        }
+    }
+
+    /**
+     * Returns a TypeAdapter for Gson to use for Connections.
+     *
+     * @return A TypeAdapter for Gson to use for Connections.
+     */
+    public static ConnectionTypeAdapter getTypeAdapter() {
+        return mTypeAdatper;
+    }
+
+    /**
+     * Special class implementing GSON's TypeAdapter.  This is used to tell
+     * GSON exactly how to serialize and deserialize Connections.
+     */
+    private static final class ConnectionTypeAdapter extends TypeAdapter<Connection> {
+
+        /** Name key of all Connections. */
+        public static final String CONNECTION_NAME = "name";
+        /** Key of Connection Implementation. */
+        public static final String CONNECTION_IMP = "imp";
+        /** Key of Connection Universal Identifier. */
+        public static final String CONNECTION_UUID = "uuid";
+
+        //Implementations of Connection
+        /** Implementation key of Bluetooth Connections. */
+        public static final String IMP_BLUETOOTH = "impBt";
+        /** Implementation key of TCPIP Connections. */
+        public static final String IMP_TCPIP = "impTcp";
+
+        //BluetoothConnection specific data
+        /** Key to store BluetoothConnection address. */
+        public static final String BLUETOOTH_ADDRESS = "btAddr";
+
+        //TcpIpConnection specific data
+        /** Key to store TcpIp remote Ip. */
+        public static final String TCPIP_IP = "tcpIp";
+        /** Key to store TcpIp remote Port. */
+        public static final String TCPIP_PORT = "tcpPort";
+
+        /**
+         * Takes a Connection and writes it to the JsonWriter as a JSON object.
+         *
+         * @param writer     The JsonWriter to write the objects into.
+         * @param connection The Connection data to convert into JSON.
+         * @throws IOException
+         */
+        @Override
+        public void write(JsonWriter writer, Connection connection) throws IOException {
+
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
+
+            //Begin this Connection
+            writer.beginObject();
+            writer.name(CONNECTION_NAME).value(connection.getName()); //Write connection name
+            writer.name(CONNECTION_UUID).value(connection.getUUID()); //Write connection uuid
+
+            //Write all properties specific to BluetoothConnections.
+            if(connection instanceof BluetoothConnection) {
+                BluetoothConnection btConnection = (BluetoothConnection) connection;
+                writer.name(CONNECTION_IMP).value(IMP_BLUETOOTH); //Write connection implementation
+                writer.name(BLUETOOTH_ADDRESS).value(btConnection.getAddress()); //Write BluetoothConnection address
+
+            //Write all properties specific to TcpIpConnections.
+            } else if(connection instanceof TcpIpConnection) {
+                TcpIpConnection tcpIpConnection = (TcpIpConnection) connection;
+                writer.name(CONNECTION_IMP).value(IMP_TCPIP);
+                writer.name(TCPIP_IP).value(tcpIpConnection.getServerIp());
+                writer.name(TCPIP_PORT).value(tcpIpConnection.getServerPort());
+            }
+
+            //End this Connection
+            writer.endObject();
+        }
+
+        /**
+         * Parses data from a JsonReader back into a List of Connections.
+         *
+         * @param reader The source of a JSON string to convert.
+         * @return A Connection parsed from the reader.
+         * @throws IOException
+         */
+        @Override
+        public Connection read(JsonReader reader) throws IOException {
+
+            //Create local variables as a cache to build a Connection
+            String connectionName = null;
+            String imp = null;
+            String btAddress = null;
+            String tcpIp = null;
+            int tcpPort = -1;
+
+            //Begin this Connection
+            reader.beginObject();
+            while(reader.hasNext()) {
+                String name = reader.nextName();
+                switch(name) {
+                    case CONNECTION_NAME: //Read Connection name
+                        connectionName = reader.nextString();
+                        break;
+                    case CONNECTION_IMP: //Read Connection implementation
+                        imp = reader.nextString();
+                        break;
+                    case BLUETOOTH_ADDRESS: //Read BluetoothConnection address
+                        btAddress = reader.nextString();
+                        break;
+                    case TCPIP_IP:
+                        tcpIp = reader.nextString();
+                        break;
+                    case TCPIP_PORT:
+                        tcpPort = reader.nextInt();
+                        break;
+                    default:
+                }
+            }
+            //End this Connection
+            reader.endObject();
+
+            //Parse Connection data into object
+            Connection connection = null;
+            if(connectionName == null) {
+                throw new NullPointerException("Connection name is null!");
+            }
+            if(imp == null) {
+                throw new NullPointerException("Implementation is null!");
+            }
+
+            //If this Connection is a BluetoothConnection
+            if(imp.equals(IMP_BLUETOOTH)) {
+                if(btAddress == null) {
+                    throw new NullPointerException("Bluetooth Address is null!");
+                }
+                connection = new BluetoothConnection(connectionName, btAddress);
+
+                //If this Connection is a TcpIpConnection
+            } else if(imp.equals(IMP_TCPIP)) {
+                if(tcpIp == null) {
+                    throw new NullPointerException("TcpIp IP is null!");
+                }
+                if(tcpPort == -1) {
+                    throw new NullPointerException("Port is null!");
+                }
+                connection = new TcpIpConnection(connectionName, tcpIp, tcpPort);
+            }
+
+            //If the connection is null, something is wrong.
+            if(connection == null) {
+                throw new NullPointerException("Connection is null!");
+            }
+
+            //If we've passed all checks, return the connection.
+            return connection;
         }
     }
 }
