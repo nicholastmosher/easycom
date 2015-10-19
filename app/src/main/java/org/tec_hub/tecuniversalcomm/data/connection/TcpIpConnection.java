@@ -3,10 +3,8 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 import android.content.Context;
 
 import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,37 +52,6 @@ public class TcpIpConnection extends Connection {
     protected TcpIpConnection() {
         mServerIp = null;
         mServerPort = -1;
-    }
-
-    /**
-     * Send connect request to TcpIpConnectionService to open a TcpIpConnection
-     * using this object's data.
-     *
-     * @param context The context to send the intent to launch the Service.
-     */
-    public void connect(Context context) {
-        if(!(getStatus().equals(Status.Connected))) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new ConnectIntent(context, this).sendLocal();
-
-            //Indicate that this connection's status is now "connecting".
-            mStatus = Status.Connecting;
-        }
-    }
-
-    /**
-     * Send disconnect request to TcpIpConnectionService to close a TcpIpConnection
-     * using this object's data.
-     *
-     * @param context The context to send the intent to launch the Service.
-     */
-    public void disconnect(Context context) {
-        if(getStatus().equals(Status.Connected)) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new DisconnectIntent(context, this).sendLocal();
-        }
     }
 
     /**
@@ -162,16 +129,6 @@ public class TcpIpConnection extends Connection {
             throw new IllegalStateException("Connection is not active!");
         }
         return null;
-    }
-
-    /**
-     * Sends the given data over this connection.
-     *
-     * @param context The context to send the intent from.
-     * @param data    The data to send.
-     */
-    public void sendData(Context context, byte[] data) {
-        new DataSendIntent(context, getUUID(), data).sendLocal();
     }
 
     @Override

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Observer;
 
 /**
  * Created by Nick Mosher on 9/24/15.
@@ -18,7 +19,7 @@ public class ConnectionList implements Iterable<Connection> {
 
     private static transient ConnectionListTypeAdapter mTypeAdapter = new ConnectionListTypeAdapter();
 
-    private transient List<ConnectionObserver> mObservers = new ArrayList<>();
+    private transient List<Observer> mObservers = new ArrayList<>();
 
     private List<Connection> mConnections = new ArrayList<>();
 
@@ -109,7 +110,7 @@ public class ConnectionList implements Iterable<Connection> {
      *
      * @param observer The new observer that we should keep notified.
      */
-    public void addObserver(ConnectionObserver observer) {
+    public void addObserver(Observer observer) {
         if(!mObservers.contains(observer)) {
             mObservers.add(observer);
         }
@@ -121,8 +122,8 @@ public class ConnectionList implements Iterable<Connection> {
      * @param status The status indicates what type of change was made.
      */
     public void notifyObservers(Connection.Status status) {
-        for(ConnectionObserver observer : mObservers) {
-            observer.onUpdate(status);
+        for(Observer observer : mObservers) {
+            observer.update(null, status);
         }
     }
 

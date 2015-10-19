@@ -4,10 +4,8 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 
 import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,37 +53,6 @@ public class BluetoothConnection extends Connection {
     protected BluetoothConnection() {
         super();
         mAddress = null;
-    }
-
-    /**
-     * Send connect request to ConnectionService to open a BluetoothConnection
-     * using this object's data.
-     *
-     * @param context The context to send the intent to launch the Service.
-     */
-    public void connect(Context context) {
-        if(!(getStatus().equals(Status.Connected))) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new ConnectIntent(context, this).sendLocal();
-
-            //Indicate that this connection's status is now "connecting".
-            mStatus = Status.Connecting;
-        }
-    }
-
-    /**
-     * Send disconnect request to ConnectionService to close a BluetoothConnection
-     * using this object's data.
-     *
-     * @param context The context to send the intent to launch the Service.
-     */
-    public void disconnect(Context context) {
-        if(getStatus().equals(Status.Connected)) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new DisconnectIntent(context, this).sendLocal();
-        }
     }
 
     /**
@@ -161,16 +128,6 @@ public class BluetoothConnection extends Connection {
             throw new IllegalStateException("Connection is not active!");
         }
         return null;
-    }
-
-    /**
-     * Sends the given data over this connection.
-     *
-     * @param context The context to send the intent from.
-     * @param data    The data to send.
-     */
-    public void sendData(Context context, byte[] data) {
-        new DataSendIntent(context, getUUID(), data).sendLocal();
     }
 
     @Override

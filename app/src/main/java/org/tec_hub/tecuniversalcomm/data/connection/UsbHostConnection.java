@@ -23,23 +23,8 @@ public class UsbHostConnection extends Connection {
     }
 
     @Override
-    public void connect(Context context) {
-
-    }
-
-    @Override
-    public void disconnect(Context context) {
-
-    }
-
-    @Override
-    public void sendData(Context context, byte[] data) {
-
-    }
-
-    @Override
     public Status getStatus() {
-        return null;
+        return mStatus;
     }
 
     @Override

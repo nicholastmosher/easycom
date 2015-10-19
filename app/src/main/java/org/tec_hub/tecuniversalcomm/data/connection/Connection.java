@@ -2,12 +2,17 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.content.Context;
 
+import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
+import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 import java.util.UUID;
 
 /**
@@ -15,7 +20,7 @@ import java.util.UUID;
  */
 public abstract class Connection {
 
-    private transient List<ConnectionObserver> mObservers = new ArrayList<>();
+    private transient List<Observer> mObservers = new ArrayList<>();
 
     public enum Status {
         Connected,
@@ -116,20 +121,46 @@ public abstract class Connection {
     }
 
     /**
-     * Launches a Service action that initiates this connection's communication
-     * link.
+     * Send connect request to ConnectionService to open a Connection
+     * using this object's data.
      *
-     * @param context The context to launch the Service from.
+     * @param context The context to send the intent to launch the Service.
      */
-    public abstract void connect(Context context);
+    public void connect(Context context) {
+        if(!(getStatus().equals(Status.Connected))) {
+
+            //Send intent with this connection's data over LocalBroadcastManager
+            new ConnectIntent(context, this).sendLocal();
+
+            //Indicate that this connection's status is now "connecting".
+            mStatus = Status.Connecting;
+        }
+    }
 
     /**
-     * Launches a Service action that disconnects this connection's communication
-     * link.
+     * Send disconnect request to ConnectionService to close a Connection
+     * using this object's data.
      *
-     * @param context The context to launch the Service from.
+     * @param context The context to send the intent to launch the Service.
      */
-    public abstract void disconnect(Context context);
+    public void disconnect(Context context) {
+        if(getStatus().equals(Status.Connected)) {
+
+            //Send intent with this connection's data over LocalBroadcastManager
+            new DisconnectIntent(context, this).sendLocal();
+        }
+    }
+
+    /**
+     * Sends an intent to ConnectionService with data that should be sent over this
+     * connection.
+     *
+     * @param context The context to send the intent from.
+     * @param data    The data to send.
+     */
+    public void send(Context context, byte[] data) {
+        new DataSendIntent(context, this, data).sendLocal();
+    }
 
     /**
      * Tells what the status of this connection is.
@@ -151,6 +182,8 @@ public abstract class Connection {
      */
     public abstract String getConnectionType();
 
+    public abstract int getImageResourceId();
+
     /**
      * Returns an InputStream that reads from this Connection's remote source.
      *
@@ -168,17 +201,6 @@ public abstract class Connection {
     public abstract OutputStream getOutputStream() throws IllegalStateException;
 
     /**
-     * Sends an intent to ConnectionService with data that should be sent over this
-     * connection.
-     *
-     * @param context The context to send the intent from.
-     * @param data    The data to send.
-     */
-    public abstract void sendData(Context context, byte[] data);
-
-    public abstract int getImageResourceId();
-
-    /**
      * Hashing a connection object will tell if the two objects contain
      * the exact content data, but the same connection - if any
      * member values are changed - will hash differently.  This method
@@ -193,15 +215,27 @@ public abstract class Connection {
         return c.getUUID().equals(this.getUUID());
     }
 
-    public void addObserver(ConnectionObserver observer) {
+    /**
+     * This class uses an Observable form without actually extending Observable,
+     * since we won't have a way to deter Gson from packaging the observers into
+     * our json files.  That being said, this adds a new Observer.
+     *
+     * @param observer The observer to add to this connection.
+     */
+    public void addObserver(Observer observer) {
         if(!mObservers.contains(observer)) {
             mObservers.add(observer);
         }
     }
 
+    /**
+     * Notifies all subscribed observers about some change to this Connection's data.
+     *
+     * @param status The status of the change.
+     */
     public void notifyObservers(Status status) {
-        for(ConnectionObserver observer : mObservers) {
-            observer.onUpdate(this, status);
+        for(Observer observer : mObservers) {
+            observer.update(null, status);
         }
     }
 }
