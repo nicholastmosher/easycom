@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.Observer;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ import java.util.UUID;
  *
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public abstract class Connection {
+public abstract class Connection extends Observable {
 
     public enum Status {
         Connected,
@@ -33,7 +34,7 @@ public abstract class Connection {
         Connecting,
         ConnectFailed,
         ConnectCanceled,
-        MetadataChanged;
+        MetadataChanged
     }
 
     /**
@@ -47,7 +48,7 @@ public abstract class Connection {
      * Connection Adapter for use with the Gson json library for correctly
      * destructing and constructing Connections.
      */
-    private static transient ConnectionTypeAdapter mTypeAdatper = new ConnectionTypeAdapter();
+    private static transient ConnectionTypeAdapter mTypeAdapter = new ConnectionTypeAdapter();
 
     /**
      * List of all observers registered to be watching this Connection.
@@ -72,6 +73,8 @@ public abstract class Connection {
      * to avoid being parsed as Json.
      */
     protected transient Status mStatus = Status.Disconnected;
+
+    protected transient Context mContext;
 
     /**
      * Constructs a Connection using a given name.  Addresses or
@@ -161,8 +164,10 @@ public abstract class Connection {
     public void connect(Context context) {
         if(!(getStatus().equals(Status.Connected))) {
 
+            mContext = context;
+
             //Send intent with this connection's data over LocalBroadcastManager
-            new ConnectIntent(context, this).sendLocal();
+            new ConnectIntent(mContext, this).sendLocal();
 
             //Indicate that this connection's status is now "connecting".
             mStatus = Status.Connecting;
@@ -178,6 +183,8 @@ public abstract class Connection {
     public void disconnect(Context context) {
         if(getStatus().equals(Status.Connected)) {
 
+            mContext = context;
+
             //Send intent with this connection's data over LocalBroadcastManager
             new DisconnectIntent(context, this).sendLocal();
         }
@@ -191,7 +198,8 @@ public abstract class Connection {
      * @param data    The data to send.
      */
     public void send(Context context, byte[] data) {
-        new DataSendIntent(context, this, data).sendLocal();
+        mContext = context;
+        new DataSendIntent(mContext, this, data).sendLocal();
     }
 
     /**
@@ -248,36 +256,12 @@ public abstract class Connection {
     }
 
     /**
-     * This class uses an Observable form without actually extending Observable,
-     * since we won't have a way to deter Gson from packaging the observers into
-     * our json files.  That being said, this adds a new Observer.
-     *
-     * @param observer The observer to add to this connection.
-     */
-    public void addObserver(Observer observer) {
-        if(!mObservers.contains(observer)) {
-            mObservers.add(observer);
-        }
-    }
-
-    /**
-     * Notifies all subscribed observers about some change to this Connection's data.
-     *
-     * @param status The status of the change.
-     */
-    public void notifyObservers(Status status) {
-        for(Observer observer : mObservers) {
-            observer.update(null, status);
-        }
-    }
-
-    /**
      * Returns a TypeAdapter for Gson to use for Connections.
      *
      * @return A TypeAdapter for Gson to use for Connections.
      */
     public static ConnectionTypeAdapter getTypeAdapter() {
-        return mTypeAdatper;
+        return mTypeAdapter;
     }
 
     /**

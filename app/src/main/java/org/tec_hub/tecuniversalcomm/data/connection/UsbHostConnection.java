@@ -48,6 +48,7 @@ public class UsbHostConnection extends Connection {
         return new OutputStream() {
             @Override
             public void write(int oneByte) throws IOException {
+                byte[] toSend = new byte[]{(byte) oneByte};
 
             }
         };

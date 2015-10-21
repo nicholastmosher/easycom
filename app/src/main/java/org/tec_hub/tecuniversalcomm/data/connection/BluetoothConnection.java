@@ -50,15 +50,6 @@ public class BluetoothConnection extends Connection {
     }
 
     /**
-     * No-argument constructor made private so that Gson can correctly
-     * build this object and then populate the members with Json data.
-     */
-    protected BluetoothConnection() {
-        super();
-        mAddress = null;
-    }
-
-    /**
      * Tells whether this BluetoothConnection is actively connected.
      *
      * @return True if connected, false otherwise.
@@ -191,6 +182,10 @@ public class BluetoothConnection extends Connection {
         }
     }
 
+    /**
+     * Returns a String representation of this connection.
+     * @return A String representation of this connection.
+     */
     @Override
     public String toString() {
         return mName + ", " + mAddress;

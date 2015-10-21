@@ -45,15 +45,6 @@ public class TcpIpConnection extends Connection {
     }
 
     /**
-     * No-argument constructor made private so that Gson can correctly
-     * build this object and then populate the members with Json data.
-     */
-    protected TcpIpConnection() {
-        mServerIp = null;
-        mServerPort = -1;
-    }
-
-    /**
      * Returns the current status of this Connection, verifying that the
      * status is correct.
      *
