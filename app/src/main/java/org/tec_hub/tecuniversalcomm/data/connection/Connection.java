@@ -13,12 +13,9 @@ import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Observer;
 import java.util.UUID;
 
 /**
@@ -49,13 +46,6 @@ public abstract class Connection extends Observable {
      * destructing and constructing Connections.
      */
     private static transient ConnectionTypeAdapter mTypeAdapter = new ConnectionTypeAdapter();
-
-    /**
-     * List of all observers registered to be watching this Connection.
-     * We use a custom implementation of the Observable framework so that
-     * this list can be transient so it isn't included into json.
-     */
-    private transient List<Observer> mObservers = new ArrayList<>();
 
     /**
      * The immutable name of this Connection.

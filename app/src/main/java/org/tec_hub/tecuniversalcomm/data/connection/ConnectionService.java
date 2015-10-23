@@ -54,7 +54,7 @@ public class ConnectionService extends Service {
      * interrupt the ConnectTask before it can be active.  If the active Task finishes,
      * it removes itself from this Map.
      */
-    private static final Map<Connection, AsyncTask<Void, Void, Boolean>> TASKS = new HashMap<>();
+    private static final Map<Connection, AsyncTask<Connection, Void, Boolean>> TASKS = new HashMap<>();
 
     private static boolean launched = false;
 
@@ -81,16 +81,18 @@ public class ConnectionService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
 
+                //Null safety check on the intent.
                 if(intent == null) {
-                    System.out.println("Received intent is null!");
+                    new NullPointerException("Intent is null!").printStackTrace();
                     return;
                 }
 
+                //Retrieve a connection from the static map in Connection using the UUID key from the intent.
                 Connection connection = Connection.getConnection(intent.getStringExtra(ConnectionIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
                 if(connection == null) {
-                    System.err.println("Received connection is null.");
+                    new NullPointerException("Connection is null!").printStackTrace();
                     return;
                 }
 
@@ -102,12 +104,12 @@ public class ConnectionService extends Service {
                         switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
-                                new ConnectBluetoothTask((BluetoothConnection) connection).execute();
+                                setTask(connection, new ConnectBluetoothTask());
                             }
                             break;
                             //If it's a disconnect action.
                             case ConnectionIntent.ACTION_DISCONNECT: {
-                                new DisconnectBluetoothTask((BluetoothConnection) connection).execute();
+                                setTask(connection, new DisconnectBluetoothTask());
                             }
                             break;
                             default:
@@ -120,12 +122,12 @@ public class ConnectionService extends Service {
                         switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
-                                new ConnectTcpIpTask((TcpIpConnection) connection).execute();
+                                setTask(connection, new ConnectTcpIpTask());
                             }
                             break;
                             //If it's a disconnect action.
                             case ConnectionIntent.ACTION_DISCONNECT: {
-                                new DisconnectTcpIpTask((TcpIpConnection) connection).execute();
+                                setTask(connection, new DisconnectTcpIpTask());
                             }
                             break;
                             default:
@@ -138,12 +140,12 @@ public class ConnectionService extends Service {
                         switch(intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
-                                new ConnectUsbTask((UsbHostConnection) connection).execute();
+                                setTask(connection, new ConnectUsbTask());
                             }
                             break;
                             //If it's a disconnect action.
                             case ConnectionIntent.ACTION_DISCONNECT: {
-                                new DisconnectUsbTask((UsbHostConnection) connection).execute();
+                                setTask(connection, new DisconnectUsbTask());
                             }
                             break;
                             default:
@@ -259,7 +261,7 @@ public class ConnectionService extends Service {
      * @param connection The connection to set this task for.
      * @param task The task to assign to the connection.
      */
-    private static void setTask(Connection connection, AsyncTask<Void, Void, Boolean> task) {
+    private static void setTask(Connection connection, AsyncTask<Connection, Void, Boolean> task) {
 
         //Null safety check connection and task.
         if(connection == null) {
@@ -273,7 +275,7 @@ public class ConnectionService extends Service {
 
         //If the connection already has a task running, cancel it and remove it.
         if(TASKS.containsKey(connection)) {
-            AsyncTask<Void, Void, Boolean> asyncTask = TASKS.get(connection);
+            AsyncTask<Connection, Void, Boolean> asyncTask = TASKS.get(connection);
             //Null safety check the existing task.
             if(asyncTask != null) {
                 asyncTask.cancel(true);
@@ -285,7 +287,7 @@ public class ConnectionService extends Service {
 
         //Add and launch the new task for the connection.
         TASKS.put(connection, task);
-        task.execute();
+        task.execute(connection);
     }
 
     /**
@@ -293,25 +295,19 @@ public class ConnectionService extends Service {
      * to handle opening BluetoothConnections.
      * Usage: new ConnectBluetoothTask(myBluetoothConnection).execute();
      */
-    private static class ConnectBluetoothTask extends AsyncTask<Void, Void, Boolean> {
+    private static class ConnectBluetoothTask extends AsyncTask<Connection, Void, Boolean> {
 
         private BluetoothConnection mConnection;
         private BluetoothAdapter mBluetoothAdapter;
         private BluetoothSocket mBluetoothSocket;
         private int retryCount;
 
-        private ConnectBluetoothTask(BluetoothConnection connection, int retry) {
-            if(connection == null) {
-                throw new NullPointerException("Connection is null!");
-            }
-            mConnection = connection;
-            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            mBluetoothSocket = null;
+        private ConnectBluetoothTask(int retry) {
             retryCount = retry;
         }
 
-        public ConnectBluetoothTask(BluetoothConnection connection) {
-            this(connection, 0);
+        public ConnectBluetoothTask() {
+            this(0);
         }
 
         /**
@@ -319,7 +315,22 @@ public class ConnectionService extends Service {
          *
          * @return True if connecting succeeded, false if it failed.
          */
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof BluetoothConnection)) {
+                new IllegalArgumentException("Connection is not a BluetoothConnection!").printStackTrace();
+                return false;
+            }
+            mConnection = (BluetoothConnection) temp;
+
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
             //Check if BT is enabled
             if(!mBluetoothAdapter.isEnabled()) {
                 new IllegalStateException("Cannot connect, Bluetooth is disabled!").printStackTrace();
@@ -396,8 +407,7 @@ public class ConnectionService extends Service {
                         System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
                         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                         mBluetoothSocket = null;
-                        new ConnectBluetoothTask(mConnection, retryCount).execute();
-                        ConnectBluetoothTask.this.cancel(true);
+                        setTask(mConnection, new ConnectBluetoothTask(retryCount));
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
@@ -412,37 +422,47 @@ public class ConnectionService extends Service {
      * Uses an asynchronous task not on the UI thread to close BluetoothConnections.
      * Usage: new DisconnectBluetoothTask(myBluetoothConnection).execute();
      */
-    private class DisconnectBluetoothTask extends AsyncTask<Void, Void, Void> {
+    private class DisconnectBluetoothTask extends AsyncTask<Connection, Void, Boolean> {
 
         private BluetoothConnection mConnection;
 
-        public DisconnectBluetoothTask(BluetoothConnection connection) {
-            if(connection == null) {
-                throw new NullPointerException("Connection is null!");
-            }
-            mConnection = connection;
-        }
-
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof BluetoothConnection)) {
+                new IllegalArgumentException("Connection is not a BluetoothConnection!").printStackTrace();
+                return false;
+            }
+            mConnection = (BluetoothConnection) temp;
+
             if(mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getBluetoothSocket().close();
+                    return true;
                 } catch(IOException e) {
                     e.printStackTrace();
-                    throw new IllegalStateException("Error closing BT socket at disconnect!");
+                    new IllegalStateException("Error closing BT socket at disconnect!").printStackTrace();
                 }
             }
-            return null;
+            return false;
         }
 
         @Override
-        protected void onPostExecute(Void param) {
-            super.onPostExecute(param);
+        protected void onPostExecute(Boolean success) {
+            super.onPostExecute(success);
             if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
 
                 //Find the TransferManager for this connection and close it.
-                TransferManager.getManager(mConnection).close();
+                TransferManager manager = TransferManager.getManager(mConnection);
+                if(manager != null) {
+                    manager.close();
+                }
 
                 //Notify connection of disconnect.
                 mConnection.notifyObservers(Connection.Status.Disconnected);
@@ -454,26 +474,35 @@ public class ConnectionService extends Service {
      * Uses an asynchronous task not on the UI thread to open a TCPIP connection.
      * Usage: new ConnectTcpIpTask(myTcpIpConnection).execute();
      */
-    private static class ConnectTcpIpTask extends AsyncTask<Void, Void, Boolean> {
+    private static class ConnectTcpIpTask extends AsyncTask<Connection, Void, Boolean> {
 
         private TcpIpConnection mConnection;
         private Socket mSocket;
         private static int retryCount;
 
-        private ConnectTcpIpTask(TcpIpConnection connection, int retry) {
-            if(connection == null) {
-                throw new NullPointerException("Connection is null!");
-            }
-            mConnection = connection;
+        private ConnectTcpIpTask(int retry) {
             retryCount = retry;
         }
 
-        public ConnectTcpIpTask(TcpIpConnection connection) {
-            this(connection, 0);
+        public ConnectTcpIpTask() {
+            this(0);
         }
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof TcpIpConnection)) {
+                new NullPointerException("Connection is not a TCP/IP Connection!").printStackTrace();
+                return false;
+            }
+            mConnection = (TcpIpConnection) temp;
+
             try {
                 System.out.println("Connecting to " + mConnection.getServerIp() + ":" + mConnection.getServerPort());
                 mSocket = new Socket(mConnection.getServerIp(), mConnection.getServerPort());
@@ -506,8 +535,7 @@ public class ConnectionService extends Service {
                         retryCount++;
                         System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
                         mSocket = null;
-                        new ConnectTcpIpTask(mConnection, retryCount).execute();
-                        ConnectTcpIpTask.this.cancel(true);
+                        setTask(mConnection, new ConnectTcpIpTask());
                     } else {
                         retryCount = 0;
                         System.out.println("Error connecting, Aborting!");
@@ -525,34 +553,47 @@ public class ConnectionService extends Service {
      * Uses an asynchronous task not on the UI thread to close a TcpIpConnection.
      * Usage: new DisconnectTcpIpTask(myTcpIpConnection).execute();
      */
-    private class DisconnectTcpIpTask extends AsyncTask<Void, Void, Void> {
+    private class DisconnectTcpIpTask extends AsyncTask<Connection, Void, Boolean> {
 
         private TcpIpConnection mConnection;
 
-        public DisconnectTcpIpTask(TcpIpConnection connection) {
-            mConnection = connection;
-        }
-
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof TcpIpConnection)) {
+                new IllegalArgumentException("Connection is not a TCP/IP Connection").printStackTrace();
+                return false;
+            }
+            mConnection = (TcpIpConnection) temp;
+
             if(mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getSocket().close();
+                    return true;
                 } catch(IOException ioe) {
                     ioe.printStackTrace();
                     throw new IllegalStateException("Error closing socket at disconnect!");
                 }
             }
-            return null;
+            return false;
         }
 
         @Override
-        protected void onPostExecute(Void param) {
+        protected void onPostExecute(Boolean param) {
             super.onPostExecute(param);
             if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
 
                 //Find the TransferManager for this connection and close it.
-                TransferManager.getManager(mConnection).close();
+                TransferManager manager = TransferManager.getManager(mConnection);
+                if(manager != null) {
+                    manager.close();
+                }
 
                 //Notify connection of disconnect.
                 mConnection.notifyObservers(Connection.Status.Disconnected);
@@ -564,16 +605,24 @@ public class ConnectionService extends Service {
      * Uses an asynchronous task not on the UI thread to open a UsbHostConnection.
      * Usage: new ConnectUsbTask(myUsbHostConnection).execute();
      */
-    private class ConnectUsbTask extends AsyncTask<Void, Void, Boolean> {
+    private class ConnectUsbTask extends AsyncTask<Connection, Void, Boolean> {
 
         private UsbHostConnection mConnection;
 
-        public ConnectUsbTask(UsbHostConnection connection) {
-            mConnection = connection;
-        }
-
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof UsbHostConnection)) {
+                new IllegalArgumentException("Connection is not a UsbHostConnection!").printStackTrace();
+                return false;
+            }
+            mConnection = (UsbHostConnection) temp;
 
             UsbDevice usbDevice = mConnection.getUsbDevice();
             UsbInterface usbInterface = usbDevice.getInterface(0);
@@ -586,8 +635,8 @@ public class ConnectionService extends Service {
         }
 
         @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
+        protected void onPostExecute(Boolean success) {
+            super.onPostExecute(success);
         }
     }
 
@@ -595,16 +644,24 @@ public class ConnectionService extends Service {
      * Uses an asynchronous task not on the UI thread to close a UsbHostConnection.
      * Usage: new DisconnectUsbTask(myUsbHostConnection).execute();
      */
-    private class DisconnectUsbTask extends AsyncTask<Void, Void, Void> {
+    private class DisconnectUsbTask extends AsyncTask<Connection, Void, Boolean> {
 
         private UsbHostConnection mConnection;
 
-        public DisconnectUsbTask(UsbHostConnection connection) {
-            mConnection = connection;
-        }
-
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Boolean doInBackground(Connection... params) {
+
+            //Perform connection null and type safety checks.
+            Connection temp = params[0];
+            if(temp == null) {
+                new NullPointerException("Connection is null!").printStackTrace();
+                return false;
+            }
+            if(!(temp instanceof UsbHostConnection)) {
+                new IllegalArgumentException("Connection is not a UsbHostConnection!").printStackTrace();
+                return false;
+            }
+            mConnection = (UsbHostConnection) temp;
 
             UsbDevice usbDevice = mConnection.getUsbDevice();
             UsbInterface usbInterface = usbDevice.getInterface(0);
@@ -613,7 +670,7 @@ public class ConnectionService extends Service {
             //Releases our claim on this usb connection.
             usbDeviceConnection.releaseInterface(usbInterface);
 
-            return null;
+            return true;
         }
     }
 
