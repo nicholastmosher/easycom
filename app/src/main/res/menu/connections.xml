@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:title="@string/connection_type_bluetooth"
+        android:icon="@drawable/ic_bluetooth_black_48dp"/>
+
+    <item
+        android:title="@string/connection_type_tcpip"
+        android:icon="@drawable/ic_wifi_black_48dp"/>
+
+</menu>

@@ -62,6 +62,7 @@ public class TcpIpConnection extends Connection {
      *
      * @param context The context to send the intent to launch the Service.
      */
+    @Override
     public void connect(Context context) {
         if(!(getStatus().equals(Status.Connected))) {
 
@@ -79,6 +80,7 @@ public class TcpIpConnection extends Connection {
      *
      * @param context The context to send the intent to launch the Service.
      */
+    @Override
     public void disconnect(Context context) {
         if(getStatus().equals(Status.Connected)) {
 
@@ -93,6 +95,7 @@ public class TcpIpConnection extends Connection {
      *
      * @return The connectivity status.
      */
+    @Override
     public Status getStatus() {
         if(mSocket != null) {
             if(!mSocket.isConnected()) {
@@ -131,6 +134,7 @@ public class TcpIpConnection extends Connection {
      * @return The InputStream from the remote device.
      * @throws java.lang.IllegalStateException If not connected.
      */
+    @Override
     public InputStream getInputStream() {
         if(getStatus().equals(Status.Connected)) {
             try {
@@ -151,6 +155,7 @@ public class TcpIpConnection extends Connection {
      * @return The OutputStream to the remote device.
      * @throws java.lang.IllegalStateException If not connected.
      */
+    @Override
     public OutputStream getOutputStream() {
         if(getStatus().equals(Status.Connected)) {
             try {
@@ -170,6 +175,7 @@ public class TcpIpConnection extends Connection {
      * @param context The context to send the intent from.
      * @param data    The data to send.
      */
+    @Override
     public void sendData(Context context, byte[] data) {
         new DataSendIntent(context, getUUID(), data).sendLocal();
     }

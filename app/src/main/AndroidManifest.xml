@@ -66,6 +66,14 @@
                 android:value=".ActivityMain"/>
         </activity>
 
+        <activity
+            android:name=".ActivityNewConnection"
+            android:parentActivityName=".ActivityConnection">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ActivityConnection"/>
+        </activity>
+
         <service
             android:name=".data.connection.ConnectionService"
             android:label="Manage Bluetooth Connections"/>

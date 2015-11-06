@@ -63,6 +63,7 @@ public class BluetoothConnection extends Connection {
      *
      * @param context The context to send the intent to launch the Service.
      */
+    @Override
     public void connect(Context context) {
         if(!(getStatus().equals(Status.Connected))) {
 
@@ -80,6 +81,7 @@ public class BluetoothConnection extends Connection {
      *
      * @param context The context to send the intent to launch the Service.
      */
+    @Override
     public void disconnect(Context context) {
         if(getStatus().equals(Status.Connected)) {
 
@@ -93,6 +95,7 @@ public class BluetoothConnection extends Connection {
      *
      * @return True if connected, false otherwise.
      */
+    @Override
     public Status getStatus() {
 
         //If we know we're trying to connect to something.
@@ -119,6 +122,7 @@ public class BluetoothConnection extends Connection {
      *
      * @return The string "connection type" as defined by ConnectionIntent.
      */
+    @Override
     public String getConnectionType() {
         return ConnectionIntent.CONNECTION_TYPE_BLUETOOTH;
     }
@@ -130,6 +134,7 @@ public class BluetoothConnection extends Connection {
      * @return The InputStream from the remote bluetooth device.
      * @throws java.lang.IllegalStateException If not connected.
      */
+    @Override
     public InputStream getInputStream() throws IllegalStateException {
         if(getStatus().equals(Status.Connected)) {
             try {
@@ -150,6 +155,7 @@ public class BluetoothConnection extends Connection {
      * @return The OutputStream to the remote bluetooth device.
      * @throws java.lang.IllegalStateException If not connected.
      */
+    @Override
     public OutputStream getOutputStream() throws IllegalStateException {
         if(getStatus().equals(Status.Connected)) {
             try {
@@ -169,6 +175,7 @@ public class BluetoothConnection extends Connection {
      * @param context The context to send the intent from.
      * @param data    The data to send.
      */
+    @Override
     public void sendData(Context context, byte[] data) {
         new DataSendIntent(context, getUUID(), data).sendLocal();
     }

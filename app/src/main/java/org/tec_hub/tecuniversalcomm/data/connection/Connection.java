@@ -27,7 +27,7 @@ public abstract class Connection {
     }
 
     /**
-     * Static maps stores all constructed connections.  This way we
+     * Static map stores all constructed connections.  This way we
      * can reference them from different activities without needing
      * to pass through the Parcelable framework.
      */
@@ -176,6 +176,10 @@ public abstract class Connection {
      */
     public abstract void sendData(Context context, byte[] data);
 
+    /**
+     * Returns the resource Id for the icon of this Connection.
+     * @return The resource Id for the icon of this Connection.
+     */
     public abstract int getImageResourceId();
 
     /**

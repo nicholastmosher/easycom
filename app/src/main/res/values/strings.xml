@@ -18,6 +18,13 @@
     <string name="controls_desc">Create custom control interfaces</string>
     <string name="settings">Settings</string>
 
+    <string name="new_connection_activity_title">Add New Connection</string>
+    <string name="new_connection_name">Name:</string>
+
+    <string name="connection_type_bluetooth">Bluetooth</string>
+    <string name="connection_type_tcpip">TCP/IP</string>
+    <string name="connection_type_usb_host">USB Host</string>
+
     <string name="string_mode">String</string>
     <string name="hex_mode">Hex</string>
     <string name="binary_mode">Binary</string>
