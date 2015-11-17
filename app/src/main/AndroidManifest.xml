@@ -67,7 +67,7 @@
         </activity>
 
         <activity
-            android:name=".ActivityNewConnection"
+            android:name=".ActivityConnectionNew"
             android:parentActivityName=".ActivityConnection">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

@@ -70,7 +70,7 @@ public class ConnectionService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                if(intent == null) {
+                if (intent == null) {
                     System.out.println("Received intent is null!");
                     return;
                 }
@@ -78,17 +78,17 @@ public class ConnectionService extends Service {
                 Connection connection = Connection.getConnection(intent.getStringExtra(ConnectionIntent.CONNECTION_UUID));
 
                 //Safety to make sure we don't get null pointer exceptions.
-                if(connection == null) {
+                if (connection == null) {
                     System.err.println("Received connection is null.");
                     return;
                 }
 
                 //Launch different handlers based on the type of connection.
-                switch(connection.getConnectionType()) {
+                switch (connection.getConnectionType()) {
                     //If it's a BluetoothConnection.
                     case ConnectionIntent.CONNECTION_TYPE_BLUETOOTH: {
                         //Launch different handlers based on the action specified.
-                        switch(intent.getAction()) {
+                        switch (intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectBluetoothTask((BluetoothConnection) connection).execute();
@@ -106,7 +106,7 @@ public class ConnectionService extends Service {
                     //If it's a TcpIpConnection.
                     case ConnectionIntent.CONNECTION_TYPE_TCPIP: {
                         //Launch different handlers based on the action specified.
-                        switch(intent.getAction()) {
+                        switch (intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectTcpIpTask((TcpIpConnection) connection).execute();
@@ -124,7 +124,7 @@ public class ConnectionService extends Service {
                     //If it's a UsbHostConnection
                     case ConnectionIntent.CONNECTION_TYPE_USB: {
                         //Launch different handlers based on the action specified.
-                        switch(intent.getAction()) {
+                        switch (intent.getAction()) {
                             //If it's a connect action.
                             case ConnectionIntent.ACTION_CONNECT: {
                                 new ConnectUsbTask((UsbHostConnection) connection).execute();
@@ -153,7 +153,7 @@ public class ConnectionService extends Service {
         LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(intent == null) {
+                if (intent == null) {
                     System.out.println("Received Send Intent");
                 }
             }
@@ -204,11 +204,10 @@ public class ConnectionService extends Service {
 
     /**
      * Launches the ConnectionService if it is not already active.
-     *
      * @param context The context to launch the Service from.
      */
     public static void launch(Context context) {
-        if(!launched) {
+        if (!launched) {
             context.startService(new Intent(context, ConnectionService.class));
         }
     }
@@ -226,7 +225,7 @@ public class ConnectionService extends Service {
         private static int retryCount;
 
         private ConnectBluetoothTask(BluetoothConnection connection, int retry) {
-            if(connection == null) {
+            if (connection == null) {
                 throw new NullPointerException("Connection is null!");
             }
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -240,13 +239,12 @@ public class ConnectionService extends Service {
 
         /**
          * This method runs on a separate, non-UI thread.  Heavy lifting goes here.
-         *
          * @param params
          * @return True if connecting succeeded, false if it failed.
          */
         protected Boolean doInBackground(Void... params) {
             //Check if BT is enabled
-            if(!mBluetoothAdapter.isEnabled()) {
+            if (!mBluetoothAdapter.isEnabled()) {
                 System.out.println("Bluetooth not enabled!"); //TODO better handling.
                 new IllegalStateException("Cannot connect, Bluetooth is disabled!").printStackTrace();
             }
@@ -255,7 +253,7 @@ public class ConnectionService extends Service {
             //Define a BluetoothDevice with the address from our Connection.
             String address = mConnection.getAddress();
             BluetoothDevice device;
-            if(address != null && BluetoothAdapter.checkBluetoothAddress(address)) {
+            if (address != null && BluetoothAdapter.checkBluetoothAddress(address)) {
                 device = mBluetoothAdapter.getRemoteDevice(address);
                 System.out.println("Bluetooth Device parsed from BluetoothAdapter...");
             } else {
@@ -269,7 +267,7 @@ public class ConnectionService extends Service {
                 mBluetoothSocket = device.createRfcommSocketToServiceRecord(BluetoothConnection.BLUETOOTH_SERIAL_UUID);
                 System.out.println("BluetoothSocket retrieved from Bluetooth Device...");
 
-            } catch(IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 return false;
             }
@@ -282,11 +280,11 @@ public class ConnectionService extends Service {
                 mBluetoothSocket.connect();
                 mConnection.setBluetoothSocket(mBluetoothSocket);
                 System.out.println("BluetoothSocket connected, success!");
-            } catch(IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 try {
                     mBluetoothSocket.close();
-                } catch(IOException e2) {
+                } catch (IOException e2) {
                     e2.printStackTrace();
                 }
                 return false;
@@ -299,22 +297,21 @@ public class ConnectionService extends Service {
         /**
          * Result method that runs on the UI thread.  Background thread reports
          * to this thread when it's finished.
-         *
          * @param success Whether the background thread succeeded or failed.
          */
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
-            if(success) {
+            if (success) {
                 System.out.println("Connected success");
                 mConnection.notifyObservers(Connection.Status.Connected);
             } else {
                 System.out.println("Connected failed");
-                if(mBluetoothSocket.isConnected()) {
+                if (mBluetoothSocket.isConnected()) {
                     System.out.println("WARNING: ConnectBluetoothTask reported error, but is connected.");
                     mConnection.notifyObservers(Connection.Status.Connected);
                 } else {
-                    if(retryCount < 3) {
+                    if (retryCount < 3) {
                         retryCount++;
                         System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
                         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -340,7 +337,7 @@ public class ConnectionService extends Service {
         private BluetoothConnection mConnection;
 
         public DisconnectBluetoothTask(BluetoothConnection connection) {
-            if(connection == null) {
+            if (connection == null) {
                 throw new NullPointerException("Connection is null!");
             }
             mConnection = connection;
@@ -348,10 +345,10 @@ public class ConnectionService extends Service {
 
         @Override
         protected Void doInBackground(Void... params) {
-            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
+            if (mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getBluetoothSocket().close();
-                } catch(IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                     throw new IllegalStateException("Error closing BT socket at disconnect!");
                 }
@@ -362,7 +359,7 @@ public class ConnectionService extends Service {
         @Override
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
-            if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
+            if (!mConnection.getStatus().equals(Connection.Status.Connected)) {
                 mConnection.notifyObservers(Connection.Status.Disconnected);
             }
         }
@@ -379,7 +376,7 @@ public class ConnectionService extends Service {
         private static int retryCount;
 
         private ConnectTcpIpTask(TcpIpConnection connection, int retry) {
-            if(connection == null) {
+            if (connection == null) {
                 throw new NullPointerException("Connection is null!");
             }
             mConnection = connection;
@@ -396,7 +393,7 @@ public class ConnectionService extends Service {
                 System.out.println("Connecting to " + mConnection.getServerIp() + ":" + mConnection.getServerPort());
                 mSocket = new Socket(mConnection.getServerIp(), mConnection.getServerPort());
                 mConnection.setSocket(mSocket);
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
                 return false;
             }
@@ -406,16 +403,16 @@ public class ConnectionService extends Service {
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
-            if(success) {
+            if (success) {
                 System.out.println("Connected success");
                 mConnection.notifyObservers(Connection.Status.Connected);
-            } else if(mSocket != null) {
+            } else if (mSocket != null) {
                 System.out.println("Connected failed");
-                if(mSocket.isConnected()) {
+                if (mSocket.isConnected()) {
                     System.out.println("WARNING: ConnectBluetoothTask reported error, but is connected.");
                     mConnection.notifyObservers(Connection.Status.Connected);
                 } else {
-                    if(retryCount < 3) {
+                    if (retryCount < 3) {
                         retryCount++;
                         System.out.println("Error connecting! Retrying... (retry " + retryCount + ").");
                         mSocket = null;
@@ -448,10 +445,10 @@ public class ConnectionService extends Service {
 
         @Override
         protected Void doInBackground(Void... params) {
-            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
+            if (mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getSocket().close();
-                } catch(IOException ioe) {
+                } catch (IOException ioe) {
                     ioe.printStackTrace();
                     throw new IllegalStateException("Error closing socket at disconnect!");
                 }
@@ -462,7 +459,7 @@ public class ConnectionService extends Service {
         @Override
         protected void onPostExecute(Void param) {
             super.onPostExecute(param);
-            if(!mConnection.getStatus().equals(Connection.Status.Connected)) {
+            if (!mConnection.getStatus().equals(Connection.Status.Connected)) {
                 mConnection.notifyObservers(Connection.Status.Disconnected);
             }
         }
@@ -535,9 +532,9 @@ public class ConnectionService extends Service {
         private byte[] mData;
 
         public SendDataTask(Connection connection, byte[] data) {
-            if(connection == null) {
+            if (connection == null) {
                 throw new NullPointerException("[ConnectionService.sendData()] Connection is null!");
-            } else if(data == null) {
+            } else if (data == null) {
                 throw new NullPointerException("[ConnectionService.sendData()] Data is null!");
             }
             mConnection = connection;
@@ -546,10 +543,10 @@ public class ConnectionService extends Service {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            if(mConnection.getStatus().equals(Connection.Status.Connected)) {
+            if (mConnection.getStatus().equals(Connection.Status.Connected)) {
                 try {
                     mConnection.getOutputStream().write(mData);
-                } catch(IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else {
@@ -568,7 +565,7 @@ public class ConnectionService extends Service {
         private boolean isRunning;
 
         public ReceiveDataThread(Connection connection) {
-            if(connection == null) {
+            if (connection == null) {
                 throw new NullPointerException("Connection is null!");
             }
             isRunning = true;
@@ -579,11 +576,11 @@ public class ConnectionService extends Service {
             super.run();
             String line = "";
             BufferedReader bufferedReader = null;
-            while((mConnection.getStatus().equals(Connection.Status.Connected)) && isRunning) {
+            while ((mConnection.getStatus().equals(Connection.Status.Connected)) && isRunning) {
                 try {
-                    if(bufferedReader == null) {
+                    if (bufferedReader == null) {
                         InputStream inputStream = mConnection.getInputStream();
-                        if(inputStream == null) {
+                        if (inputStream == null) {
                             throw new NullPointerException("Input Stream is null!");
                         }
                         bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -591,13 +588,13 @@ public class ConnectionService extends Service {
                     //Fun fact, if the input stream disconnects, readLine() decides to return null :/
                     line = bufferedReader.readLine();
 
-                } catch(IOException e) {
+                } catch (IOException e) {
                     //Happens if the bufferedReader's stream is closed.
                     e.printStackTrace();
                 }
 
                 //Ensure that we're not just sending blank strings; can happen if connection ends.
-                if(line != null && !line.equals("")) {
+                if (line != null && !line.equals("")) {
 
                     System.out.println(line);
                     new DataReceiveIntent(ConnectionService.this, ActivityMain.class, mConnection, line.getBytes()).sendLocal();
@@ -605,7 +602,7 @@ public class ConnectionService extends Service {
 
                 try {
                     Thread.sleep(50);
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                     isRunning = false;
                 }
