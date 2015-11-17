@@ -1,5 +1,6 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
+import android.content.Context;
 import android.hardware.usb.UsbDevice;
 
 import org.tec_hub.tecuniversalcomm.R;

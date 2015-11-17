@@ -155,16 +155,6 @@ public class BluetoothConnection extends Connection {
         return null;
     }
 
-    /**
-     * Sends the given data over this connection.
-     * @param context The context to send the intent from.
-     * @param data    The data to send.
-     */
-    @Override
-    public void sendData(Context context, byte[] data) {
-        new DataSendIntent(context, getUUID(), data).sendLocal();
-    }
-
     @Override
     public int getImageResourceId() {
         return R.drawable.ic_bluetooth_black_48dp;

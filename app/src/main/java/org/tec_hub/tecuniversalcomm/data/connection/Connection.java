@@ -204,14 +204,6 @@ public abstract class Connection extends Observable {
     public abstract OutputStream getOutputStream() throws IllegalStateException;
 
     /**
-     * Sends an intent to ConnectionService with data that should be sent over this
-     * connection.
-     * @param context The context to send the intent from.
-     * @param data    The data to send.
-     */
-    public abstract void sendData(Context context, byte[] data);
-
-    /**
      * Returns the resource Id for the icon of this Connection.
      * @return The resource Id for the icon of this Connection.
      */
