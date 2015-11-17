@@ -1,12 +1,7 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
-import android.content.Context;
-
 import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,37 +40,6 @@ public class TcpIpConnection extends Connection {
         super(name);
         mServerIp = ip; //TODO add a way to verify IP layout
         mServerPort = port; //TODO add a way to check port bounds
-    }
-
-    /**
-     * Send connect request to TcpIpConnectionService to open a TcpIpConnection
-     * using this object's data.
-     * @param context The context to send the intent to launch the Service.
-     */
-    @Override
-    public void connect(Context context) {
-        if (!(getStatus().equals(Status.Connected))) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new ConnectIntent(context, this).sendLocal();
-
-            //Indicate that this connection's status is now "connecting".
-            mStatus = Status.Connecting;
-        }
-    }
-
-    /**
-     * Send disconnect request to TcpIpConnectionService to close a TcpIpConnection
-     * using this object's data.
-     * @param context The context to send the intent to launch the Service.
-     */
-    @Override
-    public void disconnect(Context context) {
-        if (getStatus().equals(Status.Connected)) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new DisconnectIntent(context, this).sendLocal();
-        }
     }
 
     /**

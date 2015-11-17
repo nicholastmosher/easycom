@@ -2,13 +2,9 @@ package org.tec_hub.tecuniversalcomm.data.connection;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 
 import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectIntent;
 import org.tec_hub.tecuniversalcomm.data.connection.intents.ConnectionIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DataSendIntent;
-import org.tec_hub.tecuniversalcomm.data.connection.intents.DisconnectIntent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,37 +43,6 @@ public class BluetoothConnection extends Connection {
             throw new NullPointerException("Bluetooth address is null!");
         }
         mAddress = address;
-    }
-
-    /**
-     * Send connect request to ConnectionService to open a BluetoothConnection
-     * using this object's data.
-     * @param context The context to send the intent to launch the Service.
-     */
-    @Override
-    public void connect(Context context) {
-        if (!(getStatus().equals(Status.Connected))) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new ConnectIntent(context, this).sendLocal();
-
-            //Indicate that this connection's status is now "connecting".
-            mStatus = Status.Connecting;
-        }
-    }
-
-    /**
-     * Send disconnect request to ConnectionService to close a BluetoothConnection
-     * using this object's data.
-     * @param context The context to send the intent to launch the Service.
-     */
-    @Override
-    public void disconnect(Context context) {
-        if (getStatus().equals(Status.Connected)) {
-
-            //Send intent with this connection's data over LocalBroadcastManager
-            new DisconnectIntent(context, this).sendLocal();
-        }
     }
 
     /**
