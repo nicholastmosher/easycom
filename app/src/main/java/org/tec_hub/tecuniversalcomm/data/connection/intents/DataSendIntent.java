@@ -15,6 +15,8 @@ import java.util.UUID;
  * The supplied reference to the Connection is boiled down to UUID and Type
  * to pass through the intent system over to the ConnectionService, where it
  * is then fetched from the static map in Connection.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class DataSendIntent extends Intent implements ConnectionIntent {
 

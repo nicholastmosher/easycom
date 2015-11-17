@@ -58,6 +58,7 @@ public class ActivityMain extends AppCompatActivity {
             public ImageView mIcon;
             public TextView mTitle;
             public TextView mSubtitle;
+
             public ViewHolder(CardView card) {
                 super(card);
                 mContainer = (LinearLayout) card.findViewById(R.id.card_container);
@@ -71,20 +72,20 @@ public class ActivityMain extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //Perform check for casting to LinearLayout
-                if(view instanceof LinearLayout) {
+                if (view instanceof LinearLayout) {
                     LinearLayout container = (LinearLayout) view;
                     String title = ((TextView) container.findViewById(R.id.card_title)).getText().toString();
 
                     //Launch Activities based on item click.
-                    if(title.equals(getString(R.string.connections))) {
+                    if (title.equals(getString(R.string.connections))) {
                         startActivity(new Intent(ActivityMain.this, ActivityConnection.class));
-                    } else if(title.equals(getString(R.string.terminal))) {
+                    } else if (title.equals(getString(R.string.terminal))) {
                         startActivity(new Intent(ActivityMain.this, ActivityTerminal.class));
-                    } else if(title.equals(getString(R.string.commands))) {
+                    } else if (title.equals(getString(R.string.commands))) {
                         startActivity(new Intent(ActivityMain.this, ActivityCommand.class));
-                    } else if(title.equals(getString(R.string.controls))) {
+                    } else if (title.equals(getString(R.string.controls))) {
                         startActivity(new Intent(ActivityMain.this, ActivityControl.class));
-                    } else if(title.equals(getString(R.string.settings))) {
+                    } else if (title.equals(getString(R.string.settings))) {
                         startActivity(new Intent(ActivityMain.this, ActivitySettings.class));
                     }
                 }
@@ -111,12 +112,13 @@ public class ActivityMain extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            if(position > mMenu.size()) throw new IllegalArgumentException("Position out of bounds!");
+            if (position > mMenu.size())
+                throw new IllegalArgumentException("Position out of bounds!");
 
             MenuItem item = mMenu.getItem(position);
             holder.mIcon.setImageDrawable(item.getIcon());
             holder.mTitle.setText(item.getTitle());
-            if(item.hasSubMenu()) {
+            if (item.hasSubMenu()) {
                 MenuItem subMenuItem = item.getSubMenu().getItem();
                 holder.mSubtitle.setText(subMenuItem.getTitle());
             } else {

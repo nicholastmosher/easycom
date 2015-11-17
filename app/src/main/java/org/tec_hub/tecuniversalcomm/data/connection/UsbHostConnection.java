@@ -1,6 +1,5 @@
 package org.tec_hub.tecuniversalcomm.data.connection;
 
-import android.content.Context;
 import android.hardware.usb.UsbDevice;
 
 import org.tec_hub.tecuniversalcomm.R;
@@ -12,6 +11,8 @@ import java.io.OutputStream;
 
 /**
  * Created by Nick Mosher on 10/15/15.
+ *
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class UsbHostConnection extends Connection {
 
@@ -23,23 +24,8 @@ public class UsbHostConnection extends Connection {
     }
 
     @Override
-    public void connect(Context context) {
-
-    }
-
-    @Override
-    public void disconnect(Context context) {
-
-    }
-
-    @Override
-    public void sendData(Context context, byte[] data) {
-
-    }
-
-    @Override
     public Status getStatus() {
-        return null;
+        return mStatus;
     }
 
     @Override
@@ -62,6 +48,7 @@ public class UsbHostConnection extends Connection {
         return new OutputStream() {
             @Override
             public void write(int oneByte) throws IOException {
+                byte[] toSend = new byte[]{(byte) oneByte};
 
             }
         };

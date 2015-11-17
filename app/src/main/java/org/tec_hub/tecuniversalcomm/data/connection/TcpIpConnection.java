@@ -16,6 +16,7 @@ import java.net.Socket;
 /**
  * Created by Nick Mosher on 9/15/15.
  * Represents a connection to a remote device over an internet TCP/IP socket.
+ * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class TcpIpConnection extends Connection {
 
@@ -36,7 +37,6 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Constructs a new TcpIpConnection with a given remote IP and port.
-     *
      * @param name The name of this Connection.
      * @param ip   The IP of the remote device.
      * @param port The port to connect over.
@@ -48,23 +48,13 @@ public class TcpIpConnection extends Connection {
     }
 
     /**
-     * No-argument constructor made private so that Gson can correctly
-     * build this object and then populate the members with Json data.
-     */
-    protected TcpIpConnection() {
-        mServerIp = null;
-        mServerPort = -1;
-    }
-
-    /**
      * Send connect request to TcpIpConnectionService to open a TcpIpConnection
      * using this object's data.
-     *
      * @param context The context to send the intent to launch the Service.
      */
     @Override
     public void connect(Context context) {
-        if(!(getStatus().equals(Status.Connected))) {
+        if (!(getStatus().equals(Status.Connected))) {
 
             //Send intent with this connection's data over LocalBroadcastManager
             new ConnectIntent(context, this).sendLocal();
@@ -77,12 +67,11 @@ public class TcpIpConnection extends Connection {
     /**
      * Send disconnect request to TcpIpConnectionService to close a TcpIpConnection
      * using this object's data.
-     *
      * @param context The context to send the intent to launch the Service.
      */
     @Override
     public void disconnect(Context context) {
-        if(getStatus().equals(Status.Connected)) {
+        if (getStatus().equals(Status.Connected)) {
 
             //Send intent with this connection's data over LocalBroadcastManager
             new DisconnectIntent(context, this).sendLocal();
@@ -92,17 +81,16 @@ public class TcpIpConnection extends Connection {
     /**
      * Returns the current status of this Connection, verifying that the
      * status is correct.
-     *
      * @return The connectivity status.
      */
     @Override
     public Status getStatus() {
-        if(mSocket != null) {
-            if(!mSocket.isConnected()) {
-                if(!mSocket.isClosed()) {
+        if (mSocket != null) {
+            if (!mSocket.isConnected()) {
+                if (!mSocket.isClosed()) {
                     try {
                         mSocket.close();
-                    } catch(IOException ioe) {
+                    } catch (IOException ioe) {
                         System.out.println("TCP/IP Socket not connected; error closing socket!");
                         ioe.printStackTrace();
                     }
@@ -120,7 +108,6 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Convenience method for use with intent extra "CONNECTION_TYPE".
-     *
      * @return The string "connection type" as defined by ConnectionIntent.
      */
     public String getConnectionType() {
@@ -130,16 +117,15 @@ public class TcpIpConnection extends Connection {
     /**
      * Retrieves the Input Stream if this Connection is connected and
      * the Input Stream is not null.
-     *
      * @return The InputStream from the remote device.
      * @throws java.lang.IllegalStateException If not connected.
      */
     @Override
     public InputStream getInputStream() {
-        if(getStatus().equals(Status.Connected)) {
+        if (getStatus().equals(Status.Connected)) {
             try {
                 return mSocket.getInputStream();
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
         } else {
@@ -151,16 +137,15 @@ public class TcpIpConnection extends Connection {
     /**
      * Retrieves the Output Stream if this Connection is connected and
      * the Output Stream is not null.
-     *
      * @return The OutputStream to the remote device.
      * @throws java.lang.IllegalStateException If not connected.
      */
     @Override
     public OutputStream getOutputStream() {
-        if(getStatus().equals(Status.Connected)) {
+        if (getStatus().equals(Status.Connected)) {
             try {
                 return mSocket.getOutputStream();
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
         } else {
@@ -171,7 +156,6 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Sends the given data over this connection.
-     *
      * @param context The context to send the intent from.
      * @param data    The data to send.
      */
@@ -187,7 +171,6 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Returns the IP address of the remote (server) device.
-     *
      * @return The IP address of the remote (server) device.
      */
     public String getServerIp() {
@@ -196,7 +179,6 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Returns the port over which connection will be established.
-     *
      * @return The port to establish connection over.
      */
     public int getServerPort() {
@@ -205,11 +187,10 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Sets the socket for this connection to use.
-     *
      * @param socket The socket to use to connect.
      */
     public void setSocket(Socket socket) {
-        if(socket == null) {
+        if (socket == null) {
             new NullPointerException("Socket is null!").printStackTrace();
         } else {
             mSocket = socket;
@@ -218,12 +199,11 @@ public class TcpIpConnection extends Connection {
 
     /**
      * Gets the socket used by this connection.
-     *
      * @return The socket used by this connection.
      * @throws NullPointerException If the socket is null.
      */
     public Socket getSocket() throws NullPointerException {
-        if(mSocket != null) {
+        if (mSocket != null) {
             return mSocket;
         } else {
             throw new NullPointerException("TCP/IP socket is null!");
