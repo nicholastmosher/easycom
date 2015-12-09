@@ -23,6 +23,13 @@ public class BluetoothConnection extends Connection {
     public static final UUID BLUETOOTH_SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     /**
+     * When a Bluetooth Device is discovered, sometimes it will have a name
+     * associated with it.  We want to store that, but it may not be the
+     * BluetoothConnection's name.
+     */
+    private String mDeviceName;
+
+    /**
      * The MAC Address of the remote bluetooth device for this Connection.
      */
     private String mAddress;
@@ -38,7 +45,17 @@ public class BluetoothConnection extends Connection {
      * @param address The MAC Address of the remote device to connect to.
      */
     public BluetoothConnection(String name, String address) {
-        super(name);
+        this(name, address, false);
+    }
+
+    /**
+     * Constructs a BluetoothConnection from a name and bluetooth MAC address.
+     * @param name    The name of this BluetoothConnection.
+     * @param address The MAC Address of the remote device to connect to.
+     * @param temp    True if this should NOT be added to the static map.
+     */
+    public BluetoothConnection(String name, String address, boolean temp) {
+        super(name, temp);
         if (address == null) {
             throw new NullPointerException("Bluetooth address is null!");
         }
@@ -120,6 +137,10 @@ public class BluetoothConnection extends Connection {
         return null;
     }
 
+    /**
+     * Returns a resource to the icon to represent this connection.
+     * @return A resource to this connection's icon.
+     */
     @Override
     public int getImageResourceId() {
         return R.drawable.ic_bluetooth_black_48dp;
@@ -139,6 +160,14 @@ public class BluetoothConnection extends Connection {
         } else {
             new NullPointerException("Bluetooth address is null!").printStackTrace();
         }
+    }
+
+    /**
+     * Returns the name of the Bluetooth Device as it was discovered.
+     * @return The name of the Bluetooth Device as it was discovered.
+     */
+    public String getDeviceName() {
+        return mDeviceName;
     }
 
     /**

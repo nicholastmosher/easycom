@@ -4,18 +4,38 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/connection_toolbar"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary">
+        android:layout_height="match_parent">
 
-    </android.support.v7.widget.Toolbar>
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/connection_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="6dp"
+            android:background="@color/colorPrimary"/>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/connection_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="fill_parent"/>
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/connection_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_centerInParent="true"/>
+
+            <include
+                android:id="@+id/panel_instructions"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                layout="@layout/panel_instructions"
+                android:layout_centerInParent="true"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/connection_fab"

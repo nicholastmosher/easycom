@@ -1,7 +1,11 @@
 package org.tec_hub.tecuniversalcomm;
 
 import android.content.Context;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.internal.view.menu.MenuBuilder;
@@ -14,11 +18,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import org.tec_hub.tecuniversalcomm.fragments.NewBluetoothFragment;
+import org.tec_hub.tecuniversalcomm.fragments.NewTcpIpFragment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Nick Mosher on 11/2/15.
@@ -26,8 +35,7 @@ import android.widget.TextView;
  */
 public class ActivityConnectionNew extends AppCompatActivity {
 
-    private ConnectionSelectorAdapter mConnectionSelector;
-    private FrameLayout mFrameLayout;
+    private Fragment activeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,20 +45,31 @@ public class ActivityConnectionNew extends AppCompatActivity {
         //Initialize the toolbar.
         Toolbar toolbar = (Toolbar) findViewById(R.id.new_connection_toolbar);
         toolbar.setTitle(getString(R.string.new_connection_activity_title));
+        Drawable backArrow = ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_black_24dp);
+        backArrow.setColorFilter(ContextCompat.getColor(this, R.color.textLight), PorterDuff.Mode.SRC_ATOP);
+        toolbar.setNavigationIcon(backArrow);
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textLight));
         setSupportActionBar(toolbar);
 
-        //Initialize the frame layout where specific connection details go.
-        mFrameLayout = (FrameLayout) findViewById(R.id.new_connection_unique_details);
+        //Initialize a list of Fragments that can be swapped into the FrameLayout.
+        final List<Fragment> fragments = new ArrayList<>();
+        fragments.add(new NewBluetoothFragment());
+        fragments.add(new NewTcpIpFragment());
 
         //Initialize the connection selection spinner.
         Spinner connectionSpinner = (Spinner) findViewById(R.id.new_connection_selector);
-        connectionSpinner.setAdapter(mConnectionSelector = new ConnectionSelectorAdapter(this));
-        connectionSpinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        connectionSpinner.setAdapter(new ConnectionSelectorAdapter(this));
+        connectionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                if(activeFragment != null) transaction.remove(activeFragment);
+                transaction.add(R.id.new_connection_unique_details, activeFragment = fragments.get(position));
+                transaction.commit();
             }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
         });
     }
 
@@ -115,7 +134,7 @@ public class ActivityConnectionNew extends AppCompatActivity {
                 connectionView = (LinearLayout) convertView;
             }
 
-            ((ImageView) connectionView.findViewById(R.id.connection_icon)).setImageDrawable(menuItem.getIcon());
+            ((ImageView) connectionView.findViewById(R.id.connection_icon)).setImageDrawable(menuItem.getIcon().getConstantState().newDrawable());
             ((TextView) connectionView.findViewById(R.id.connection_title)).setText(menuItem.getTitle());
 
             return connectionView;

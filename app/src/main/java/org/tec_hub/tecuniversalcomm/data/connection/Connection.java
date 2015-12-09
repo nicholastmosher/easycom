@@ -34,6 +34,12 @@ public abstract class Connection extends Observable {
     }
 
     /**
+     * Connection Adapter for use with the Gson json library for correctly
+     * destructing and constructing Connections.
+     */
+    private static ConnectionTypeAdapter mTypeAdapter = new ConnectionTypeAdapter();
+
+    /**
      * Static map stores all constructed connections.  This way we
      * can reference them from different activities without needing
      * to pass through the Parcelable framework.
@@ -41,13 +47,7 @@ public abstract class Connection extends Observable {
     protected static Map<UUID, Connection> connections = new HashMap<>();
 
     /**
-     * Connection Adapter for use with the Gson json library for correctly
-     * destructing and constructing Connections.
-     */
-    private static ConnectionTypeAdapter mTypeAdapter = new ConnectionTypeAdapter();
-
-    /**
-     * The immutable name of this Connection.
+     * The name of this Connection.
      */
     protected String mName;
 
@@ -65,11 +65,20 @@ public abstract class Connection extends Observable {
     protected Context mContext;
 
     /**
-     * Constructs a Connection using a given name.  Addresses or
-     * connection information are managed by subclasses.
-     * @param name The name of the connection.
+     * Constructs a Connection that will be added to the static map.
+     * @param name The name of this Connection.
      */
     public Connection(String name) {
+        this(name, false);
+    }
+
+    /**
+     * Constructs a Connection using a given name.  Addresses or
+     * connection information are managed by subclasses.
+     * @param name The name of the Connection.
+     * @param temp True if this Connection should NOT be added to the static map.
+     */
+    public Connection(String name, boolean temp) {
         if (name == null) {
             System.out.println("Connection has no name!");
             mName = "";
@@ -77,7 +86,11 @@ public abstract class Connection extends Observable {
             mName = name;
         }
         mUUID = UUID.randomUUID();
-        connections.put(mUUID, this);
+
+        //If this connection is not marked as temporary, add it to the map.
+        if(!temp) {
+            connections.put(mUUID, this);
+        }
     }
 
     /**

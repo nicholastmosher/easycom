@@ -10,6 +10,10 @@
     <color name="card">#FFFFFFFF</color>
     <color name="underCard">#FFAAAAAA</color>
 
+    <color name="bluetoothBlue">#094DBD</color>
+
+    <color name="instructionsPanel">#AADDDDDD</color>
+
     <color name="connected">#00C853</color>
     <color name="disconnected">#212121</color>
     <color name="error">#D50000</color>

@@ -4,10 +4,10 @@
 
     <item
         android:title="@string/connection_type_bluetooth"
-        android:icon="@drawable/ic_bluetooth_black_48dp"/>
+        android:icon="@drawable/ic_bluetooth_black_24dp"/>
 
     <item
         android:title="@string/connection_type_tcpip"
-        android:icon="@drawable/ic_wifi_black_48dp"/>
+        android:icon="@drawable/ic_wifi_black_24dp"/>
 
 </menu>

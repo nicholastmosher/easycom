@@ -522,7 +522,7 @@ public class ConnectionService extends Service {
 
                 //Notify connection that it's connected.
                 mConnection.notifyObservers(Connection.Status.Connected);
-            } else if (!success && mSocket != null) {
+            } else if (mSocket != null) {
                 System.out.println("Connected failed");
                 if (mSocket.isConnected()) {
                     System.out.println("WARNING: ConnectBluetoothTask reported error, but is connected.");

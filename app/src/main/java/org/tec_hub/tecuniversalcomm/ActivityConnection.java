@@ -1,14 +1,18 @@
 package org.tec_hub.tecuniversalcomm;
 
 import android.content.Intent;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,15 +32,36 @@ public class ActivityConnection extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.connection_toolbar);
         toolbar.setTitle(getString(R.string.connections));
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textLight));
+        Drawable backArrow = ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_black_24dp);
+        backArrow.setColorFilter(ContextCompat.getColor(this, R.color.textLight), PorterDuff.Mode.SRC_ATOP);
+        toolbar.setNavigationIcon(backArrow);
         setSupportActionBar(toolbar);
 
+        //Initialize the RecycleView
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.connection_recycler);
+        RecyclerAdapter recyclerAdapter = new RecyclerAdapter();
+        recyclerView.setAdapter(recyclerAdapter);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(true);
+
         FloatingActionButton connectionFab = (FloatingActionButton) findViewById(R.id.connection_fab);
+        connectionFab.setImageResource(R.drawable.ic_add_white_48dp);
         connectionFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(ActivityConnection.this, ActivityConnectionNew.class));
             }
         });
+
+        //Retrieve a reference to the "connections empty" message to maybe display.
+        FrameLayout instructions = (FrameLayout) findViewById(R.id.panel_instructions);
+        if(recyclerAdapter.getItemCount() == 0) {
+            instructions.setVisibility(View.VISIBLE);
+        } else {
+            instructions.setVisibility(View.GONE);
+        }
     }
 
     private class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
