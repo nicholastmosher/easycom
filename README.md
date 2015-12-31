@@ -16,7 +16,7 @@ communications options.  Any network interface available to android that can
 stream bytes is compatible with the custom Connections framework built into
 TEC-COMM.  By identifying operations common to all or most communications on a
 conceptual level, all Connections in code may be abstracted to an
-application-frienly programming interface.  These common operations are:
+application-friendly programming interface.  These common operations are:
 
  * Connecting
  * Disconnecting
