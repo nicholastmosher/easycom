@@ -1,41 +1,42 @@
-# TEC-COMM
+# Easycom
+
 Universal hobby project remote control app.
 
-TEC-COMM is an Android open-source project whose goal is to provide a unifying
-interface for communicating with electronic projects.  It offers a wide range of
-connection options, including reconfigurable Bluetooth and TCP/IP.  Data can be
-represented as String, Hex, or Binary, and arranged into pre-established
-commands that can be easily repeated or tweaked.
+Easycom, originally TEC-COMM, aims to simplify the way Android users interact
+with remote projects. It's target audience is hobbyists and hackers who want an
+easy interface for remotely controlling their creations.
 
-TEC-COMM has several unique features:
+# Easycom Core
 
-## Communications options
+The simplicity of Easycom comes from the core package, which is separately
+located at the [easycom-core](https://github.com/nicholastmosher/easycom-core)
+repository. This package provides a unifying interface for transmitting data
+over bluetooth and tcp/ip, with an extensible, inheritance-based framework
+which makes it easy to add support for other interfaces and protocols.
 
-TEC-COMM brings an object-oriented approach to the problem of expanding
-communications options.  Any network interface available to android that can
-stream bytes is compatible with the custom Connections framework built into
-TEC-COMM.  By identifying operations common to all or most communications on a
-conceptual level, all Connections in code may be abstracted to an
-application-friendly programming interface.  These common operations are:
+# The Easycom Vision
 
- * Connecting
- * Disconnecting
- * Sending Data
- * Receiving Data
+When I began developing Easycom, I wanted to build a tool to fill a niche I'd
+identified in the robotics and DIY electronics world. I wanted to build a
+hacker's go-to toolbox app for controlling projects with support for enough
+protocols to make it a viable solution for most small projects.
 
-In the code, network interfaces are made compatible by writing a subclass of
-the "Connection" class.  Each subclass provides the implementations necessary
-for establishing connections and transferring data, while complying with the
-API defined by the Connection superclass.  Due to this, Connections of differing
-types (e.g. Bluetooth and TCP/IP) need only be treated separately in code during
-construction, after which they may be treated identically.
+## Possibilities
 
-## Multithreading
+### Terminal
 
-As new Connections are established, they are assigned TransferManagers, which
-exist in the ConnectionService and are in charge of asynchronously sending and
-receiving data.  A TransferManager is destroyed when its corresponding
-Connection is disconnected.
+With the standardized input and output streams provided by easycom-core,
+viewing and manipulating data becomes a matter of harnessing the UI. Simple
+interactions with data can be provided by a terminal-type user interface
+which, if implemented gracefully, could be made to display the data in
+multiple representations such as ascii, hex, and binary.
 
-If this seems like a project that you would be interested in contributing to,
-feel free to contact me at nicholastmosher@gmail.com
+### Configurable Controls
+
+Implementing a dynamically reconfigurable UI could lead to very interesting
+possibilities involving how users interact with their data and devices. By
+providing a pallette of UI elements and a canvas to arrange them on,
+we can give users full control over their interface. Joysticks could be
+configured to send streams of data referring to their status, which could be
+interpreted by the user's project (such as an Arduino), or indicators could
+display information regarding internal statuses for debugging.
