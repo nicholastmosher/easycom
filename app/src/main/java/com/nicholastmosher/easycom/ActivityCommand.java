@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm;
+package com.nicholastmosher.easycom;
 
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;

@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm;
+package com.nicholastmosher.easycom;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;

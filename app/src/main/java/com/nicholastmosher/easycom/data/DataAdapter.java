@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.data;
+package com.nicholastmosher.easycom.data;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -56,7 +56,6 @@ public class DataAdapter<T> extends Observable implements Observer {
     /**
      * Returns an instance of DataAdapter of the given type, name, and TypeAdapter,
      * creating such a DataAdapter if one has not been constructed yet.
-     *
      * @param type    The data type for this adapter.
      * @param name    The name of this DataAdapter.  Using a name will cause
      *                this DataAdapter to write to a file of the same name.
@@ -82,7 +81,6 @@ public class DataAdapter<T> extends Observable implements Observer {
     /**
      * Returns an instance of DataAdapter of the given type and name,
      * creating such a DataAdapter if one has not been constructed yet.
-     *
      * @param type The data type for this adapter.
      * @param name The name of this DataAdapter.  Using a name will cause
      *             this DataAdapter to write to a file of the same name.
@@ -106,7 +104,6 @@ public class DataAdapter<T> extends Observable implements Observer {
     /**
      * Returns an instance of DataAdapter of the given type,
      * creating such a DataAdapter if one has not been constructed yet.
-     *
      * @param type The data type for this adapter.
      * @param <T>  The generic type for this adapter.
      * @return An instance of a DataAdapter fitting the arguments' specifications.
@@ -118,7 +115,6 @@ public class DataAdapter<T> extends Observable implements Observer {
     /**
      * Initiates an asynchronous task to write the given
      * data to storage.
-     *
      * @param data The data to write.
      */
     public void write(T data) {
@@ -129,7 +125,6 @@ public class DataAdapter<T> extends Observable implements Observer {
      * Initiate an asynchronous task to write the given
      * data to storage.  Accepts an observer to notify
      * when the write operation is complete.
-     *
      * @param data     The data to write to file.
      * @param observer To notify when write is finished.
      */
@@ -142,7 +137,6 @@ public class DataAdapter<T> extends Observable implements Observer {
      * this DataAdapter's file.  Callers provide a
      * DataObserver which is used to deliver the
      * parsed data.
-     *
      * @param observer The observer to deliver the data to.
      */
     public void read(Observer observer) {
@@ -154,7 +148,6 @@ public class DataAdapter<T> extends Observable implements Observer {
      * In this scenario, the DataAdapter subscribes to the data as an
      * Observer, so that whenever the data object is updated, the DataAdapter
      * is notified and can update the changes in the file.
-     *
      * @param data The observable data to subscribe to.
      */
     public void registerObservableData(T data) {
@@ -176,7 +169,6 @@ public class DataAdapter<T> extends Observable implements Observer {
     /**
      * Called by data we've subscribed to when there are important changes
      * that need to be rewritten to file.
-     *
      * @param observable The data we've subscribed to.
      * @param event      Will be an instance of DataAdapter.Event if it's a
      *                   notification that is relevant to us.
@@ -224,7 +216,6 @@ public class DataAdapter<T> extends Observable implements Observer {
 
         /**
          * Actually performs data writing.
-         *
          * @param params Null in this case.
          * @return True if written successfully, false otherwise.
          */
@@ -307,7 +298,6 @@ public class DataAdapter<T> extends Observable implements Observer {
         /**
          * When we've finished parsing the data, call the listener
          * to deliver the constructed object.
-         *
          * @param data The data read from storage.
          */
         @Override

@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm;
+package com.nicholastmosher.easycom;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,11 +19,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.nicholastmosher.easycom.data.DataAdapter;
+import com.nicholastmosher.easycom.core.connection.BluetoothConnection;
+
+import java.util.Observable;
+import java.util.Observer;
+
 /**
  * Created by Nick Mosher on 10/16/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
 public class ActivityMain extends AppCompatActivity {
+
+    BluetoothConnection readConnection;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,24 @@ public class ActivityMain extends AppCompatActivity {
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         recycler.setAdapter(new RecyclerAdapter());
+
+        //Begin DataAdapter test.
+        DataAdapter<BluetoothConnection> connectionAdapter = DataAdapter.getDataAdapter(this, BluetoothConnection.class, "Connection");
+        BluetoothConnection bluetooth = new BluetoothConnection("BT1", "Address");
+        connectionAdapter.write(bluetooth);
+
+        class Done {public boolean done = false;} final Done done = new Done();
+
+        connectionAdapter.read(new Observer() {
+            @Override
+            public void update(Observable observable, Object data) {
+                if(data instanceof BluetoothConnection) {
+                    readConnection = (BluetoothConnection) data;
+                    done.done = true;
+                }
+            }
+        });
+        System.out.println("Read connection data: " + readConnection.getName());
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.fragments;
+package com.nicholastmosher.easycom.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import org.tec_hub.tecuniversalcomm.R;
+import com.nicholastmosher.easycom.R;
 
 /**
  * Created by Nick Mosher on 12/4/15.

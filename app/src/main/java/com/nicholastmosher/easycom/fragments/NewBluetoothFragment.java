@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.fragments;
+package com.nicholastmosher.easycom.fragments;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -21,8 +21,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.BluetoothConnection;
+import com.nicholastmosher.easycom.R;
+import com.nicholastmosher.easycom.data.connection.BluetoothConnection;
 
 import java.util.ArrayList;
 import java.util.List;

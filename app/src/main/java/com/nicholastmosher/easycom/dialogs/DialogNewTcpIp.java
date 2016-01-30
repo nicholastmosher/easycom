@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.dialogs;
+package com.nicholastmosher.easycom.dialogs;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,9 +10,9 @@ import android.view.LayoutInflater;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
-import org.tec_hub.tecuniversalcomm.R;
-import org.tec_hub.tecuniversalcomm.data.connection.ConnectionList;
-import org.tec_hub.tecuniversalcomm.data.connection.TcpIpConnection;
+import com.nicholastmosher.easycom.R;
+import com.nicholastmosher.easycom.data.connection.ConnectionList;
+import com.nicholastmosher.easycom.data.connection.TcpIpConnection;
 
 /**
  * Created by Nick Mosher on 9/24/15.

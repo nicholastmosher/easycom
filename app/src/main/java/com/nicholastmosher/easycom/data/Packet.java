@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm.data;
+package com.nicholastmosher.easycom.data;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

@@ -28,7 +28,7 @@
     <string name="connection_type_usb_host">USB Host</string>
 
     <string name="connection_bluetooth_searching">Searching for Bluetooth Devices:</string>
-    <string name="connection_new_tcpip_ip_label">Enter IP:</string>
+    <string name="connection_new_tcpip_host_label">Enter Host:</string>
     <string name="connection_new_tcpip_port_label">Enter Port:</string>
 
     <string name="string_mode">String</string>

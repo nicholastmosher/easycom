@@ -1,4 +1,4 @@
-package org.tec_hub.tecuniversalcomm;
+package com.nicholastmosher.easycom;
 
 import android.content.Context;
 import android.graphics.PorterDuff;
@@ -23,8 +23,8 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.tec_hub.tecuniversalcomm.fragments.NewBluetoothFragment;
-import org.tec_hub.tecuniversalcomm.fragments.NewTcpIpFragment;
+import com.nicholastmosher.easycom.fragments.NewBluetoothFragment;
+import com.nicholastmosher.easycom.fragments.NewTcpIpFragment;
 
 import java.util.ArrayList;
 import java.util.List;
