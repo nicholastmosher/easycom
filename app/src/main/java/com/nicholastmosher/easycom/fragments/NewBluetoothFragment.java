@@ -22,7 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.nicholastmosher.easycom.R;
-import com.nicholastmosher.easycom.data.connection.BluetoothConnection;
+import com.nicholastmosher.easycom.core.connection.BluetoothConnection;
 
 import java.util.ArrayList;
 import java.util.List;

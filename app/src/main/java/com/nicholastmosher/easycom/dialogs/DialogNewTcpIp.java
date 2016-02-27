@@ -11,8 +11,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import com.nicholastmosher.easycom.R;
-import com.nicholastmosher.easycom.data.connection.ConnectionList;
-import com.nicholastmosher.easycom.data.connection.TcpIpConnection;
+import com.nicholastmosher.easycom.core.connection.ConnectionList;
+import com.nicholastmosher.easycom.core.connection.TcpIpConnection;
 
 /**
  * Created by Nick Mosher on 9/24/15.

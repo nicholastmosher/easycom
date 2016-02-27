@@ -4,9 +4,9 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.nicholastmosher.easycom.data.connection.BluetoothConnection;
-import com.nicholastmosher.easycom.data.connection.Connection;
-import com.nicholastmosher.easycom.data.connection.TcpIpConnection;
+import com.nicholastmosher.easycom.core.connection.BluetoothConnection;
+import com.nicholastmosher.easycom.core.connection.Connection;
+import com.nicholastmosher.easycom.core.connection.TcpIpConnection;
 
 import java.util.HashMap;
 import java.util.Map;
