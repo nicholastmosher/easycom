@@ -23,7 +23,7 @@ import android.widget.TextView;
  * Created by Nick Mosher on 10/16/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public class ActivityMain extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,15 +78,15 @@ public class ActivityMain extends AppCompatActivity {
 
                     //Launch Activities based on item click.
                     if (title.equals(getString(R.string.connections))) {
-                        startActivity(new Intent(ActivityMain.this, ActivityConnection.class));
+                        startActivity(new Intent(MainActivity.this, ConnectionActivity.class));
                     } else if (title.equals(getString(R.string.terminal))) {
-                        startActivity(new Intent(ActivityMain.this, ActivityTerminal.class));
+                        startActivity(new Intent(MainActivity.this, TerminalActivity.class));
                     } else if (title.equals(getString(R.string.commands))) {
-                        startActivity(new Intent(ActivityMain.this, ActivityCommand.class));
+                        startActivity(new Intent(MainActivity.this, CommandActivity.class));
                     } else if (title.equals(getString(R.string.controls))) {
-                        startActivity(new Intent(ActivityMain.this, ActivityControl.class));
+                        startActivity(new Intent(MainActivity.this, ControlActivity.class));
                     } else if (title.equals(getString(R.string.settings))) {
-                        startActivity(new Intent(ActivityMain.this, ActivitySettings.class));
+                        startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                     }
                 }
             }
@@ -95,8 +95,8 @@ public class ActivityMain extends AppCompatActivity {
         private Menu mMenu;
 
         public RecyclerAdapter() {
-            mMenu = new MenuBuilder(ActivityMain.this);
-            new MenuInflater(ActivityMain.this).inflate(R.menu.main, mMenu);
+            mMenu = new MenuBuilder(MainActivity.this);
+            new MenuInflater(MainActivity.this).inflate(R.menu.main, mMenu);
         }
 
         @Override

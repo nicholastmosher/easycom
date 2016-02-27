@@ -9,16 +9,16 @@ import android.support.v7.widget.Toolbar;
  * Created by Nick Mosher on 10/19/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public class ActivityControl extends AppCompatActivity {
+public class CommandActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_control);
+        setContentView(R.layout.activity_command);
 
         //Initialize toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.control_toolbar);
-        toolbar.setTitle(getString(R.string.controls));
+        Toolbar toolbar = (Toolbar) findViewById(R.id.command_toolbar);
+        toolbar.setTitle(getString(R.string.commands));
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.textLight));
         setSupportActionBar(toolbar);
     }

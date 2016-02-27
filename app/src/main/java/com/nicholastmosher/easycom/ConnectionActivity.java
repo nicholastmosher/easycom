@@ -21,7 +21,7 @@ import android.widget.TextView;
  * Created by Nick Mosher on 10/19/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public class ActivityConnection extends AppCompatActivity {
+public class ConnectionActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +51,7 @@ public class ActivityConnection extends AppCompatActivity {
         connectionFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(ActivityConnection.this, ActivityConnectionNew.class));
+                startActivity(new Intent(ConnectionActivity.this, NewConnectionActivity.class));
             }
         });
 

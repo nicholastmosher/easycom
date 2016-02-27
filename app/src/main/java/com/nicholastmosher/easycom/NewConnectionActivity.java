@@ -33,7 +33,7 @@ import java.util.List;
  * Created by Nick Mosher on 11/2/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, github.com/nicholastmosher
  */
-public class ActivityConnectionNew extends AppCompatActivity {
+public class NewConnectionActivity extends AppCompatActivity {
 
     private Fragment activeFragment;
 

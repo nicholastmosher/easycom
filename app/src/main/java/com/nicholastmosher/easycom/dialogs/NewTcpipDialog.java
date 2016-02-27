@@ -17,7 +17,7 @@ import com.nicholastmosher.easycom.core.connection.TcpIpConnection;
 /**
  * Created by Nick Mosher on 9/24/15.
  */
-public class DialogNewTcpIp {
+public class NewTcpipDialog {
 
     private static LinearLayout address;
 

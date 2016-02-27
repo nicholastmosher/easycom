@@ -9,7 +9,7 @@ import android.support.v7.widget.Toolbar;
  * Created by Nick Mosher on 10/19/15.
  * @author Nick Mosher, nicholastmosher@gmail.com, https://github.com/nicholastmosher
  */
-public class ActivityTerminal extends AppCompatActivity {
+public class TerminalActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

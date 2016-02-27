@@ -15,7 +15,7 @@
         android:theme="@style/MyTheme">
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".MainActivity">
 
             <intent-filter>
 
@@ -27,55 +27,55 @@
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityConnection"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".ConnectionActivity"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityMain"/>
+                android:value=".MainActivity"/>
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityTerminal"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".TerminalActivity"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityMain"/>
+                android:value=".MainActivity"/>
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityCommand"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".CommandActivity"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityMain"/>
+                android:value=".MainActivity"/>
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityControl"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".ControlActivity"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityMain"/>
+                android:value=".MainActivity"/>
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivitySettings"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityMain">
+            android:name=".SettingsActivity"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityMain"/>
+                android:value=".MainActivity"/>
         </activity>
 
         <activity
-            android:name="com.nicholastmosher.easycom.ActivityConnectionNew"
-            android:parentActivityName="com.nicholastmosher.easycom.ActivityConnection">
+            android:name=".NewConnectionActivity"
+            android:parentActivityName=".ConnectionActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nicholastmosher.easycom.ActivityConnection"/>
+                android:value=".ConnectionActivity"/>
         </activity>
 
         <service
-            android:name="com.nicholastmosher.easycom.data.connection.ConnectionService"
+            android:name="com.nicholastmosher.easycom.core.connection.ConnectionService"
             android:label="Manage Bluetooth Connections"/>
 
     </application>
