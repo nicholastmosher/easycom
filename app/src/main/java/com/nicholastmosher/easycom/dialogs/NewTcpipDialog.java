@@ -11,8 +11,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import com.nicholastmosher.easycom.R;
-import com.nicholastmosher.easycom.core.connection.ConnectionList;
+import com.nicholastmosher.easycom.core.connection.ConnectionModel;
 import com.nicholastmosher.easycom.core.connection.TcpIpConnection;
+
+import java.util.UUID;
 
 /**
  * Created by Nick Mosher on 9/24/15.
@@ -21,7 +23,7 @@ public class NewTcpipDialog {
 
     private static LinearLayout address;
 
-    public static AlertDialog build(final Context context, final ConnectionList list) {
+    public static AlertDialog build(final Context context, final ConnectionModel model) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Create New Device");
@@ -43,7 +45,8 @@ public class NewTcpipDialog {
                 if(!name.getText().toString().equals("") && !ip.getText().toString().equals("")) {
                     try {
                         int portNum = Integer.parseInt(port.getText().toString());
-                        list.add(new TcpIpConnection(name.getText().toString(), ip.getText().toString(), portNum));
+                        model.put(UUID.randomUUID(),
+                                new TcpIpConnection(name.getText().toString(), ip.getText().toString(), portNum));
                     } catch(NumberFormatException e) {
                         e.printStackTrace();
                     }

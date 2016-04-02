@@ -72,7 +72,7 @@ public class NewBluetoothFragment extends Fragment {
                 //Create a Bluetooth Connection from the newly discovered device.
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String name = (device.getName() == null ? "Unknown" : device.getName());
-                BluetoothConnection connection = new BluetoothConnection(name, device.getAddress(), true);
+                BluetoothConnection connection = new BluetoothConnection(name, device.getAddress());
                 recyclerAdapter.addConnection(connection);
 
             }
