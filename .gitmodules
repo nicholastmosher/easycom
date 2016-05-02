@@ -1,9 +1,3 @@
-[submodule "app/src/main/java/com/nicholastmosher/easycom/data/easycom-core"]
-	path = app/src/main/java/com/nicholastmosher/easycom/data/easycom-core
-	url = https://github.com/nicholastmosher/easycom-core
-[submodule "app/src/main/java/com/nicholastmosher/easycom/easycom-core"]
-	path = app/src/main/java/com/nicholastmosher/easycom/easycom-core
-	url = git@github.com:nicholastmosher/easycom-core
-[submodule "app/src/main/java/com/nicholastmosher/easycom/core"]
-	path = app/src/main/java/com/nicholastmosher/easycom/core
-	url = git@github.com:nicholastmosher/easycom-core
+[submodule "easycom-core"]
+	path = easycom-core
+	url = https://github.com/nicholastmosher/easycom-core.git
